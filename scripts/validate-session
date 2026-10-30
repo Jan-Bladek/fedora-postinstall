@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+[[ -n ${HYPRLAND_INSTANCE_SIGNATURE:-} ]] || { echo 'Not in Hyprland.' >&2; exit 1; }
+hyprctl -j monitors | python3 -c 'import json,sys; assert json.load(sys.stdin), "No monitors"'
+errors=$(hyprctl configerrors)
+[[ -z $errors || $errors == 'ok' ]] || { echo "$errors" >&2; exit 1; }
+pgrep -u "$(id -u)" -x noctalia >/dev/null
+systemctl --user is-active pipewire wireplumber xdg-desktop-portal-hyprland
+systemctl is-active NetworkManager display-manager
+command -v kitty >/dev/null
+read -r -p 'Did launcher, lock/unlock, suspend/resume, audio, monitors and OBS screenshare all work? Type YES: ' answer
+[[ $answer == YES ]] || exit 1
+echo 'Runtime checks and manual session acceptance passed.'

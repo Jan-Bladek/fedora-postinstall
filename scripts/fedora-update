@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+((EUID != 0)) || { echo 'Run as desktop user.' >&2; exit 1; }
+state=${XDG_STATE_HOME:-$HOME/.local/state}/fedora-postinstall
+mkdir -p "$state"
+exec 9>"$state/lock"
+flock -n 9 || { echo 'Installer/update already running.' >&2; exit 1; }
+sudo dnf5 upgrade --refresh
+if command -v flatpak >/dev/null; then
+    flatpak update --user
+    sudo flatpak update --system
+fi
+python3 "$HOME/.local/share/fedora-postinstall/scripts/vendor-apps.py" update
+sudo dnf5 check
+echo 'DNF includes enabled COPRs and Noctalia RPM. No Git checkouts were changed.'

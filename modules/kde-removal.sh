@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+module_kde_removal() {
+    [[ -n ${HYPRLAND_INSTANCE_SIGNATURE:-} ]] || die 'Run removal from a working Hyprland session.'
+    "$ROOT/scripts/validate-session"
+    local p; local targets=()
+    # Exact allowlist; rpm refuses removal if ANY retained package requires a target.
+    for p in plasma-desktop plasma-workspace plasma-workspace-x11 plasma-workspace-wayland kwin kwin-wayland kwin-x11 plasma-systemmonitor plasma-discover plasma-welcome plasma-pa plasma-nm plasma-bluedevil kdeplasma-addons; do
+        if rpm -q "$p" >/dev/null 2>&1; then targets+=("$p"); fi
+    done
+    ((${#targets[@]})) || { log 'No allowlisted Plasma packages installed.'; return; }
+    rpm -qa --qf '%{NAME}\n' | sort -u > "$RUN/preserved-before.txt"
+    printf '%s\n' "${targets[@]}" | tee "$RUN/plasma-targets.txt"
+    packages dnf5-plugins
+    run sudo rpm -e --test "${targets[@]}"
+    # Offline recovery: download exact installed NEVRAs BEFORE erasing anything.
+    mkdir -p "$RUN/plasma-rpms"
+    for p in "${targets[@]}"; do
+        run dnf5 download --destdir "$RUN/plasma-rpms" "$(rpm -q --qf '%{NEVRA}' "$p")"
+    done
+    systemctl is-active display-manager.service >/dev/null || die 'Display manager is not active.'
+    confirm 'Session tested; exact package list and dependency test shown. Remove Plasma now?' || die 'Removal cancelled.'
+    # RPM has no cascading removal or autoremove; dependency checks remain enabled.
+    run sudo rpm -e "${targets[@]}"
+    run sudo dnf5 check
+    while IFS= read -r p; do
+        if ! grep -Fxq "$p" "$RUN/plasma-targets.txt"; then rpm -q "$p" >/dev/null || die "Retained package missing: $p"; fi
+    done < "$RUN/preserved-before.txt"
+    log "Recovery from TTY: sudo dnf5 install $RUN/plasma-rpms/*.rpm; sudo systemctl restart sddm"
+    log 'Plasma-owned autostart entries removed with their RPMs. Custom user autostarts retained for manual review.'
+}
