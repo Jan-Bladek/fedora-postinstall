@@ -6,6 +6,9 @@ mkdir -p "$state"
 exec 9>"$state/lock"
 flock -n 9 || { echo 'Installer/update already running.' >&2; exit 1; }
 sudo dnf5 upgrade --refresh
+if command -v rustup >/dev/null 2>&1; then
+    rustup update
+fi
 if command -v flatpak >/dev/null; then
     flatpak update --user
     sudo flatpak update --system

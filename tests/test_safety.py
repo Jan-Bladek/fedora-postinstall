@@ -23,6 +23,30 @@ class Safety(unittest.TestCase):
             self.assertNotIn('FORBIDDEN', result.stderr)
             self.assertFalse(list(home.iterdir()))
 
+    def test_language_tools_preserve_rust_distribution(self):
+        script = r"""
+source "$1/modules/development.sh"
+packages() { printf 'PACKAGES %s\n' "$*"; }
+run() { printf 'RUN %s\n' "$*"; }
+command() {
+    if [[ $* == '-v rustup' ]]; then return "$RUSTUP_MISSING"; fi
+    builtin command "$@"
+}
+install_language_tools
+"""
+        for missing in ('0', '1'):
+            env = dict(os.environ, RUSTUP_MISSING=missing)
+            r = subprocess.run(['bash', '-eu', '-c', script, 'test', str(ROOT)],
+                               env=env, capture_output=True, text=True, check=True)
+            self.assertIn('python3-pip python3-devel gcc gcc-c++', r.stdout)
+            if missing == '0':
+                self.assertIn('RUN rustup toolchain install stable', r.stdout)
+                self.assertNotIn('PACKAGES rust cargo', r.stdout)
+                self.assertNotIn('rustup default', r.stdout)
+            else:
+                self.assertIn('PACKAGES rust cargo clippy rustfmt rust-src', r.stdout)
+                self.assertNotIn('RUN rustup', r.stdout)
+
     def test_invalid_module(self):
         r = subprocess.run(['bash', str(ROOT/'install.sh'), '--dry-run', '--modules', '../lib/core'], capture_output=True)
         self.assertNotEqual(r.returncode, 0)

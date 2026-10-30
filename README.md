@@ -32,7 +32,7 @@ Zachowaj kolejność powyżej. Moduły aplikacji potrzebują dostępu do sieci i
 | hyprland | Fedora RPM; jeśli brak Hyprland, oferuje wskazany przez dokumentację Noctalia COPR lionheartp/Hyprland |
 | noctalia | Natywny RPM `noctalia` v5, ustawienia pierwszego uruchomienia producenta |
 | terminal | Kitty, Bash, EDITOR/VISUAL/TERMINAL |
-| development | VSCodium RPM producenta; RustRover, IntelliJ IDEA, WebStorm z oficjalnego API JetBrains; Arduino IDE 2 AppImage z GitHub Arduino |
+| development | Rust/Cargo, Python 3 (pip, nagłówki), C/C++ (GCC, CMake, Ninja, GDB), VSCodium RPM producenta; RustRover, IntelliJ IDEA, WebStorm z oficjalnego API JetBrains; Arduino IDE 2 AppImage z GitHub Arduino |
 | browsers | Brave i LibreWolf z repozytoriów dostawców |
 | multimedia | OBS z Fedory; Vesktop i Steam z Flathub |
 | utilities | Obsidian i LocalSend z Flathub; Tailscale RPM, tailscaled bez logowania |
@@ -109,3 +109,17 @@ Bash -n, ShellCheck i unittest sprawdzają m.in. brak zmian/sudo/sieci w dry-run
 - [Arduino IDE 2](https://docs.arduino.cc/software/ide-v2/tutorials/getting-started/ide-v2-downloading-and-installing)
 - [Tailscale ręczne repozytoria](https://pkgs.tailscale.com/stable/)
 - [Vesktop Flathub](https://flathub.org/apps/dev.vencord.Vesktop), [Steam](https://flathub.org/apps/com.valvesoftware.Steam), [Obsidian](https://flathub.org/apps/md.obsidian.Obsidian), [LocalSend](https://flathub.org/apps/org.localsend.localsend_app)
+
+## Języki programowania
+
+Moduł `development` instaluje Python 3, pip, python3-devel oraz GCC/G++,
+Make, CMake, Ninja, GDB i pkg-config z repozytoriów Fedory. Do projektów Python
+używaj `python3 -m venv .venv`, następnie `source .venv/bin/activate`;
+nie instaluj bibliotek przez sudo pip.
+
+Rust domyślnie pochodzi z podpisanych pakietów Fedory: rust, cargo, clippy,
+rustfmt i rust-src. Jeśli istnieje rustup, instalator korzysta z niego i zapewnia
+stable z komponentami domyślnymi oraz rust-src, zachowując domyślny toolchain
+użytkownika. Nie miesza pakietów Rust z rustup. `fedora-update` aktualizuje
+pakiety przez DNF i istniejące toolchainy rustup przez `rustup update` jako użytkownik.
+Źródło: [Fedora Developer Portal — Rust](https://developer.fedoraproject.org/tech/languages/rust/rust-installation.html).

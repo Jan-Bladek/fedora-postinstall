@@ -1,5 +1,23 @@
 #!/usr/bin/env bash
+install_language_tools() {
+    packages python3 python3-pip python3-devel gcc gcc-c++ make cmake ninja-build gdb pkgconf-pkg-config
+    if command -v rustup >/dev/null 2>&1; then
+        # Preserve an existing rustup installation and the user's default toolchain.
+        run rustup toolchain install stable --profile default --component rust-src
+        run rustup run stable rustc --version
+        run rustup run stable cargo --version
+    else
+        # Prefer signed Fedora RPMs; never install competing Rust distributions.
+        packages rust cargo clippy rustfmt rust-src
+        run rustc --version
+        run cargo --version
+    fi
+    run python3 --version
+    run g++ --version
+}
+
 module_development() {
+    install_language_tools
     source "$ROOT/modules/repositories.sh"
     vendor_repo vscodium https://repo.vscodium.dev/vscodium.repo
     packages codium fuse fuse-libs
