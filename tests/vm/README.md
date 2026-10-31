@@ -11,7 +11,7 @@ It must never be used with a host disk passed through to the VM.
 3. Substitute `@@SSH_PUBLIC_KEY@@` in fedora44.ks.in with a **test-only public SSH key**.
    Serve the resulting ks.cfg from a localhost HTTP server; QEMU user networking
    exposes that server to the guest as 10.0.2.2. Do not commit private keys.
-4. Extract images/pxeboot/vmlinuz and initrd.img from the netinst ISO. Attach netinst as /dev/sr0 and KDE Live as /dev/sr1. The template mounts the KDE ISO read-only and copies its LiveOS/squashfs.img to the virtual disk. Create a new 90 GiB
+4. Extract images/pxeboot/vmlinuz and initrd.img from the netinst ISO. Attach both the netinst and KDE Live ISOs. The template locates the KDE ISO by its filesystem label and mounts it read-only and copies its LiveOS/squashfs.img to the virtual disk. Create a new 90 GiB
    qcow2 disk. Boot with the ISO attached, those kernel/initrd files, and arguments
    `inst.stage2=hd:LABEL=Fedora-E-dvd-x86_64-44 inst.ks=http://10.0.2.2:8844/ks.cfg inst.text console=ttyS0,115200n8`.
 5. Allocate 8 GiB RAM and 4 virtual CPUs. Use KVM where available; software TCG is

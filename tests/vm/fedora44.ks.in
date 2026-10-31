@@ -17,7 +17,7 @@ autopart --type=btrfs
 reboot
 %pre
 mkdir -p /run/kde-live
-mount -o ro /dev/sr1 /run/kde-live
+mount -o ro -L Fedora-KDE-Live-44 /run/kde-live
 %end
 %post
 dnf5 -y install openssh-server
