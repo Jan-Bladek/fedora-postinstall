@@ -8,6 +8,8 @@ locally, so local tests used TCG with 4 virtual CPUs, 8 GiB RAM and virtio/virgl
 The guest booted from its own Btrfs virtual disk with kernel 6.19.10-300.fc44,
 SELinux **Enforcing** and NetworkManager active. A baseline qcow2 snapshot exists
 outside the repository. Existing host desktop configuration was not modified.
+After local checks the guest powered off normally; an additional offline qcow2
+snapshot `hyprland-noctalia-core-tested` records the tested desktop state.
 
 Both ISO checksums matched the Fedora 44 signed CHECKSUM files. Signatures were
 verified with key `36F612DCF27F7D1A48A835E4DBFCF71C6D9F90A6`.
@@ -82,9 +84,13 @@ The corrected KVM workflow is validated separately below.
 ## Static and native package checks
 
 - All Bash entrypoints passed `bash -n` and ShellCheck 0.11.0.
-- Eight Python safety/regression tests passed, including dry-run isolation, failed
+- The text selection fallback was exercised through a local PTY with whiptail
+  hidden; `EXIT` returned 0 before preflight or system changes. Explicit `--modules`
+  now bypasses the menu; whiptail output is normalized before module verification.
+  Full interactive checklist use on Fedora has not been validated.
+- Nine Python safety/regression tests passed, including dry-run isolation, failed
   transaction handling, repository validation with Python optimizations, preservation
-  of existing Rust toolchains and version/VM gating of the EGL workaround.
+  of existing Rust toolchains, rejection of an incorrect editor default with whitespace-separated module lists, and version/VM gating of the EGL workaround.
 - [Fedora container CI](https://github.com/Jan-Bladek/fedora-postinstall/actions/runs/41193533968)
   installed native dependencies, Noctalia and Polkit, created a Python venv with pip,
   compiled and ran C++ and Rust programs, and passed `dnf5 check`.
@@ -103,7 +109,25 @@ from the ISO conflicted with new `kf6-kmime`. Fedora's updated kmime package inc
 a [co-installability fix](https://packages.fedoraproject.org/pkgs/kmime/kmime/fedora-44-updates.html); the dependencies module now updates installed packages
 before adding software. A live `/etc` archive race is reported explicitly while
 retaining the archive; fatal archive errors still stop installation.
-The latest corrected run is pending. **Full application installation/repeat/reboot
+The next run passed the base update and installed OBS, confirming the kmime
+conflict fix, then exposed Flatpak refusing required runtimes without a TTY.
+Selected Flatpaks now use the official `--assumeyes --noninteractive` flags.
+A [focused Fedora 44 container test](https://github.com/Jan-Bladek/fedora-postinstall/actions/runs/41219147636)
+installed Vesktop, Steam, Obsidian and LocalSend with their runtimes through the real
+installer helper and repeated the already-installed path without a terminal.
+Its privileged container is an isolated hosted-runner fixture for bubblewrap;
+the installer does not change host container permissions.
+A focused MIME check also found the current official VSCodium RPM uses
+`com.visualstudio.CodeOSS.desktop` (Name=VSCodium), not `codium.desktop`.
+The RPM was inspected directly after checking its GitHub SHA256 digest. Defaults
+now resolve an entry owned by the installed `codium` RPM and use its actual
+vscodium URL handler. Verification now checks the editor and all four browser
+associations. The [complete application smoke test](https://github.com/Jan-Bladek/fedora-postinstall/actions/runs/41220447418)
+passed with all four Flatpaks plus Brave 1.98.63, LibreWolf 159.0, VSCodium
+1.143.17232 and Tailscale 1.104.4. It confirmed all browser MIME associations,
+`xdg-settings get default-web-browser`, the actual editor association and
+`dnf5 check`. The container did not test tailscaled as a systemd service.
+The latest corrected full VM run is pending. **Full application installation/repeat/reboot
 is not yet claimed as passed.**
 
 ## Not established by these results

@@ -10,8 +10,13 @@
 - Dodano ograniczone do Hyprland 0.57.0 w VM obejście regresji EGL/VirGL.
 - Zatrzymano rekurencyjne uruchamianie DrKonqi w sesji Hyprland,
   zachowując systemd-coredump i działanie w Plasma.
+- Naprawiono instalację Flatpak bez terminala, wraz z wymaganymi runtime’ami.
+- Dodano wymagany do dialogów Hyprland pakiet `hyprland-guiutils`.
 - Oddzielono manifesty weryfikacji kolejnych uruchomień; nieudana transakcja
   nie zatruwa następnej instalacji. Zachowano konfigurację użytkownika.
+- Poprawiono wybór modułów bez whiptail i obsługę jawnego `--modules`.
+- Dopasowano domyślny edytor do rzeczywistego wpisu desktop z RPM VSCodium
+  i rozszerzono kontrolę powiązań MIME.
 - Aktualizator archiwów producentów pomija aplikacje, których nie instalowano.
 - Dodano testy natywnych pakietów i kompilatorów Fedora oraz instalacji z
   podpisanych obrazów ISO w jednorazowej maszynie KVM.

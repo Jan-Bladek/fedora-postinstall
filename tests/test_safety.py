@@ -83,6 +83,25 @@ packages nonexistent-package
             self.assertEqual(r.returncode, 42)
             self.assertFalse((Path(run) / 'expected-rpm').exists())
 
+    def test_wrong_editor_default_is_rejected_for_whitespace_module_lists(self):
+        script = r"""
+source "$1/lib/core.sh"
+source "$1/lib/verify.sh"
+RUN=$2
+MODULES=$'terminal\tdefaults\nupdates'
+command() { [[ $* == '-v codium' ]]; }
+codium_desktop_id() { echo com.visualstudio.CodeOSS.desktop; }
+xdg-mime() { echo another-editor.desktop; }
+run() { echo UNEXPECTED_PACKAGE_CHECK; return 77; }
+verify
+"""
+        with tempfile.TemporaryDirectory() as run:
+            result = subprocess.run(['bash', '-eu', '-c', script, 'test', str(ROOT), run],
+                                    capture_output=True, text=True)
+            self.assertEqual(result.returncode, 1)
+            self.assertIn('VSCodium default verification failed', result.stderr)
+            self.assertNotIn('UNEXPECTED_PACKAGE_CHECK', result.stdout)
+
     def test_egl_workaround_is_limited_to_0570_virtual_machines(self):
         script = r"""
 source "$1/modules/hyprland.sh"
