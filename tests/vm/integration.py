@@ -118,7 +118,7 @@ def main():
         while proc.poll() is None:
             if serial.exists():
                 output = serial.read_text(errors='replace')
-                if 'An unknown error has occurred' in output or 'installation will be aborted' in output:
+                if any(marker in output for marker in ('An unknown error has occurred', 'An unknown error has occured', 'exception report', 'installation will be aborted')):
                     raise RuntimeError('Anaconda reported a fatal error; see anaconda-serial.log')
             if time.monotonic() > deadline:
                 raise TimeoutError('Anaconda did not finish within 20 minutes')
