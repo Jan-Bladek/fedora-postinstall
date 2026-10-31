@@ -19,8 +19,13 @@ jobs:
       - name: Prepare disposable runner
         run: |
           sudo apt-get update
-          sudo apt-get install -y qemu-system-x86 qemu-utils libarchive-tools acl
-          sudo setfacl -m "u:$USER:rw" /dev/kvm
+          sudo apt-get install -y qemu-system-x86 qemu-utils libarchive-tools
+          # Keep access across KVM device/udev events in this disposable runner.
+          printf 'KERNEL=="kvm", OWNER="%s", MODE="0600"\n' "$USER" | sudo tee /etc/udev/rules.d/99-fedora-vm-kvm.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+          sudo chown "$USER" /dev/kvm
+          sudo chmod 0600 /dev/kvm
           # Reclaim only the hosted runner's unused Android SDK for the VM disk.
           sudo rm -rf /usr/local/lib/android
           df -h "$RUNNER_TEMP"

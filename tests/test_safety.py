@@ -83,6 +83,23 @@ packages nonexistent-package
             self.assertEqual(r.returncode, 42)
             self.assertFalse((Path(run) / 'expected-rpm').exists())
 
+    def test_egl_workaround_is_limited_to_0570_virtual_machines(self):
+        script = r"""
+source "$1/modules/hyprland.sh"
+ROOT=$1
+RUN=$2
+log() { :; }
+systemd-detect-virt() { return "$VIRT_STATUS"; }
+prepare_hyprland_config "$TEST_VERSION"
+"""
+        for version, status, expected in [('0.57.0', '0', True), ('0.57.0', '1', False),
+                                          ('0.56.2', '0', False), ('0.57.1', '0', False)]:
+            with self.subTest(version=version, status=status), tempfile.TemporaryDirectory() as temp:
+                subprocess.run(['bash', '-eu', '-c', script, 'test', str(ROOT), temp], check=True,
+                               env=dict(os.environ, VIRT_STATUS=status, TEST_VERSION=version))
+                config = (Path(temp) / 'hyprland.lua').read_text()
+                self.assertEqual('skip_non_kms_dmabuf_formats = false' in config, expected)
+
     def test_invalid_module(self):
         r = subprocess.run(['bash', str(ROOT/'install.sh'), '--dry-run', '--modules', '../lib/core'], capture_output=True)
         self.assertNotEqual(r.returncode, 0)
