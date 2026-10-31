@@ -1,9 +1,15 @@
 #!/usr/bin/env bash
 module_hyprland() {
-    if ! dnf5 repoquery --available hyprland | grep -q hyprland; then
-        source "$ROOT/modules/repositories.sh"
-        log 'Native Hyprland unavailable. Noctalia docs list this community COPR; review required.'
-        vendor_repo hyprland-copr "https://copr.fedorainfracloud.org/coprs/lionheartp/Hyprland/repo/fedora-$VERSION_ID/lionheartp-Hyprland-fedora-$VERSION_ID.repo"
+    local available version
+    if ! rpm -q hyprland >/dev/null 2>&1; then
+        # Reuse the system package cache populated by the dependencies module.
+        # A failed query aborts; only a successful empty result offers COPR.
+        available=$(sudo dnf5 -q repoquery --available hyprland)
+        if [[ -z $available ]]; then
+            source "$ROOT/modules/repositories.sh"
+            log 'Native Hyprland unavailable. Noctalia docs list this community COPR; review required.'
+            vendor_repo hyprland-copr "https://copr.fedorainfracloud.org/coprs/lionheartp/Hyprland/repo/fedora-$VERSION_ID/lionheartp-Hyprland-fedora-$VERSION_ID.repo"
+        fi
     fi
     # No implicit allowerasing or distribution synchronization.
     packages hyprland xorg-x11-server-Xwayland xdg-desktop-portal-hyprland xdg-desktop-portal-gtk pipewire pipewire-pulseaudio wireplumber polkit-kde NetworkManager bluez sddm mesa-dri-drivers mesa-vulkan-drivers
