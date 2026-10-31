@@ -4,7 +4,13 @@ backup_state() {
     systemctl list-unit-files > "$RUN/units-before.txt"
     findmnt -no SOURCE,FSTYPE,OPTIONS / > "$RUN/filesystem.txt"
     tar -C "$HOME" --exclude='.config/BraveSoftware' --exclude='.config/discord' -czf "$RUN/user-config.tar.gz" .config
-    sudo tar -C / -czf "$RUN/etc.tar.gz" etc
+    local archive_status=0
+    sudo tar -C / -czf "$RUN/etc.tar.gz" etc || archive_status=$?
+    case $archive_status in
+        0) ;;
+        1) log 'Some /etc files changed during the live backup; archive retained. Use the snapshot for a consistent restore.' ;;
+        *) die "System configuration backup failed (tar exit $archive_status)." ;;
+    esac
     sudo chown "$(id -u):$(id -g)" "$RUN/etc.tar.gz"
     log "Recovery records: $RUN (may contain private data; never publish)"
 }
