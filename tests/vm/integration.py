@@ -134,6 +134,7 @@ def main():
             tar.add(ROOT, arcname='project', filter=lambda info: None if '/.git' in info.name else info)
         run(['scp', '-O', '-i', str(work / 'key'), '-P', '22244', '-o', f'UserKnownHostsFile={work}/known_hosts', str(archive), 'tester@127.0.0.1:project.tar.gz'])
         guest('set -eu\ntar -xzf project.tar.gz\ncd project\nbash install.sh --dry-run\n', 'dry-run.log')
+        guest('set -eu\ncd project\nrpm -qa | sort > /tmp/plasma-plan-before\nif bash scripts/plan-plasma-removal; then echo "Dependency plan passed"; else echo "Dependency plan blocked; no erase requested"; fi\nrpm -qa | sort > /tmp/plasma-plan-after\ndiff /tmp/plasma-plan-before /tmp/plasma-plan-after\n', 'plasma-plan.log')
         install = 'cd project\nset -o pipefail\nyes YES | bash install.sh --modules ' + shlex.quote(args.modules) + '\nrc=${PIPESTATUS[1]}\nexit "$rc"\n'
         guest(install, 'install.log')
         guest(install, 'repeat-install.log')

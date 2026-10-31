@@ -119,6 +119,25 @@ prepare_hyprland_config "$TEST_VERSION"
                 config = (Path(temp) / 'hyprland.lua').read_text()
                 self.assertEqual('skip_non_kms_dmabuf_formats = false' in config, expected)
 
+    def test_plasma_targets_keep_apps_and_fail_on_unreadable_rpm_database(self):
+        script = r"""
+source "$1/modules/kde-removal.sh"
+rpm() {
+    if [[ $RPM_FAILURE == 1 ]]; then return 42; fi
+    printf '%s\n' plasma-desktop plasma-workspace kwin dolphin kate qt6-qtbase NetworkManager
+}
+plasma_removal_targets
+"""
+        for failure in ('0', '1'):
+            result = subprocess.run(['bash', '-eu', '-c', script, 'test', str(ROOT)],
+                                    env=dict(os.environ, RPM_FAILURE=failure), capture_output=True, text=True)
+            if failure == '1':
+                self.assertEqual(result.returncode, 42)
+                self.assertEqual(result.stdout, '')
+            else:
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertEqual(set(result.stdout.splitlines()), {'plasma-desktop', 'plasma-workspace', 'kwin'})
+
     def test_invalid_module(self):
         r = subprocess.run(['bash', str(ROOT/'install.sh'), '--dry-run', '--modules', '../lib/core'], capture_output=True)
         self.assertNotEqual(r.returncode, 0)
