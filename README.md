@@ -1,6 +1,6 @@
 # Fedora Post-Install · Hyprland + Noctalia
 
-Modułowy instalator Bash dla istniejącej **Fedory 44 x86_64 (DNF5, wariant klasyczny, także KDE Desktop)**. To projekt do walidacji w maszynie wirtualnej przed użyciem na głównym komputerze. Nie jest nową dystrybucją. Fedora Atomic, starsze/nowsze wydania i ARM są świadomie blokowane. Główne moduły i sesja Hyprland + Noctalia zostały uruchomione w VM Fedora KDE 44. Zakres wyników oraz pozostałe ograniczenia opisuje [TESTING.md](TESTING.md); nie jest to deklaracja zgodności z każdym sprzętem.
+Modułowy instalator Bash dla istniejącej **Fedory 44 x86_64 (DNF5, wariant klasyczny, także KDE Desktop)**. To projekt do walidacji w maszynie wirtualnej przed użyciem na głównym komputerze. Nie jest nową dystrybucją. Fedora Atomic, starsze/nowsze wydania i ARM są świadomie blokowane. Pełna instalacja domyślnych modułów, drugi przebieg i restart przeszły test VM Fedora KDE 44; osobno uruchomiono sesję Hyprland + Noctalia w lokalnej VM. Zakres wyników oraz pozostałe ograniczenia opisuje [TESTING.md](TESTING.md); nie jest to deklaracja zgodności z każdym sprzętem.
 
 Wymagania: konto użytkownika z sudo, SELinux Enforcing, internet, Wayland-capable GPU; praktycznie 8 GB RAM i co najmniej 30 GB wolnego miejsca dla IDE i kopii. Zalecane 16 GB RAM dla pracy z JetBrains/OBS. Dane prywatne i katalog domowy wymagają niezależnej kopii zapasowej.
 

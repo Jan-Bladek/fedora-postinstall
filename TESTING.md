@@ -1,5 +1,10 @@
 # Validation record — 2026-10-31
 
+**Full Fedora KDE 44 CLI installation, repeat and reboot passed** in
+[the final KVM run](https://github.com/Jan-Bladek/fedora-postinstall/actions/runs/41220450322).
+The separate local VM demonstrated Noctalia/Kitty GUI and lock/unlock; graphical
+suspend/resume failed in its TCG/VirGL setup. Positive Plasma removal is untested.
+
 ## Actual Fedora KDE VM
 
 A separate QEMU VM was created from the Fedora 44 KDE Live filesystem, using the
@@ -25,7 +30,7 @@ completed manually (test account, SSH and sudo), without recopying the system.
 This is a fixture correction, not evidence that unattended provisioning passed.
 The corrected KVM workflow is validated separately below.
 
-## Passed in the local guest
+## Local guest results
 
 - Real `install.sh` run with `dependencies hyprland noctalia terminal defaults updates`:
   **exit 0**, including the final `sudo dnf5 check`.
@@ -54,8 +59,8 @@ The corrected KVM workflow is validated separately below.
   this does not test the installer's preservation of Plasma Login Manager.
 - The compositor warned that `hyprland-guiutils` was absent. Version 0.2.2-2.fc44
   installed successfully from the existing lionheartp COPR in the local guest;
-  this runtime dependency is now included in the desktop module. This addition
-  was tested locally, separately from the already running full KVM job.
+  this runtime dependency is included in the desktop module and in both
+  subsequent successful full KVM passes.
 - A terminal-module rerun retained a deliberately modified Kitty config unchanged
   (matching SHA256), wrote a proposed `.fedora-postinstall-new`, and exited 0,
   including `dnf5 check`. This also exercised the corrected live-backup handling.
@@ -87,6 +92,7 @@ The corrected KVM workflow is validated separately below.
 - The text selection fallback was exercised through a local PTY with whiptail
   hidden; `EXIT` returned 0 before preflight or system changes. Explicit `--modules`
   now bypasses the menu; whiptail output is normalized before module verification.
+  Whiptail rendered at 80×24 and 100×32 in local PTYs; Cancel returned 0.
   Full interactive checklist use on Fedora has not been validated.
 - Nine Python safety/regression tests passed, including dry-run isolation, failed
   transaction handling, repository validation with Python optimizations, preservation
@@ -98,37 +104,49 @@ The corrected KVM workflow is validated separately below.
 
 ## Full KVM integration
 
-The manual `Fedora KDE VM integration` workflow downloads and verifies both ISO
-images, provisions a new KDE guest, installs selected modules twice, checks modified
-config preservation, rejects unvalidated Plasma removal and checks a reboot.
-Earlier runs failed in the test fixture (media selection, login-manager choice,
-password hash and transient runner KVM permissions), before application testing.
-One full run reached the development and browser modules successfully, including
-all three JetBrains archives and Arduino, then failed installing OBS: old `kmime`
-from the ISO conflicted with new `kf6-kmime`. Fedora's updated kmime package includes
-a [co-installability fix](https://packages.fedoraproject.org/pkgs/kmime/kmime/fedora-44-updates.html); the dependencies module now updates installed packages
-before adding software. A live `/etc` archive race is reported explicitly while
-retaining the archive; fatal archive errors still stop installation.
-The next run passed the base update and installed OBS, confirming the kmime
-conflict fix, then exposed Flatpak refusing required runtimes without a TTY.
-Selected Flatpaks now use the official `--assumeyes --noninteractive` flags.
-A [focused Fedora 44 container test](https://github.com/Jan-Bladek/fedora-postinstall/actions/runs/41219147636)
-installed Vesktop, Steam, Obsidian and LocalSend with their runtimes through the real
-installer helper and repeated the already-installed path without a terminal.
-Its privileged container is an isolated hosted-runner fixture for bubblewrap;
-the installer does not change host container permissions.
-A focused MIME check also found the current official VSCodium RPM uses
-`com.visualstudio.CodeOSS.desktop` (Name=VSCodium), not `codium.desktop`.
-The RPM was inspected directly after checking its GitHub SHA256 digest. Defaults
-now resolve an entry owned by the installed `codium` RPM and use its actual
-vscodium URL handler. Verification now checks the editor and all four browser
-associations. The [complete application smoke test](https://github.com/Jan-Bladek/fedora-postinstall/actions/runs/41220447418)
-passed with all four Flatpaks plus Brave 1.98.63, LibreWolf 159.0, VSCodium
-1.143.17232 and Tailscale 1.104.4. It confirmed all browser MIME associations,
-`xdg-settings get default-web-browser`, the actual editor association and
-`dnf5 check`. The container did not test tailscaled as a systemd service.
-The latest corrected full VM run is pending. **Full application installation/repeat/reboot
-is not yet claimed as passed.**
+[Final run 41220450322](https://github.com/Jan-Bladek/fedora-postinstall/actions/runs/41220450322)
+**passed** at runtime-code commit `e634617`, including the final VSCodium MIME fix.
+[Result JSON](tests/vm/evidence/fedora44-kvm-result.json) records the module list,
+ISO hashes and the explicit SSH-only graphical-session limitation.
+
+- Download and signature/SHA256 verification of both official ISO images.
+- Unattended provisioning of the stock KDE Live filesystem to a Btrfs virtual disk.
+- All 12 default modules installed and installed again successfully.
+- Python venv/pip, compiled-and-executed C++ and Rust smoke programs.
+- Hyprland's own parser accepted the generated Lua configuration.
+- A deliberately changed Kitty config retained its exact SHA256; a proposed new
+  configuration was written alongside it.
+- Removal outside a validated Hyprland session failed, leaving RPM lists unchanged.
+- Reboot from the guest disk succeeded, followed by `dnf5 check`.
+- SELinux remained Enforcing; NetworkManager and tailscaled were active without
+  any Tailscale account login. Bluetooth runtime was skipped: no adapter in this VM.
+
+After reboot: kernel 7.2.13-200.fc44, Hyprland 0.57.0, Noctalia 5.4.0,
+Kitty 0.49.2, Polkit KDE 6.7.5 and Plasma Desktop 6.7.5. Plasma was retained.
+An [earlier full pass](https://github.com/Jan-Bladek/fedora-postinstall/actions/runs/41218983387)
+verified the same installation/repeat/reboot path before the final editor MIME fix.
+The KVM fixture did not start a graphical session; GUI evidence is from the local VM.
+
+The [application smoke test](https://github.com/Jan-Bladek/fedora-postinstall/actions/runs/41220447418)
+also passed in a disposable Fedora 44 container: Vesktop, Steam, Obsidian and LocalSend
+with their runtimes, plus Brave 1.98.63, LibreWolf 159.0, VSCodium 1.143.17232
+and Tailscale 1.104.4. It read back all four browser MIME associations,
+`xdg-settings get default-web-browser`, the RPM-owned VSCodium desktop association
+and passed `dnf5 check`. Its privileged container is a hosted-runner fixture for
+bubblewrap; the installer does not change host container permissions. This container
+test did not claim a running systemd tailscaled service.
+
+Earlier fixture failures (media selection, login manager, password hash, KVM device
+permissions and an absent test-account config directory) were corrected. Runtime
+tests additionally exposed old `kmime` conflicting with `kf6-kmime`, Flatpak declining
+runtime installation without a TTY, and VSCodium's changed desktop ID. The fixes are:
+base-package upgrade before application installation, explicit noninteractive Flatpak
+flags, and selection/verification of a desktop file owned by the installed codium RPM.
+Fedora's updated kmime contains the
+[co-installability fix](https://packages.fedoraproject.org/pkgs/kmime/kmime/fedora-44-updates.html).
+A live `/etc` archive race is logged while retaining the archive; fatal tar failures
+still abort installation. Raw cores, VM disks, keys and private backup archives are
+not published.
 
 ## Not established by these results
 
