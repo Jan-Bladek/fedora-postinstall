@@ -21,7 +21,7 @@ Wybór modułów bez TUI:
 bash install.sh --modules "snapshots dependencies hyprland noctalia terminal updates"
 ```
 
-Zachowaj kolejność powyżej. Moduły aplikacji potrzebują dostępu do sieci i curl/python3. Domyślna pełna lista instaluje dependencies jako pierwsze po snapshotach. Każdy przebieg tworzy nowy katalog logów; po błędzie napraw przyczynę i uruchom ponownie. Nie ma automatycznego pomijania modułu tylko dlatego, że poprzednio zapisano go w logu.
+Zachowaj kolejność powyżej. Moduły aplikacji potrzebują dostępu do sieci i curl/python3. Domyślna pełna lista instaluje dependencies jako pierwsze po snapshotach. Każdy przebieg tworzy nowy katalog logów i własną listę oczekiwanych pakietów zapisywaną po udanych transakcjach; po błędzie napraw przyczynę i uruchom ponownie. Nie ma automatycznego pomijania modułu tylko dlatego, że poprzednio zapisano go w logu.
 
 ## Moduły i źródła
 
@@ -123,3 +123,15 @@ stable z komponentami domyślnymi oraz rust-src, zachowując domyślny toolchain
 użytkownika. Nie miesza pakietów Rust z rustup. `fedora-update` aktualizuje
 pakiety przez DNF i istniejące toolchainy rustup przez `rustup update` jako użytkownik.
 Źródło: [Fedora Developer Portal — Rust](https://developer.fedoraproject.org/tech/languages/rust/rust-installation.html).
+
+## Aktualizacja po błędzie polkit-gnome
+
+Wersja 0.2.0 zastępuje niedostępny `polkit-gnome` natywnym `polkit-kde`,
+przestarzałe pakiety p7zip pakietem 7zip i używa nazwy RPM wget2-wget.
+Po `git pull` uruchom instalator ponownie. Stare, nieudane wpisy oczekiwanych
+pakietów nie są już odczytywane przy weryfikacji nowego przebiegu.
+Jeżeli masz wcześniejszą konfigurację Hyprland, sprawdź proponowany plik
+`~/.config/hypr/hyprland.lua.fedora-postinstall-new` i zastąp w swojej konfiguracji
+polecenie agenta Polkit ścieżką `/usr/libexec/kf6/polkit-kde-authentication-agent-1`.
+Nie uruchamiaj równocześnie dwóch agentów. Wersję sprawdzisz przez
+`bash install.sh --version`.

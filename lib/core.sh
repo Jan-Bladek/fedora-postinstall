@@ -34,10 +34,11 @@ init_state() {
 packages() {
     local p; local missing=()
     for p in "$@"; do
-        printf '%s\n' "$p" >> "$STATE/expected-rpm"
         if ! rpm -q "$p" >/dev/null 2>&1; then missing+=("$p"); fi
     done
-    if ((${#missing[@]})); then run sudo dnf5 install "${missing[@]}"; fi
+    if ((${#missing[@]})); then run sudo dnf5 install "${missing[@]}" || return; fi
+    for p in "$@"; do rpm -q "$p" >/dev/null || die "Requested RPM was not installed: $p"; done
+    printf '%s\n' "$@" >> "$RUN/expected-rpm"
 }
 config_file() {
     local src=$1 dst=$2
@@ -56,5 +57,5 @@ flatpak_app() {
         run flatpak remote-add --user flathub https://flathub.org/repo/flathub.flatpakrepo
     fi
     if ! flatpak info --user "$id" >/dev/null 2>&1; then run flatpak install --user flathub "$id"; fi
-    printf '%s\n' "$id" >> "$STATE/expected-flatpak"
+    printf '%s\n' "$id" >> "$RUN/expected-flatpak"
 }

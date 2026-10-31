@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 verify() {
     local p
-    if [[ -f $STATE/expected-rpm ]]; then
-        while IFS= read -r p; do rpm -q "$p" >/dev/null || die "Missing RPM: $p"; done < "$STATE/expected-rpm"
+    if [[ -f $RUN/expected-rpm ]]; then
+        while IFS= read -r p; do rpm -q "$p" >/dev/null || die "Missing RPM: $p"; done < "$RUN/expected-rpm"
     fi
-    if [[ -f $STATE/expected-flatpak ]]; then
-        while IFS= read -r p; do flatpak info --user "$p" >/dev/null || die "Missing Flatpak: $p"; done < "$STATE/expected-flatpak"
+    if [[ -f $RUN/expected-flatpak ]]; then
+        while IFS= read -r p; do flatpak info --user "$p" >/dev/null || die "Missing Flatpak: $p"; done < "$RUN/expected-flatpak"
     fi
     if command -v tailscale >/dev/null; then systemctl is-active tailscaled; fi
     if command -v brave-browser >/dev/null && [[ " $MODULES " == *' defaults '* ]]; then

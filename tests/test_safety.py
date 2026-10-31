@@ -69,6 +69,20 @@ runpy.run_path(str(Path.cwd() / 'scripts/vendor-apps.py'), run_name='__main__')
             subprocess.run(['python3', '-c', script, home], cwd=ROOT, check=True,
                            capture_output=True, text=True)
 
+    def test_failed_transaction_does_not_poison_verification(self):
+        script = r"""
+source "$1/lib/core.sh"
+RUN=$2
+rpm() { return 1; }
+run() { return 42; }
+packages nonexistent-package
+"""
+        with tempfile.TemporaryDirectory() as run:
+            r = subprocess.run(['bash', '-eu', '-c', script, 'test', str(ROOT), run],
+                               capture_output=True, text=True)
+            self.assertEqual(r.returncode, 42)
+            self.assertFalse((Path(run) / 'expected-rpm').exists())
+
     def test_invalid_module(self):
         r = subprocess.run(['bash', str(ROOT/'install.sh'), '--dry-run', '--modules', '../lib/core'], capture_output=True)
         self.assertNotEqual(r.returncode, 0)
