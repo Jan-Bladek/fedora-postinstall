@@ -10,6 +10,9 @@ source "$ROOT/modules/browsers.sh"
 source "$ROOT/modules/defaults.sh"
 RUN=$(mktemp -d)
 trap 'rm -rf -- "$RUN"' EXIT
+# Match install.sh's init_state: a fresh container account has no .config yet.
+CONFIG=${XDG_CONFIG_HOME:-$HOME/.config}
+mkdir -p "$CONFIG"
 module_browsers
 vendor_repo vscodium https://repo.vscodium.dev/vscodium.repo
 packages codium
