@@ -1,0 +1,35 @@
+name: Fedora KDE VM integration
+on:
+  workflow_dispatch:
+    inputs:
+      modules:
+        description: Modules to install and repeat in a disposable Fedora KDE VM
+        default: snapshots dependencies hyprland noctalia terminal development browsers multimedia utilities defaults optimization updates
+        required: true
+permissions:
+  contents: read
+jobs:
+  vm:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Prepare disposable runner
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y qemu-system-x86 qemu-utils libarchive-tools acl
+          sudo setfacl -m "u:$USER:rw" /dev/kvm
+          # Reclaim only the hosted runner's unused Android SDK for the VM disk.
+          sudo rm -rf /usr/local/lib/android
+          df -h "$RUNNER_TEMP"
+      - name: Install Fedora KDE from verified ISO and test selected modules
+        env:
+          TEST_MODULES: ${{ inputs.modules }}
+        run: python3 tests/vm/integration.py --work-dir "$RUNNER_TEMP/fedora-vm" --modules "$TEST_MODULES"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: fedora-kde-vm-report
+          path: ${{ runner.temp }}/fedora-vm/reports/
