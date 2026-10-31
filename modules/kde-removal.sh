@@ -1,13 +1,20 @@
 #!/usr/bin/env bash
+plasma_removal_targets() {
+    local p installed
+    installed=$(rpm -qa --qf '%{NAME}\n') || return
+    for p in plasma-desktop plasma-workspace plasma-workspace-x11 plasma-workspace-wayland kwin kwin-wayland kwin-x11 plasma-systemmonitor plasma-discover plasma-welcome plasma-pa plasma-nm plasma-bluedevil kdeplasma-addons; do
+        if grep -Fxq "$p" <<< "$installed"; then printf '%s\n' "$p"; fi
+    done
+}
+
 module_kde_removal() {
     [[ -n ${HYPRLAND_INSTANCE_SIGNATURE:-} ]] || die 'Run removal from a working Hyprland session.'
     "$ROOT/scripts/validate-session"
-    local p; local targets=()
+    local p selection; local targets=()
     # Exact allowlist; rpm refuses removal if ANY retained package requires a target.
-    for p in plasma-desktop plasma-workspace plasma-workspace-x11 plasma-workspace-wayland kwin kwin-wayland kwin-x11 plasma-systemmonitor plasma-discover plasma-welcome plasma-pa plasma-nm plasma-bluedevil kdeplasma-addons; do
-        if rpm -q "$p" >/dev/null 2>&1; then targets+=("$p"); fi
-    done
-    ((${#targets[@]})) || { log 'No allowlisted Plasma packages installed.'; return; }
+    selection=$(plasma_removal_targets) || die 'Cannot read the installed RPM database.'
+    [[ -n $selection ]] || { log 'No allowlisted Plasma packages installed.'; return; }
+    mapfile -t targets <<< "$selection"
     rpm -qa --qf '%{NAME}\n' | sort -u > "$RUN/preserved-before.txt"
     printf '%s\n' "${targets[@]}" | tee "$RUN/plasma-targets.txt"
     packages dnf5-plugins

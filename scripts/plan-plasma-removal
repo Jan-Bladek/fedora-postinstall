@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+# Inspect the same exact target list as the removal module, without erasing RPMs.
+set -Eeuo pipefail
+ROOT=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
+source /etc/os-release
+[[ $ID == fedora && $VERSION_ID == 44 ]] || { echo 'Supported target: Fedora 44.' >&2; exit 1; }
+source "$ROOT/lib/core.sh"
+source "$ROOT/modules/kde-removal.sh"
+selection=$(plasma_removal_targets) || die 'Cannot read the installed RPM database.'
+[[ -n $selection ]] || { echo 'No allowlisted Plasma packages installed.'; exit 0; }
+mapfile -t targets <<< "$selection"
+echo 'Read-only Plasma dependency plan; these exact installed RPMs are candidates:'
+rpm -q --qf '%{NEVRA}\n' "${targets[@]}"
+echo 'Retained-package dependencies are checked below. A conflict blocks removal.'
+if ((EUID == 0)); then
+    run rpm -e --test "${targets[@]}"
+else
+    run sudo rpm -e --test "${targets[@]}"
+fi
+echo 'Dependency test passed. Removal still requires scripts/validate-session and a separate confirmation.'

@@ -1,13 +1,41 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
+check_only=0
+case ${1:-} in
+    '') ;;
+    --check-only) check_only=1 ;;
+    *) echo 'Usage: validate-session [--check-only]' >&2; exit 2 ;;
+esac
+(( $# <= 1 )) || { echo 'Too many arguments.' >&2; exit 2; }
 [[ -n ${HYPRLAND_INSTANCE_SIGNATURE:-} ]] || { echo 'Not in Hyprland.' >&2; exit 1; }
-hyprctl -j monitors | python3 -c 'import json,sys; assert json.load(sys.stdin), "No monitors"'
-errors=$(hyprctl configerrors)
+socket_path=${WAYLAND_DISPLAY:-}
+if [[ $socket_path != /* ]]; then socket_path=${XDG_RUNTIME_DIR:-}/$socket_path; fi
+[[ -n ${WAYLAND_DISPLAY:-} && -n ${XDG_RUNTIME_DIR:-} && -S $socket_path ]] || {
+    echo 'No Wayland socket for the current session.' >&2; exit 1;
+}
+timeout 10 hyprctl -j monitors | python3 -c '
+import json, sys
+monitors = json.load(sys.stdin)
+if not isinstance(monitors, list) or not any(
+    isinstance(m, dict) and not m.get("disabled", False)
+    and m.get("width", 0) > 0 and m.get("height", 0) > 0
+    and m.get("dpmsStatus", True) for m in monitors
+):
+    sys.exit("No active monitor")
+'
+errors=$(timeout 10 hyprctl configerrors)
 [[ -z $errors || $errors == 'ok' ]] || { echo "$errors" >&2; exit 1; }
 pgrep -u "$(id -u)" -x noctalia >/dev/null
+# A process can exist while blocked in the GPU driver. Require an IPC reply too;
+# keep session status (potentially including private window titles) out of logs.
+timeout 10 noctalia msg status >/dev/null
 systemctl --user is-active pipewire wireplumber xdg-desktop-portal-hyprland
 systemctl is-active NetworkManager display-manager
 command -v kitty >/dev/null
+if ((check_only)); then
+    echo 'Automatic checks passed. Manual session acceptance is still required before Plasma removal.'
+    exit 0
+fi
 read -r -p 'Did launcher, lock/unlock, suspend/resume, audio, monitors and OBS screenshare all work? Type YES: ' answer
 [[ $answer == YES ]] || exit 1
 echo 'Runtime checks and manual session acceptance passed.'
