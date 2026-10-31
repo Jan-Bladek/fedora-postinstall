@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
 module_dependencies() {
-    packages bash git curl wget tar unzip zip xz bzip2 p7zip p7zip-plugins jq pciutils usbutils iproute bind-utils traceroute lsof strace btop wl-clipboard xdg-utils util-linux newt python3
+    packages bash git curl wget2-wget tar unzip zip xz bzip2 7zip jq pciutils usbutils iproute bind-utils traceroute lsof strace btop wl-clipboard xdg-utils util-linux newt python3
 }

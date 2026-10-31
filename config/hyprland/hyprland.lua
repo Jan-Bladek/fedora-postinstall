@@ -7,7 +7,7 @@ hl.config({
 hl.on("hyprland.start", function()
     hl.exec_cmd("dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP HYPRLAND_INSTANCE_SIGNATURE")
     hl.exec_cmd("noctalia")
-    hl.exec_cmd("/usr/libexec/polkit-gnome-authentication-agent-1")
+    hl.exec_cmd("/usr/libexec/kf6/polkit-kde-authentication-agent-1")
 end)
 hl.bind("SUPER+Return", hl.dsp.exec_cmd("kitty"))
 hl.bind("SUPER+B", hl.dsp.exec_cmd("brave-browser"))

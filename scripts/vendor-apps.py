@@ -112,5 +112,7 @@ if __name__ == '__main__':
     for name, code, launcher in [('rustrover', 'RR', 'bin/rustrover.sh'),
                                   ('intellij-idea', 'IIU', 'bin/idea.sh'),
                                   ('webstorm', 'WS', 'bin/webstorm.sh')]:
-        install(name, jetbrains(code), launcher)
-    install('arduino-ide', arduino(), 'arduino-ide')
+        if sys.argv[1] == 'install' or (BASE / name / 'current').is_symlink():
+            install(name, jetbrains(code), launcher)
+    if sys.argv[1] == 'install' or (BASE / 'arduino-ide' / 'current').is_symlink():
+        install('arduino-ide', arduino(), 'arduino-ide')

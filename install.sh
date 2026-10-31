@@ -7,6 +7,7 @@ DRY_RUN=0
 MODULES='snapshots dependencies hyprland noctalia terminal development browsers multimedia utilities defaults optimization updates'
 while (($#)); do
     case $1 in
+        --version) cat "$ROOT/VERSION"; exit 0 ;;
         --dry-run) DRY_RUN=1 ;;
         --modules) shift; MODULES=${1:?Missing module list} ;;
         --help) echo 'install.sh [--dry-run] [--modules "snapshots dependencies hyprland noctalia terminal development browsers multimedia utilities defaults optimization updates kde-removal"]'; exit 0 ;;
@@ -26,7 +27,10 @@ fi
 preflight
 if ((DRY_RUN)); then
     echo "PLAN Fedora 44 x86_64, modules: $MODULES"
-    for module in $MODULES; do cat "$ROOT/plans/$module.txt"; done
+    for module in $MODULES; do
+        printf '\n[%s] Planned module (not executed):\n' "$module"
+        cat "$ROOT/modules/$module.sh"
+    done
     exit 0
 fi
 init_state

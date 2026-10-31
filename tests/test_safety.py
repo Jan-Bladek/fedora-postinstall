@@ -47,6 +47,28 @@ install_language_tools
                 self.assertIn('PACKAGES rust cargo clippy rustfmt rust-src', r.stdout)
                 self.assertNotIn('RUN rustup', r.stdout)
 
+    def test_update_does_not_install_unselected_vendor_apps(self):
+        with tempfile.TemporaryDirectory() as home:
+            script = r"""
+import runpy
+import sys
+import urllib.request
+from pathlib import Path
+
+def forbidden(*args, **kwargs):
+    raise AssertionError('Update must not fetch unselected applications')
+urllib.request.urlopen = forbidden
+# The test runner may be root in CI/container environments; simulate a desktop user.
+import os
+os.geteuid = lambda: 1000
+home = Path(sys.argv[1])
+Path.home = classmethod(lambda cls: home)
+sys.argv = ['vendor-apps.py', 'update']
+runpy.run_path(str(Path.cwd() / 'scripts/vendor-apps.py'), run_name='__main__')
+"""
+            subprocess.run(['python3', '-c', script, home], cwd=ROOT, check=True,
+                           capture_output=True, text=True)
+
     def test_invalid_module(self):
         r = subprocess.run(['bash', str(ROOT/'install.sh'), '--dry-run', '--modules', '../lib/core'], capture_output=True)
         self.assertNotEqual(r.returncode, 0)
