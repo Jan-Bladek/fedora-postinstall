@@ -25,6 +25,6 @@ module_kde_removal() {
     while IFS= read -r p; do
         if ! grep -Fxq "$p" "$RUN/plasma-targets.txt"; then rpm -q "$p" >/dev/null || die "Retained package missing: $p"; fi
     done < "$RUN/preserved-before.txt"
-    log "Recovery from TTY: sudo dnf5 install $RUN/plasma-rpms/*.rpm; sudo systemctl restart sddm"
+    log "Recovery from TTY: sudo dnf5 install $RUN/plasma-rpms/*.rpm; sudo systemctl restart display-manager.service"
     log 'Plasma-owned autostart entries removed with their RPMs. Custom user autostarts retained for manual review.'
 }

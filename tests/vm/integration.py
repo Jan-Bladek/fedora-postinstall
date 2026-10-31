@@ -80,8 +80,18 @@ def main():
     ssh = ['ssh', '-i', str(work / 'key'), '-p', '22244', '-o', 'BatchMode=yes', '-o', 'ConnectTimeout=5',
            '-o', 'StrictHostKeyChecking=accept-new', '-o', f'UserKnownHostsFile={work}/known_hosts', 'tester@127.0.0.1']
     def guest(script, log, check=True):
-        result = subprocess.run(ssh + ['bash -s'], input=script, text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-        (reports / log).write_text(result.stdout)
+        command = ssh + ['bash -s']
+        with (reports / log).open('w') as output:
+            child = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                                     stderr=subprocess.STDOUT, text=True)
+            child.stdin.write(script)
+            child.stdin.close()
+            for line in child.stdout:
+                output.write(line)
+                output.flush()
+                if 'MODULE ' in line or 'ERROR:' in line or 'Finished.' in line:
+                    print(line.rstrip(), flush=True)
+            result = subprocess.CompletedProcess(command, child.wait(), (reports / log).read_text())
         print(result.stdout[-3500:], flush=True)
         if check and result.returncode:
             raise RuntimeError(f'Guest failed ({result.returncode}); see {log}')
@@ -103,13 +113,22 @@ def main():
             '-kernel', str(work / 'images/pxeboot/vmlinuz'), '-initrd', str(work / 'images/pxeboot/initrd.img'),
             '-append', 'inst.stage2=hd:LABEL=Fedora-E-dvd-x86_64-44 inst.ks=http://10.0.2.2:8844/ks.cfg inst.text console=ttyS0,115200n8',
             '-serial', f'file:{reports}/anaconda-serial.log'], stdout=qemu_log, stderr=qemu_log)
-        proc.wait(timeout=1200)
+        deadline = time.monotonic() + 1200
+        serial = reports / 'anaconda-serial.log'
+        while proc.poll() is None:
+            if serial.exists():
+                output = serial.read_text(errors='replace')
+                if 'An unknown error has occurred' in output or 'installation will be aborted' in output:
+                    raise RuntimeError('Anaconda reported a fatal error; see anaconda-serial.log')
+            if time.monotonic() > deadline:
+                raise TimeoutError('Anaconda did not finish within 20 minutes')
+            time.sleep(5)
         if proc.returncode != 0:
             raise RuntimeError('QEMU installation failed')
         run(['qemu-img', 'snapshot', '-c', 'fedora-kde-baseline', str(work / 'guest.qcow2')])
         proc = boot_guest('boot.log')
         wait_ssh()
-        guest('set -eu\ncat /etc/os-release\ngetenforce\nrpm -q plasma-desktop plasma-workspace polkit-kde\n', 'baseline.log')
+        guest('set -eu\nsudo -n -v\ncat /etc/os-release\ngetenforce\nrpm -q plasma-desktop plasma-workspace polkit-kde\n', 'baseline.log')
         archive = work / 'project.tar.gz'
         with tarfile.open(archive, 'w:gz') as tar:
             tar.add(ROOT, arcname='project', filter=lambda info: None if '/.git' in info.name else info)

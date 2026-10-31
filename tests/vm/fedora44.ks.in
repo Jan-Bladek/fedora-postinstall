@@ -15,13 +15,15 @@ zerombr
 clearpart --all --initlabel --drives=vda
 autopart --type=btrfs
 reboot
-%pre
+%pre --erroronfail
+set -eu
 mkdir -p /run/kde-live
 mount -o ro -L Fedora-KDE-Live-44 /run/kde-live
 %end
-%post
-dnf5 -y install openssh-server
-printf 'tester ALL=(ALL) NOPASSWD: ALL\n' > /etc/sudoers.d/90-vm-test
+%post --erroronfail
+set -eu
+rpm -q openssh-server
+printf 'tester ALL=(ALL) NOPASSWD: ALL\nDefaults:tester verifypw=never\n' > /etc/sudoers.d/90-vm-test
 chmod 440 /etc/sudoers.d/90-vm-test
 systemctl set-default multi-user.target
 %end
