@@ -56,6 +56,10 @@ flatpak_app() {
     if ! flatpak remote-list --user --columns=name | grep -Fxq flathub; then
         run flatpak remote-add --user flathub https://flathub.org/repo/flathub.flatpakrepo
     fi
-    if ! flatpak info --user "$id" >/dev/null 2>&1; then run flatpak install --user flathub "$id"; fi
+    if ! flatpak info --user "$id" >/dev/null 2>&1; then
+        # Flatpak does not accept piped confirmation reliably without a TTY.
+        # The selected application module authorizes its required runtime too.
+        run flatpak install --user --assumeyes --noninteractive flathub "$id"
+    fi
     printf '%s\n' "$id" >> "$RUN/expected-flatpak"
 }
