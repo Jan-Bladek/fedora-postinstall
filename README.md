@@ -13,7 +13,7 @@ bash install.sh --dry-run
 bash install.sh
 ```
 
-Nie uruchamiaj całego instalatora przez sudo. Jeżeli dostępny jest `whiptail`, pojawia się checklist TUI; bez niego używana jest domyślna lista modułów. Repozytoria i destrukcyjny etap zawsze wymagają osobnych potwierdzeń. `--dry-run` działa również poza Fedorą, drukuje pełne moduły i nie wywołuje menedżerów pakietów, sudo ani pobierania. Nie rozwiązuje zależności bez metadanych systemu docelowego.
+Nie uruchamiaj całego instalatora przez sudo. Jeżeli dostępny jest `whiptail`, pojawia się checklist TUI; bez niego terminal pokazuje wybór modułów po nazwach i pozwala zakończyć przez `EXIT`. Przy wejściu bez terminala używana jest podana lub domyślna lista modułów. Repozytoria i destrukcyjny etap zawsze wymagają osobnych potwierdzeń. `--dry-run` działa również poza Fedorą, drukuje pełne moduły i nie wywołuje menedżerów pakietów, sudo ani pobierania. Nie rozwiązuje zależności bez metadanych systemu docelowego.
 
 Wybór modułów bez TUI:
 
@@ -87,7 +87,7 @@ Restart display managera kończy bieżące sesje. Kopię konfiguracji rozpakuj n
 
 `journalctl --user -b`, `journalctl -b -u sddm`, `hyprctl configerrors`, `systemctl --user status pipewire wireplumber xdg-desktop-portal-hyprland`, `sudo dnf5 check`. Z Noctalia korzystaj z natywnego screenshot UI; w OBS wybierz PipeWire. Zgoda portalu jest interaktywna. Akceleracja OBS/kodeki/NVIDIA zależą od GPU i dostępności sterowników; instalator nie obiecuje NVENC/VAAPI bez testu. LocalSend potrzebuje zgody firewall na właściwej zaufanej sieci; nie otwieramy portów globalnie. Tailscale uruchamia się bez `tailscale up` i bez konta.
 
-TUI wymaga wcześniej dostępnego newt/whiptail, w przeciwnym razie wybierz moduły argumentem. Wyniki testów VM są w [TESTING.md](TESTING.md). Brakuje automatycznego przywracania pełnego stanu i potwierdzonego wsparcia Hyprmod. Osobnej walidacji wymagają błędy sieci, przerwanie instalacji, rollback RPM oraz sprzętowe testy GPU, lock/suspend i screenshare. Instalator zatrzymuje się przy błędach zamiast deklarować sukces.
+Checklist TUI wymaga newt/whiptail; bez niego działa tekstowy wybór modułów. Argument `--modules` pomija obydwa interfejsy. Wyniki testów VM są w [TESTING.md](TESTING.md). Brakuje automatycznego przywracania pełnego stanu i potwierdzonego wsparcia Hyprmod. Osobnej walidacji wymagają błędy sieci, przerwanie instalacji, rollback RPM oraz sprzętowe testy GPU, lock/suspend i screenshare. Instalator zatrzymuje się przy błędach zamiast deklarować sukces.
 
 ## Testy
 

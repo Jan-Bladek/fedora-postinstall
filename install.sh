@@ -4,26 +4,38 @@ ROOT=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 export ROOT
 source "$ROOT/lib/core.sh"
 DRY_RUN=0
+EXPLICIT_MODULES=0
 MODULES='snapshots dependencies hyprland noctalia terminal development browsers multimedia utilities defaults optimization updates'
 while (($#)); do
     case $1 in
         --version) cat "$ROOT/VERSION"; exit 0 ;;
         --dry-run) DRY_RUN=1 ;;
-        --modules) shift; MODULES=${1:?Missing module list} ;;
+        --modules) shift; MODULES=${1:?Missing module list}; EXPLICIT_MODULES=1 ;;
         --help) echo 'install.sh [--dry-run] [--modules "snapshots dependencies hyprland noctalia terminal development browsers multimedia utilities defaults optimization updates kde-removal"]'; exit 0 ;;
         *) die "Unknown option: $1" ;;
     esac
     shift
 done
+if [[ -t 0 && $DRY_RUN == 0 && $EXPLICIT_MODULES == 0 ]]; then
+    if command -v whiptail >/dev/null; then
+        items=()
+        for module in $MODULES; do items+=("$module" "$module" ON); done
+        items+=(kde-removal 'Remove Plasma AFTER session validation' OFF)
+        MODULES=$(whiptail --title 'Fedora · Hyprland + Noctalia' --separate-output --checklist 'Choose modules' 24 78 15 "${items[@]}" 3>&1 1>&2 2>&3) || exit 0
+    else
+        printf 'Fedora Post-Install · Hyprland + Noctalia\nAvailable default modules:\n%s\n' "$MODULES"
+        echo 'Optional: kde-removal (requires a validated Hyprland session and separate confirmation).'
+        read -r -p 'Enter module names, press Enter for defaults, or type EXIT: ' selection
+        [[ $selection != EXIT ]] || exit 0
+        if [[ -n $selection ]]; then MODULES=$selection; fi
+    fi
+fi
+# whiptail returns one module per line; verification uses a space-separated list.
+MODULES=${MODULES//$'\n'/ }
+[[ -n $MODULES ]] || exit 0
 for module in $MODULES; do
     [[ -f $ROOT/modules/$module.sh && $module != */* ]] || die "Unknown module: $module"
 done
-if [[ -t 0 && $DRY_RUN == 0 ]] && command -v whiptail >/dev/null; then
-    items=()
-    for module in $MODULES; do items+=("$module" "$module" ON); done
-    items+=(kde-removal 'Remove Plasma AFTER session validation' OFF)
-    MODULES=$(whiptail --title 'Fedora · Hyprland + Noctalia' --separate-output --checklist 'Choose modules' 24 78 15 "${items[@]}" 3>&1 1>&2 2>&3) || exit 0
-fi
 preflight
 if ((DRY_RUN)); then
     echo "PLAN Fedora 44 x86_64, modules: $MODULES"
