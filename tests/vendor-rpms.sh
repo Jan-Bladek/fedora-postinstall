@@ -19,11 +19,19 @@ packages codium
 vendor_repo tailscale https://pkgs.tailscale.com/stable/fedora/tailscale.repo
 packages tailscale
 module_defaults
+cat "$CONFIG/mimeapps.list"
+find /usr/share/applications -maxdepth 1 -name '*brave*' -print
 for type in x-scheme-handler/http x-scheme-handler/https text/html application/xhtml+xml; do
-    [[ $(xdg-mime query default "$type") == brave-browser.desktop ]]
+    actual=$(xdg-mime query default "$type")
+    printf 'Default for %s: <%s>\n' "$type" "$actual"
+    [[ $actual == brave-browser.desktop ]] || die "Wrong browser association: $type"
 done
-[[ $(xdg-settings get default-web-browser) == brave-browser.desktop ]]
-[[ $(xdg-mime query default text/plain) == codium.desktop ]]
+actual=$(xdg-settings get default-web-browser)
+printf 'Default web browser: <%s>\n' "$actual"
+[[ $actual == brave-browser.desktop ]] || die 'Wrong xdg-settings browser'
+actual=$(xdg-mime query default text/plain)
+printf 'Default text editor: <%s>\n' "$actual"
+[[ $actual == codium.desktop ]] || die 'Wrong text editor association'
 rpm -q brave-browser librewolf codium tailscale
 # A container is not a systemd boot test; the KVM workflow checks tailscaled.
 tailscale version
