@@ -31,7 +31,9 @@ printf 'Default web browser: <%s>\n' "$actual"
 [[ $actual == brave-browser.desktop ]] || die 'Wrong xdg-settings browser'
 actual=$(xdg-mime query default text/plain)
 printf 'Default text editor: <%s>\n' "$actual"
-[[ $actual == codium.desktop ]] || die 'Wrong text editor association'
+desktop=$(codium_desktop_id)
+[[ $actual == "$desktop" ]] || die 'Wrong text editor association'
+rpm -qf "/usr/share/applications/$actual"
 rpm -q brave-browser librewolf codium tailscale
 # A container is not a systemd boot test; the KVM workflow checks tailscaled.
 tailscale version
