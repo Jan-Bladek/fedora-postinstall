@@ -46,6 +46,17 @@ The corrected KVM workflow is validated separately below.
   `virtio_gpu_queue_ctrl_sgs` through DRM object cleanup. No new core was produced.
   This does not establish behavior on a physical GPU.
 - DrKonqi's user-unit probe reported `ConditionResult=no` in Hyprland.
+- After the failed resume, a normal shutdown/reboot did not finish. The disposable
+  QEMU process was power-cycled, Fedora booted its disk again, and starting SDDM
+  restored Noctalia. The local fixture now enables SDDM/graphical.target explicitly;
+  this does not test the installer's preservation of Plasma Login Manager.
+- The compositor warned that `hyprland-guiutils` was absent. Version 0.2.2-2.fc44
+  installed successfully from the existing lionheartp COPR in the local guest;
+  this runtime dependency is now included in the desktop module. This addition
+  was tested locally, separately from the already running full KVM job.
+- A terminal-module rerun retained a deliberately modified Kitty config unchanged
+  (matching SHA256), wrote a proposed `.fedora-postinstall-new`, and exited 0,
+  including `dnf5 check`. This also exercised the corrected live-backup handling.
 
 ![Noctalia launcher and Kitty in the actual Fedora VM](tests/vm/evidence/fedora44-noctalia-kitty.png)
 
@@ -89,7 +100,7 @@ password hash and transient runner KVM permissions), before application testing.
 One full run reached the development and browser modules successfully, including
 all three JetBrains archives and Arduino, then failed installing OBS: old `kmime`
 from the ISO conflicted with new `kf6-kmime`. Fedora's updated kmime package includes
-a co-installability fix; the dependencies module now updates installed packages
+a [co-installability fix](https://packages.fedoraproject.org/pkgs/kmime/kmime/fedora-44-updates.html); the dependencies module now updates installed packages
 before adding software. A live `/etc` archive race is reported explicitly while
 retaining the archive; fatal archive errors still stop installation.
 The latest corrected run is pending. **Full application installation/repeat/reboot
