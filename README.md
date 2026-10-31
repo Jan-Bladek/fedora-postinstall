@@ -1,6 +1,6 @@
 # Fedora Post-Install · Hyprland + Noctalia
 
-Modułowy instalator Bash dla istniejącej **Fedory 44 x86_64 (DNF5, wariant klasyczny, także KDE Desktop)**. To projekt do walidacji w maszynie wirtualnej przed użyciem na głównym komputerze. Nie jest nową dystrybucją. Fedora Atomic, starsze/nowsze wydania i ARM są świadomie blokowane. Pełna instalacja graficzna **nie została przetestowana na Fedorze**; testy statyczne nie zastępują tej weryfikacji.
+Modułowy instalator Bash dla istniejącej **Fedory 44 x86_64 (DNF5, wariant klasyczny, także KDE Desktop)**. To projekt do walidacji w maszynie wirtualnej przed użyciem na głównym komputerze. Nie jest nową dystrybucją. Fedora Atomic, starsze/nowsze wydania i ARM są świadomie blokowane. Główne moduły i sesja Hyprland + Noctalia zostały uruchomione w VM Fedora KDE 44. Zakres wyników oraz pozostałe ograniczenia opisuje [TESTING.md](TESTING.md); nie jest to deklaracja zgodności z każdym sprzętem.
 
 Wymagania: konto użytkownika z sudo, SELinux Enforcing, internet, Wayland-capable GPU; praktycznie 8 GB RAM i co najmniej 30 GB wolnego miejsca dla IDE i kopii. Zalecane 16 GB RAM dla pracy z JetBrains/OBS. Dane prywatne i katalog domowy wymagają niezależnej kopii zapasowej.
 
@@ -21,14 +21,14 @@ Wybór modułów bez TUI:
 bash install.sh --modules "snapshots dependencies hyprland noctalia terminal updates"
 ```
 
-Zachowaj kolejność powyżej. Moduły aplikacji potrzebują dostępu do sieci i curl/python3. Domyślna pełna lista instaluje dependencies jako pierwsze po snapshotach. Każdy przebieg tworzy nowy katalog logów i własną listę oczekiwanych pakietów zapisywaną po udanych transakcjach; po błędzie napraw przyczynę i uruchom ponownie. Nie ma automatycznego pomijania modułu tylko dlatego, że poprzednio zapisano go w logu.
+Zachowaj kolejność powyżej. Moduły aplikacji potrzebują dostępu do sieci i curl/python3. Domyślna pełna lista instaluje dependencies jako pierwsze po snapshotach. Moduł najpierw wykonuje `sudo dnf5 upgrade --refresh`, aby starsze pakiety z ISO nie kolidowały z aktualnymi zależnościami; przejrzyj transakcję i po aktualizacji kernela zaplanuj restart. Każdy przebieg tworzy nowy katalog logów i własną listę oczekiwanych pakietów zapisywaną po udanych transakcjach; po błędzie napraw przyczynę i uruchom ponownie. Nie ma automatycznego pomijania modułu tylko dlatego, że poprzednio zapisano go w logu.
 
 ## Moduły i źródła
 
 | Moduł | Działanie i źródła |
 |---|---|
 | snapshots | Pakiety, jednostki systemd, kopia /etc i ~/.config; opcjonalny Snapper dla Btrfs |
-| dependencies | Git, curl, wget, archiwizacja, narzędzia diagnostyczne, wl-clipboard, newt |
+| dependencies | Aktualizacja zainstalowanych RPM, potem Git, curl, wget, archiwizacja, diagnostyka, wl-clipboard, newt |
 | hyprland | Fedora RPM; jeśli brak Hyprland, oferuje wskazany przez dokumentację Noctalia COPR lionheartp/Hyprland |
 | noctalia | Natywny RPM `noctalia` v5, ustawienia pierwszego uruchomienia producenta |
 | terminal | Kitty, Bash, EDITOR/VISUAL/TERMINAL |
@@ -87,7 +87,7 @@ Restart display managera kończy bieżące sesje. Kopię konfiguracji rozpakuj n
 
 `journalctl --user -b`, `journalctl -b -u sddm`, `hyprctl configerrors`, `systemctl --user status pipewire wireplumber xdg-desktop-portal-hyprland`, `sudo dnf5 check`. Z Noctalia korzystaj z natywnego screenshot UI; w OBS wybierz PipeWire. Zgoda portalu jest interaktywna. Akceleracja OBS/kodeki/NVIDIA zależą od GPU i dostępności sterowników; instalator nie obiecuje NVENC/VAAPI bez testu. LocalSend potrzebuje zgody firewall na właściwej zaufanej sieci; nie otwieramy portów globalnie. Tailscale uruchamia się bez `tailscale up` i bez konta.
 
-TUI wymaga wcześniej dostępnego newt/whiptail, w przeciwnym razie wybierz moduły argumentem. Nie ma jeszcze testów VM ani automatycznego przywracania pełnego stanu, potwierdzonego wsparcia Hyprmod ani walidacji GPU. Przed użyciem produkcyjnym potrzebna jest pełna instalacja Fedora KDE 44 w VM, drugi przebieg, test błędu sieci, przerwania, rollback RPM oraz sprzętowe testy lock/suspend/screenshare. Instalator zatrzymuje się przy błędach zamiast deklarować sukces.
+TUI wymaga wcześniej dostępnego newt/whiptail, w przeciwnym razie wybierz moduły argumentem. Wyniki testów VM są w [TESTING.md](TESTING.md). Brakuje automatycznego przywracania pełnego stanu i potwierdzonego wsparcia Hyprmod. Osobnej walidacji wymagają błędy sieci, przerwanie instalacji, rollback RPM oraz sprzętowe testy GPU, lock/suspend i screenshare. Instalator zatrzymuje się przy błędach zamiast deklarować sukces.
 
 ## Testy
 
@@ -134,3 +134,17 @@ Jeżeli masz wcześniejszą konfigurację Hyprland, sprawdź proponowany plik
 polecenie agenta Polkit ścieżką `/usr/libexec/kf6/polkit-kde-authentication-agent-1`.
 Nie uruchamiaj równocześnie dwóch agentów. Wersję sprawdzisz przez
 `bash install.sh --version`.
+
+## Poprawki integracji wykryte w VM
+
+W maszynach wirtualnych z Hyprland 0.57.0 generowana konfiguracja zawiera obejście
+regresji EGL/VirGL. Po aktualizacji scal propozycję `.fedora-postinstall-new` i rozpocznij
+nową sesję; sam reload może nie wystarczyć. Inne wersje i fizyczne komputery zachowują
+domyślne ustawienie. Jeśli na fizycznym GPU występuje ten sam błąd EGL, sprawdź
+[zgłoszenie upstream](https://github.com/hyprwm/Hyprland/discussions/16702) przed zmianą konfiguracji.
+
+Jednostka użytkownika `drkonqi-coredump-launcher@.service` otrzymuje warunek wykluczający
+sesję Hyprland. W VM wykryto jej rekurencyjne awarie podczas tworzenia powiadomień.
+Nie wyłączamy systemd-coredump; zrzuty i dziennik pozostają dostępne. W sesji Plasma
+warunek nie ogranicza działania tej jednostki. Pierwsze uruchomienie Noctalia może
+pokazać oficjalny ekran powitalny i prośbę o skonfigurowanie magazynu kluczy.
