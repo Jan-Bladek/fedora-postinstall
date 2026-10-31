@@ -9,7 +9,6 @@ import json
 from pathlib import Path
 import re
 import shlex
-import shutil
 import subprocess
 import tarfile
 import threading
@@ -65,8 +64,10 @@ def main():
     print('Both Fedora ISO signatures and hashes verified', flush=True)
     run(['ssh-keygen', '-q', '-t', 'ed25519', '-N', '', '-f', str(work / 'key')])
     ks = (ROOT / 'tests/vm/fedora44.ks.in').read_text().replace('@@SSH_PUBLIC_KEY@@', (work / 'key.pub').read_text().strip())
-    (work / 'ks.cfg').write_text(ks)
-    server = ThreadingHTTPServer(('127.0.0.1', 8844), functools.partial(SimpleHTTPRequestHandler, directory=str(work)))
+    http_root = work / 'http'
+    http_root.mkdir()
+    (http_root / 'ks.cfg').write_text(ks)
+    server = ThreadingHTTPServer(('127.0.0.1', 8844), functools.partial(SimpleHTTPRequestHandler, directory=str(http_root)))
     threading.Thread(target=server.serve_forever, daemon=True).start()
     run(['bsdtar', '-xf', str(work / IMAGES['Everything'][0]), '-C', str(work), 'images/pxeboot/vmlinuz', 'images/pxeboot/initrd.img'])
     run(['qemu-img', 'create', '-f', 'qcow2', str(work / 'guest.qcow2'), '90G'])

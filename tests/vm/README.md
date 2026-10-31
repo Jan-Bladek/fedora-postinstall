@@ -28,3 +28,11 @@ It must never be used with a host disk passed through to the VM.
 
 On a guest with accelerated virtio graphics, start a local desktop session for the
 runtime tests. Running tests through SSH alone does not establish a graphical login.
+
+The manual GitHub Actions workflow `Fedora KDE VM integration` automates the above
+using KVM, signature/hash verification, first and repeated installation, language
+compilation, config verification, preservation of a changed Kitty config, a negative
+Plasma-removal test, and reboot checks. Logs are uploaded as `fedora-kde-vm-report`.
+It runs only when dispatched, downloads several GiB and may take tens of minutes.
+Its SSH fixture does **not** validate a graphical session, lock/unlock or screenshare.
+The guest alone has passwordless sudo; no such policy is installed on user systems.

@@ -93,8 +93,10 @@ packages nonexistent-package
             with tempfile.NamedTemporaryFile(mode='w') as f:
                 f.write('[vendor]\n'+body+'\n')
                 f.flush()
-                r = subprocess.run(['python3', str(ROOT/'scripts/check-repo.py'), 'vscodium', f.name], capture_output=True)
-                self.assertNotEqual(r.returncode, 0)
+                for optimized in ('0', '1'):
+                    r = subprocess.run(['python3', str(ROOT/'scripts/check-repo.py'), 'vscodium', f.name],
+                                       env=dict(os.environ, PYTHONOPTIMIZE=optimized), capture_output=True)
+                    self.assertNotEqual(r.returncode, 0)
 
     def test_repo_valid(self):
         with tempfile.NamedTemporaryFile(mode='w') as f:
