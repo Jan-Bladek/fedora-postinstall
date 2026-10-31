@@ -8,7 +8,13 @@ ROOT=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
 source "$ROOT/modules/dependencies.sh"
 source "$ROOT/modules/development.sh"
 packages() { dnf5 -y install "$@"; }
-run() { "$@"; }
+log() { printf '%s\n' "$*"; }
+run() {
+    # This explicitly disposable fixture already runs as root, including in
+    # minimal Fedora containers where sudo is not installed.
+    if [[ $1 == sudo ]]; then shift; fi
+    if [[ $1 == dnf5 ]]; then shift; dnf5 -y "$@"; else "$@"; fi
+}
 module_dependencies
 packages polkit-kde noctalia
 install_language_tools
