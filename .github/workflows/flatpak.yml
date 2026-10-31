@@ -1,0 +1,25 @@
+name: Flatpak installation smoke
+on: workflow_dispatch
+permissions:
+  contents: read
+jobs:
+  applications:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    container:
+      image: fedora:44
+      # Flatpak's extra-data deployment uses bubblewrap namespaces. This is an
+      # ephemeral hosted runner, never a request to change the user's host.
+      options: --privileged
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Prepare disposable user and session bus
+        run: |
+          dnf5 -y install flatpak dbus-daemon util-linux shadow-utils
+          useradd --create-home tester
+      - name: Install selected applications without a terminal
+        env:
+          FEDORA_POSTINSTALL_TEST_TARGET: disposable
+        run: runuser -u tester -- dbus-run-session bash tests/flatpak-apps.sh
