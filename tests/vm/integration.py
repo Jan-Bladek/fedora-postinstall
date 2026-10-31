@@ -134,7 +134,7 @@ diff /tmp/packages-before-removal-guard /tmp/packages-after-removal-guard
         proc.wait(timeout=90)
         proc = boot_guest('reboot.log')
         wait_ssh()
-        guest('set -eu\ngetenforce\nsudo dnf5 check\nrpm -q hyprland noctalia kitty polkit-kde plasma-desktop\nsystemctl is-active NetworkManager bluetooth\nif command -v tailscale >/dev/null; then systemctl is-active tailscaled; fi\n', 'after-reboot.log')
+        guest('set -eu\ngetenforce\nsudo dnf5 check\nrpm -q hyprland noctalia kitty polkit-kde plasma-desktop\nsystemctl is-active NetworkManager\nif compgen -G "/sys/class/bluetooth/hci*" >/dev/null; then systemctl is-active bluetooth; else echo "Bluetooth runtime skipped: no adapter in VM"; fi\nif command -v tailscale >/dev/null; then systemctl is-active tailscaled; fi\n', 'after-reboot.log')
         (reports / 'result.json').write_text(json.dumps({'result': 'passed', 'modules': args.modules.split(), 'iso_sha256': hashes, 'graphical_session': 'not tested by this SSH-only fixture'}, indent=2))
     finally:
         if proc is not None and proc.poll() is None:

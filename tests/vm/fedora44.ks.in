@@ -9,7 +9,7 @@ user --name=tester --groups=wheel --password=unused --iscrypted
 sshkey --username=tester "@@SSH_PUBLIC_KEY@@"
 firewall --enabled --service=ssh
 selinux --enforcing
-services --enabled=sshd,NetworkManager,sddm
+services --enabled=sshd,NetworkManager
 bootloader --location=mbr --append="console=ttyS0,115200n8"
 zerombr
 clearpart --all --initlabel --drives=vda
