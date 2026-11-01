@@ -34,3 +34,14 @@ jobs:
           result=${PIPESTATUS[1]}
           exit "$result"
         shell: bash
+      - name: Prepare native OBS and FFmpeg
+        run: dnf5 -y install obs-studio ffmpeg-free
+      - name: Verify real H.264 encoding and codec rerun
+        env:
+          FEDORA_POSTINSTALL_TEST_TARGET: disposable
+        run: |
+          set +e
+          yes YES | runuser -u tester -- dbus-run-session bash tests/obs-codec.sh
+          result=${PIPESTATUS[1]}
+          exit "$result"
+        shell: bash
