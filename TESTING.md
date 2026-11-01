@@ -24,6 +24,13 @@ provider-specific IPC routing, rejection of an unrelated COPR dependency, and
 migration of the exact old template while retaining customized configurations.
 Session health tests now exercise both shells with optimized and ordinary Python.
 
+The later configuration follow-up passed **18 local regression tests**, including
+execution of the Lua selector with DMS-generated settings present and absence of
+those side effects under Noctalia. Hyprland 0.57.0's own `--verify-config` parser
+returned **config ok** for both profiles against actual DMS-generated files, in an
+isolated temporary config/runtime directory. Its IPC binding warning in this
+configuration-only invocation is not evidence of a running graphical session.
+
 The existing local Fedora KDE VM also ran `install.sh --desktop plasma --modules
 updates` successfully (exit 0, including DNF check). Before/after comparisons matched
 all installed RPMs, the Hyprland configuration, the selected shell file and the display
@@ -56,6 +63,12 @@ manually in this disposable VM for the GUI test. Exact unmodified-template migra
 is covered by regression tests. The stale GTK portal unit from earlier crashed
 sessions was restarted for this fixture. DMS logged QML binding-loop/audio warnings;
 physical audio, full lock/suspend tests and OBS in DMS were not established.
+
+The actual Noctalia module was used to switch back. After a new session,
+`validate-session --check-only` passed and only Noctalia was running. Both graphical
+switch checks used the fixture's temporary no-realtime override; this does not
+establish default realtime behavior on physical hardware. The override and debug
+logging patch were subsequently removed from the guest, leaving Noctalia selected.
 
 Initial DMS CI failures exposed two test-fixture issues (root CLI use and absent
 `runuser`) and one installer error (`--version` instead of the supported `version`
