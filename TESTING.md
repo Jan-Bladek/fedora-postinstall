@@ -7,6 +7,35 @@ and a short OBS recording. Graphical suspend/resume failed in its TCG/VirGL setu
 on both tested kernels. Positive Plasma removal is untested.
 
 
+## Desktop choices — v0.3.0
+
+The installer now supports Noctalia, DMS (DankMaterialShell, renamed upstream to
+Dux Shell), and preservation of an existing Plasma desktop. The DMS stable RPM
+path and repeat configuration passed in a disposable Fedora 44 container in
+[run 41333222620](https://github.com/Jan-Bladek/fedora-postinstall/actions/runs/41333222620),
+at commit `dbf20db`. It installed `dms`/`dms-cli` **2.0.0-1.fc44**, exercised the
+installer module twice as an ordinary user, verified the selected provider and
+CLI, and passed `dnf5 check`. The same run passed ShellCheck, Bash syntax and
+**17 regression tests**, plus the existing native compiler/package job.
+
+The new tests cover all three dry-run presets without system commands or writes,
+rejection of Plasma/removal and mixed-shell conflicts, the Plasma checklist,
+provider-specific IPC routing, rejection of an unrelated COPR dependency, and
+migration of the exact old template while retaining customized configurations.
+Session health tests now exercise both shells with optimized and ordinary Python.
+
+The existing local Fedora KDE VM also ran `install.sh --desktop plasma --modules
+updates` successfully (exit 0, including DNF check). Before/after comparisons matched
+all installed RPMs, the Hyprland configuration, the selected shell file and the display
+manager symlink. Plasma Desktop/Workspace 6.7.5, Dolphin, Okular, KWrite and Qt6 remained
+installed. This tests the Plasma preset with a limited module set, not a second full
+installation of every application.
+
+Initial DMS CI failures exposed two test-fixture issues (root CLI use and absent
+`runuser`) and one installer error (`--version` instead of the supported `version`
+subcommand). These were corrected before the passing run. Container installation
+alone does not establish that the graphical DMS UI or lock screen works.
+
 ## Follow-up validation — v0.2.1
 
 [Full KVM run 41304027246](https://github.com/Jan-Bladek/fedora-postinstall/actions/runs/41304027246)

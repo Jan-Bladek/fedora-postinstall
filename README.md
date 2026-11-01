@@ -1,8 +1,68 @@
-# Fedora Post-Install · Hyprland + Noctalia
+# Fedora Post-Install · Noctalia / DMS / KDE Plasma
 
 Modułowy instalator Bash dla istniejącej **Fedory 44 x86_64 (DNF5, wariant klasyczny, także KDE Desktop)**. To projekt do walidacji w maszynie wirtualnej przed użyciem na głównym komputerze. Nie jest nową dystrybucją. Fedora Atomic, starsze/nowsze wydania i ARM są świadomie blokowane. Pełna instalacja domyślnych modułów, drugi przebieg i restart przeszły test VM Fedora KDE 44; osobno uruchomiono sesję Hyprland + Noctalia w lokalnej VM. Zakres wyników oraz pozostałe ograniczenia opisuje [TESTING.md](TESTING.md); nie jest to deklaracja zgodności z każdym sprzętem.
 
 Wymagania: konto użytkownika z sudo, SELinux Enforcing, internet, Wayland-capable GPU; praktycznie 8 GB RAM i co najmniej 30 GB wolnego miejsca dla IDE i kopii. Zalecane 16 GB RAM dla pracy z JetBrains/OBS. Dane prywatne i katalog domowy wymagają niezależnej kopii zapasowej.
+
+## Wybór pulpitu
+
+Instalator oferuje trzy warianty w osobnym menu przed wyborem modułów:
+
+| Wariant | Efekt |
+|---|---|
+| `noctalia` | Hyprland + Noctalia; wariant domyślny |
+| `dms` | Hyprland + DankMaterialShell (DMS, obecnie Dux Shell) |
+| `plasma` | Zachowanie istniejącej KDE Plasma i instalacja aplikacji/narzędzi |
+
+Warianty Hyprland również zachowują Plasma, dopóki osobno nie wybierzesz jej
+usunięcia. Wariant `plasma` wyklucza moduły Hyprland, obu powłok i usuwania KDE;
+nie zmienia konfiguracji sesji ani menedżera logowania. Wymaga już zainstalowanych
+`plasma-desktop` i `plasma-workspace`. Instalacja aplikacji może aktualizować RPM
+i ustawiać wybrane programy domyślne, Kitty oraz Bash. Na ekranie logowania wybierz
+sesję Plasma, jeśli wcześniej używano Hyprland; instalator nie wymusza sesji logowania.
+
+```bash
+bash install.sh --desktop noctalia
+bash install.sh --desktop dms
+bash install.sh --desktop plasma
+# Dowolny wariant można najpierw obejrzeć bez zmian:
+bash install.sh --dry-run --desktop dms
+```
+
+Bez terminala domyślny jest wariant Noctalia. `--desktop` wybiera zestaw domyślnych
+modułów; jawne `--modules` określa dokładną listę, a sprzeczne kombinacje są odrzucane
+przed zmianami. Sam moduł `dms` w jawnej liście automatycznie rozpoznaje wariant DMS.
+Przykład zmiany powłoki istniejącej instalacji Hyprland:
+
+```bash
+bash install.sh --desktop dms --modules "hyprland dms"
+# Powrót:
+bash install.sh --desktop noctalia --modules "hyprland noctalia"
+```
+
+Po zmianie wyloguj się i rozpocznij nową sesję Hyprland. Instalator nie zabija działającej
+powłoki ani nie usuwa drugiej. Plik `~/.config/fedora-postinstall/shell` zawiera wybór;
+wspólny selektor obsługuje autostart, launcher, panel, ustawienia i kontrolę IPC.
+Nie włączamy globalnej usługi DMS, dzięki czemu nie startuje ona w sesji Plasma.
+Jeśli sam wcześniej włączyłeś `dms.service` globalnie dla użytkownika, przejrzyj i wyłącz
+jej autostart przed użyciem selektora; dwa mechanizmy autostartu mogą powodować konflikt.
+
+Dokładnie niezmieniony szablon Hyprland z v0.2 jest migrowany z kopią w katalogu przebiegu.
+Własna konfiguracja pozostaje nietknięta: scal `hyprland.lua.fedora-postinstall-new`,
+aby uruchamiała selektor zamiast starego polecenia Noctalia. Wybór zapisany przez
+instalator nie przepisuje samodzielnie własnych skrótów/autostartów.
+
+DMS jest instalowany jako stabilny RPM `dms`: najpierw z dostępnych repozytoriów,
+a gdy go brak, z zalecanego przez upstream COPR `duxlabs/dms`, wraz z dołączonym
+repozytorium zależności `duxlabs/dux-repo`. Wyświetlamy oba źródła i klucze do akceptacji.
+Nie pobieramy instalatora `curl | sh`, nie uruchamiamy `dms setup` nad konfiguracją
+użytkownika i nie instalujemy rozwojowego `dms-git`. Aktualizacje obsługuje DNF i
+`fedora-update`. DMS używa własnego agenta Polkit; agent KDE jest uruchamiany przez
+selektor tylko dla Noctalia.
+
+Oficjalne źródła: [instalacja DMS](https://duxlabs.dev/docs/dms/installation),
+[komendy IPC](https://duxlabs.dev/docs/dms/keybinds-ipc),
+[repozytorium upstream](https://github.com/duxlabs-dev/dux-shell).
 
 ## Uruchomienie
 
@@ -31,6 +91,7 @@ Zachowaj kolejność powyżej. Moduły aplikacji potrzebują dostępu do sieci i
 | dependencies | Aktualizacja zainstalowanych RPM, potem Git, curl, wget, archiwizacja, diagnostyka, wl-clipboard, newt |
 | hyprland | Fedora RPM; jeśli brak Hyprland, oferuje wskazany przez dokumentację Noctalia COPR lionheartp/Hyprland |
 | noctalia | Natywny RPM `noctalia` v5, ustawienia pierwszego uruchomienia producenta |
+| dms | Stabilny RPM `dms`, upstream COPR duxlabs/dms z zależnościami duxlabs/dux-repo, gdy brak dostępnego RPM |
 | terminal | Kitty, Bash, EDITOR/VISUAL/TERMINAL |
 | development | Rust/Cargo, Python 3 (pip, nagłówki), C/C++ (GCC, CMake, Ninja, GDB), VSCodium RPM producenta; RustRover, IntelliJ IDEA, WebStorm z oficjalnego API JetBrains; Arduino IDE 2 AppImage z GitHub Arduino |
 | browsers | Brave i LibreWolf z repozytoriów dostawców |
@@ -51,9 +112,9 @@ Priorytet źródeł nie oznacza instalowania nieutrzymywanych RPM z przypadkowyc
 
 ## Sesja i konfiguracja
 
-Konfiguracja wymaga Hyprland >=0.55 z Lua oraz Noctalia v5. Nie instaluje starego v4/Quickshell ani Waybar, dunst czy osobnego launchera. Noctalia obsługuje interfejs, powiadomienia, schowek i funkcje sesji. Ustawienia Noctalia tworzy sam upstream; projekt nie wymyśla schematu settings. Dobierz idle, blokadę, monitory i skalowanie w ustawieniach Noctalia, następnie przetestuj przed usuwaniem Plasma.
+Konfiguracja Hyprland wymaga wersji >=0.55 z Lua oraz wybranej Noctalia v5 lub DMS. Noctalia używa natywnego v5; nie instalujemy jej starego wariantu v4/Quickshell. DMS korzysta z Quickshell jako zależności RPM. Nie dodajemy Waybar, dunst ani osobnego launchera. Noctalia obsługuje interfejs, powiadomienia, schowek i funkcje sesji. Ustawienia Noctalia tworzy sam upstream; projekt nie wymyśla schematu settings. Dobierz idle, blokadę, monitory i skalowanie w ustawieniach Noctalia, następnie przetestuj przed usuwaniem Plasma.
 
-Super+Enter: Kitty; Super+Space: launcher; Super+S: panel; Super+B: Brave; Super+Q: zamknij; Super+F: fullscreen; Super+1–9: workspace; Shift+Super+1–9: przenieś okno. Układ klawiatury PL. Audio i screencast używają PipeWire/WirePlumber i portalu Hyprland, file chooser portalu GTK. Polkit uruchamia natywny pakiet Fedory `polkit-kde` (`/usr/libexec/kf6/polkit-kde-authentication-agent-1`). Agent pozostaje po usunięciu Plasma. SDDM jest instalowany jako dostępny zamiennik; istniejący menedżer logowania jest zachowany. Fedora KDE 44 domyślnie używa Plasma Login Manager, nie SDDM ([zmiana Fedory](https://fedoraproject.org/wiki/Changes/PlasmaLoginManager)). Wybierz Hyprland na ekranie logowania; zapamiętanie sesji zależy od menedżera logowania. Nie włączamy autologowania.
+Super+Enter: Kitty; Super+Space: launcher wybranej powłoki; Super+S: panel; Super+B: Brave; Super+Q: zamknij; Super+F: fullscreen; Super+1–9: workspace; Shift+Super+1–9: przenieś okno. Układ klawiatury PL. Audio i screencast używają PipeWire/WirePlumber i portalu Hyprland, file chooser portalu GTK. Polkit uruchamia natywny pakiet Fedory `polkit-kde` (`/usr/libexec/kf6/polkit-kde-authentication-agent-1`). Agent pozostaje po usunięciu Plasma. SDDM jest instalowany jako dostępny zamiennik; istniejący menedżer logowania jest zachowany. Fedora KDE 44 domyślnie używa Plasma Login Manager, nie SDDM ([zmiana Fedory](https://fedoraproject.org/wiki/Changes/PlasmaLoginManager)). Wybierz Hyprland na ekranie logowania; zapamiętanie sesji zależy od menedżera logowania. Nie włączamy autologowania.
 
 Pliki użytkownika nie są nadpisywane; propozycja trafia do `.fedora-postinstall-new`. Przy istniejącym hyprland.conf/Lua konieczne jest ręczne scalenie i sprawdzenie, którą konfigurację ładuje compositor. Zmienne środowiskowe environment.d wymagają nowego logowania. Dodaj ~/.local/bin do PATH. Brak uniwersalnego standardu domyślnego terminala: TERMINAL, MIME i skrót sesji wskazują Kitty.
 

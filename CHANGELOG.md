@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.3.0 — 2026-11-01
+
+- Dodano wybór pulpitu w menu i przez `--desktop noctalia|dms|plasma`.
+- Wariant Plasma instaluje aplikacje bez konfiguracji Hyprland i blokuje usuwanie KDE.
+- Dodano stabilne RPM DankMaterialShell (obecnie Dux Shell), z walidacją
+  upstream COPR duxlabs/dms oraz repozytorium zależności duxlabs/dux-repo.
+- Jeden selektor obsługuje autostart, skróty i kontrolę IPC Noctalia/DMS.
+  DMS nie jest włączany jako globalna usługa sesji Plasma.
+- Nie zmieniamy własnych profili powłok. Niezmieniony szablon Hyprland v0.2
+  migruje z kopią zapasową; własny plik otrzymuje proponowane zmiany.
+- Dodano testy wariantów, menu, konfliktów, źródeł DMS i zachowania konfiguracji
+  oraz natywny test instalacji i powtórzenia RPM DMS na Fedorze 44.
+
 ## 0.2.1 — 2026-11-01
 
 - Walidacja sesji sprawdza aktywny socket Wayland, włączony monitor i odpowiedź
