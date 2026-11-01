@@ -15,4 +15,4 @@ if command -v flatpak >/dev/null; then
 fi
 python3 "$HOME/.local/share/fedora-postinstall/scripts/vendor-apps.py" update
 sudo dnf5 check
-echo 'DNF includes enabled COPRs and Noctalia RPM. No Git checkouts were changed.'
+echo 'DNF includes enabled COPRs and the installed Noctalia/DMS RPMs. No Git checkouts were changed.'

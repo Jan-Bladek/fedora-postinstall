@@ -25,10 +25,10 @@ if not isinstance(monitors, list) or not any(
 '
 errors=$(timeout 10 hyprctl configerrors)
 [[ -z $errors || $errors == 'ok' ]] || { echo "$errors" >&2; exit 1; }
-pgrep -u "$(id -u)" -x noctalia >/dev/null
-# A process can exist while blocked in the GPU driver. Require an IPC reply too;
-# keep session status (potentially including private window titles) out of logs.
-timeout 10 noctalia msg status >/dev/null
+# A process can exist while blocked in a GPU driver. Query the selected UI.
+# Resolve from the checkout so validation also works before installing updates.
+root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
+"$root/scripts/desktop-shell" health >/dev/null
 systemctl --user is-active pipewire wireplumber xdg-desktop-portal-hyprland
 systemctl is-active NetworkManager display-manager
 command -v kitty >/dev/null

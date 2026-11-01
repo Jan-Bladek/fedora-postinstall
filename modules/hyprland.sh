@@ -13,6 +13,26 @@ LUA
     fi
 }
 
+write_hyprland_config() {
+    local target=$CONFIG/hypr/hyprland.lua legacy=$RUN/hyprland-legacy.lua
+    cp -- "$ROOT/config/hyprland/legacy-v0.2.lua" "$legacy"
+    if grep -Fq 'skip_non_kms_dmabuf_formats = false' "$RUN/hyprland.lua"; then
+        sed -n '/^-- Hyprland 0.57.0 VM compatibility/,$p' "$RUN/hyprland.lua" > "$RUN/legacy-quirk"
+        printf '\n' >> "$legacy"
+        cat "$RUN/legacy-quirk" >> "$legacy"
+    fi
+    if [[ ! -L $target && -f $target ]] && cmp -s "$legacy" "$target"; then
+        cp -- "$target" "$RUN/hyprland-before-shell-selector.lua"
+        install -m 600 "$RUN/hyprland.lua" "$target"
+        log 'Migrated the unmodified v0.2 Hyprland template to the shell selector; backup saved in this run.'
+    else
+        config_file "$RUN/hyprland.lua" "$target"
+        if ! cmp -s "$RUN/hyprland.lua" "$target"; then
+            log 'Merge hyprland.lua.fedora-postinstall-new before using the selected shell; existing custom configuration was retained.'
+        fi
+    fi
+}
+
 configure_session_services() {
     if [[ -f /usr/lib/systemd/user/drkonqi-coredump-launcher@.service ]]; then
         config_file "$ROOT/config/systemd/user/drkonqi-coredump-launcher@.service.d/hyprland.conf" \
@@ -44,8 +64,9 @@ module_hyprland() {
     version=${version%%$'\n'*}
     log "$version"
     [[ $version =~ 0\.([0-9]+) && ${BASH_REMATCH[1]} -ge 55 ]] || die 'Lua config requires Hyprland >=0.55; no configuration was replaced.'
+    install_shell_selector
     prepare_hyprland_config "$version"
-    config_file "$RUN/hyprland.lua" "$CONFIG/hypr/hyprland.lua"
+    write_hyprland_config
     config_file "$ROOT/config/portals.conf" "$CONFIG/xdg-desktop-portal/hyprland-portals.conf"
     run sudo systemctl enable --now NetworkManager bluetooth
     if ! systemctl is-enabled display-manager.service >/dev/null 2>&1; then run sudo systemctl enable sddm; fi

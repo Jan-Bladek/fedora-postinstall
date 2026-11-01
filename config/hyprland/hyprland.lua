@@ -1,4 +1,4 @@
--- Hyprland >=0.55. Noctalia v5. Keep this file user-owned.
+-- Hyprland >=0.55. Selected Noctalia / DMS shell. Keep this file user-owned.
 hl.monitor({ output = "", mode = "preferred", position = "auto", scale = "auto" })
 hl.config({
     general = { gaps_in = 4, gaps_out = 8, border_size = 2 },
@@ -7,14 +7,13 @@ hl.config({
 })
 hl.on("hyprland.start", function()
     hl.exec_cmd("dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP HYPRLAND_INSTANCE_SIGNATURE")
-    hl.exec_cmd("noctalia")
-    hl.exec_cmd("/usr/libexec/kf6/polkit-kde-authentication-agent-1")
+    hl.exec_cmd("$HOME/.local/share/fedora-postinstall/scripts/desktop-shell start")
 end)
 hl.bind("SUPER+Return", hl.dsp.exec_cmd("kitty"))
 hl.bind("SUPER+B", hl.dsp.exec_cmd("brave-browser"))
-hl.bind("SUPER+Space", hl.dsp.exec_cmd("noctalia msg panel-toggle launcher"))
-hl.bind("SUPER+S", hl.dsp.exec_cmd("noctalia msg panel-toggle control-center"))
-hl.bind("SUPER+comma", hl.dsp.exec_cmd("noctalia msg settings-toggle"))
+hl.bind("SUPER+Space", hl.dsp.exec_cmd("$HOME/.local/share/fedora-postinstall/scripts/desktop-shell launcher"))
+hl.bind("SUPER+S", hl.dsp.exec_cmd("$HOME/.local/share/fedora-postinstall/scripts/desktop-shell panel"))
+hl.bind("SUPER+comma", hl.dsp.exec_cmd("$HOME/.local/share/fedora-postinstall/scripts/desktop-shell settings"))
 -- More specific monitor rules can be added through Noctalia settings.
 hl.bind("SUPER+Q", hl.dsp.window.close())
 hl.bind("SUPER+F", hl.dsp.window.fullscreen({ action = "toggle", mode = "fullscreen" }))

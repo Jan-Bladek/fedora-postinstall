@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+# A single selector shared by compositor startup, keybinds and runtime validation.
+set -Eeuo pipefail
+selection=${XDG_CONFIG_HOME:-$HOME/.config}/fedora-postinstall/shell
+shell=noctalia
+if [[ -e $selection ]]; then IFS= read -r shell < "$selection"; fi
+case $shell in noctalia|dms) ;; *) echo "Invalid shell selection: $shell" >&2; exit 1 ;; esac
+case ${1:-} in
+    name) printf '%s\n' "$shell" ;;
+    start)
+        if [[ $shell == dms ]]; then
+            if pgrep -u "$(id -u)" -x noctalia >/dev/null; then
+                echo 'Noctalia is already running. Log out before switching shells.' >&2; exit 1
+            fi
+            exec dms run
+        fi
+        if command -v dms >/dev/null && timeout 3 dms ipc call lock isLocked >/dev/null 2>&1; then
+            echo 'DMS is already running. Log out before switching shells.' >&2; exit 1
+        fi
+        /usr/libexec/kf6/polkit-kde-authentication-agent-1 &
+        exec noctalia
+        ;;
+    health)
+        if [[ $shell == dms ]]; then
+            # Queries the running Quickshell UI, not just the backend process.
+            exec timeout 10 dms ipc call lock isLocked
+        fi
+        pgrep -u "$(id -u)" -x noctalia >/dev/null
+        exec timeout 10 noctalia msg status
+        ;;
+    launcher|panel|settings)
+        if [[ $shell == dms ]]; then
+            case $1 in
+                launcher) exec dms ipc call spotlight toggle ;;
+                panel) exec dms ipc call control-center toggle ;;
+                settings) exec dms ipc call settings toggle ;;
+            esac
+        else
+            case $1 in
+                launcher) exec noctalia msg panel-toggle launcher ;;
+                panel) exec noctalia msg panel-toggle control-center ;;
+                settings) exec noctalia msg settings-toggle ;;
+            esac
+        fi
+        ;;
+    *) echo 'Usage: desktop-shell {name|start|health|launcher|panel|settings}' >&2; exit 2 ;;
+esac

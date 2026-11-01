@@ -41,6 +41,7 @@ class SessionHealth(unittest.TestCase):
                         with self.subTest(optimized=optimized, monitors=monitors, ipc=ipc_exit):
                             fixture.write_text(json.dumps(monitors))
                             env = dict(os.environ, PATH=str(shim)+':'+os.environ['PATH'],
+                                       XDG_CONFIG_HOME=str(work/'config'),
                                        XDG_RUNTIME_DIR=str(work), WAYLAND_DISPLAY=str(display),
                                        HYPRLAND_INSTANCE_SIGNATURE='fixture', PYTHONOPTIMIZE=optimized,
                                        MONITOR_FIXTURE=str(fixture), IPC_EXIT=ipc_exit)

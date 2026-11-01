@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 verify() {
     local p type desktop
+    if [[ ${DESKTOP:-} == plasma ]]; then
+        rpm -q plasma-desktop plasma-workspace >/dev/null || die 'KDE Plasma preservation check failed.'
+    fi
     if [[ -f $RUN/expected-rpm ]]; then
         while IFS= read -r p; do rpm -q "$p" >/dev/null || die "Missing RPM: $p"; done < "$RUN/expected-rpm"
     fi

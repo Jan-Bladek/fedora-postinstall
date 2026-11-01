@@ -8,6 +8,7 @@ allowed = {
     'vscodium': {'repo.vscodium.dev'},
     'tailscale': {'pkgs.tailscale.com'},
     'librewolf': {'repo.librewolf.net'},
+    'dms-copr': {'download.copr.fedorainfracloud.org'},
     'hyprland-copr': {'download.copr.fedorainfracloud.org'},
 }
 def require(condition, message):
@@ -30,4 +31,7 @@ for s in c.values():
         for url in urls:
             u = urlparse(url)
             require(u.scheme == 'https' and u.hostname in allowed[name], url)
+            if name == 'dms-copr':
+                require(any(u.path.startswith('/results/duxlabs/'+repo+'/')
+                            for repo in ('dms', 'dux-repo')), 'Unexpected DMS COPR project')
 print('Repository host/TLS/signature policy passed; review the signing key trust separately.')

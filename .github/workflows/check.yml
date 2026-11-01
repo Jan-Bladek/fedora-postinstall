@@ -18,3 +18,13 @@ jobs:
         env:
           FEDORA_POSTINSTALL_TEST_TARGET: disposable
         run: bash tests/fedora-packages.sh
+
+  dms-packages:
+    runs-on: ubuntu-latest
+    container: fedora:44
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install and repeat upstream DMS stable RPMs
+        env:
+          FEDORA_POSTINSTALL_TEST_TARGET: disposable
+        run: bash tests/dms-packages.sh

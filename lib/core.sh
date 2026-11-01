@@ -13,6 +13,9 @@ preflight() {
     command -v dnf5 >/dev/null || die 'DNF5 is required.'
     [[ $(getenforce) == Enforcing ]] || die 'Enable SELinux Enforcing before installation.'
     command -v sudo >/dev/null || die 'sudo is required.'
+    if [[ ${DESKTOP:-} == plasma ]]; then
+        rpm -q plasma-desktop plasma-workspace >/dev/null || die 'The Plasma preset requires an existing KDE Plasma installation.'
+    fi
 }
 init_state() {
     umask 077
