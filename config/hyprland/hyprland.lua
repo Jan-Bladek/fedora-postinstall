@@ -26,3 +26,19 @@ for _, direction in ipairs({ "left", "right", "up", "down" }) do
 end
 hl.bind("SUPER+mouse:272", hl.dsp.window.drag(), { mouse = true })
 hl.bind("SUPER+mouse:273", hl.dsp.window.resize(), { mouse = true })
+
+-- Load DMS-generated settings only for DMS. Keep this project's application binds.
+local config_home = os.getenv("XDG_CONFIG_HOME") or (os.getenv("HOME") .. "/.config")
+local selector = io.open(config_home .. "/fedora-postinstall/shell", "r")
+local selected = selector and selector:read("*l") or "noctalia"
+if selector then selector:close() end
+if selected == "dms" then
+    for _, name in ipairs({ "colors", "outputs", "layout", "cursor", "input", "windowrules" }) do
+        local path = config_home .. "/hypr/dms/" .. name .. ".lua"
+        local file = io.open(path, "r")
+        if file then
+            file:close()
+            dofile(path)
+        end
+    end
+end

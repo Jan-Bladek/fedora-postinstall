@@ -109,6 +109,33 @@ esac
             for forbidden in ('kde-removal', 'hyprland', 'noctalia', 'dms'):
                 self.assertNotIn(forbidden, checklist)
 
+    def test_lua_loads_generated_settings_only_for_dms(self):
+        runner = """
+local proxy = {}
+setmetatable(proxy, { __index = function() return proxy end,
+                     __call = function() return function() end end })
+hl = proxy
+dofile(arg[1])
+"""
+        for shell in ('noctalia', 'dms'):
+            with self.subTest(shell=shell), tempfile.TemporaryDirectory() as temp:
+                work = Path(temp)
+                (work/'fedora-postinstall').mkdir()
+                (work/'fedora-postinstall/shell').write_text(shell+'\n')
+                settings = work/'hypr/dms'
+                settings.mkdir(parents=True)
+                for name in ('outputs', 'layout', 'colors'):
+                    (settings/(name+'.lua')).write_text('local f = assert(io.open(os.getenv("TRACE"), "a")); f:write("'+name+'\\n"); f:close()\n')
+                trace = work/'loaded'
+                env = dict(os.environ, XDG_CONFIG_HOME=str(work), TRACE=str(trace))
+                result = subprocess.run(['lua', '-', str(ROOT/'config/hyprland/hyprland.lua')], input=runner,
+                                        env=env, text=True, capture_output=True)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                if shell == 'dms':
+                    self.assertEqual(set(trace.read_text().splitlines()), {'outputs', 'layout', 'colors'})
+                else:
+                    self.assertFalse(trace.exists())
+
     def test_only_unmodified_legacy_config_migrates(self):
         script = r'''
 source "$1/lib/core.sh"

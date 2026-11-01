@@ -40,6 +40,12 @@ bash install.sh --desktop dms --modules "hyprland dms"
 bash install.sh --desktop noctalia --modules "hyprland noctalia"
 ```
 
+W wariancie DMS konfiguracja wczytuje istniejące pliki `colors`, `outputs`, `layout`,
+`cursor`, `input` i `windowrules` z `~/.config/hypr/dms/*.lua`, tworzone przez upstream.
+Przy pierwszym starcie ich brak jest dozwolony. Pliki te są pomijane w Noctalia;
+skróty wybranych aplikacji pozostają zarządzane przez ten projekt, bez wczytywania
+alternatywnego zestawu skrótów DMS.
+
 Po zmianie wyloguj się i rozpocznij nową sesję Hyprland. Instalator nie zabija działającej
 powłoki ani nie usuwa drugiej. Plik `~/.config/fedora-postinstall/shell` zawiera wybór;
 wspólny selektor obsługuje autostart, launcher, panel, ustawienia i kontrolę IPC.
