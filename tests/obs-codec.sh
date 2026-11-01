@@ -9,6 +9,22 @@ source "$ROOT/lib/core.sh"
 source "$ROOT/modules/multimedia.sh"
 RUN=$(mktemp -d)
 trap 'rm -rf -- "$RUN"' EXIT
+# Reproduce the stock KDE placeholder even when the fresh container's dependency
+# resolver already chose the real codec. These mutations are fixture-only.
+if rpm -q openh264 >/dev/null 2>&1; then
+    if rpm -q mozilla-openh264 >/dev/null 2>&1; then
+        sudo dnf5 -y --setopt=clean_requirements_on_remove=False remove mozilla-openh264
+    fi
+    sudo dnf5 -y --repo=fedora --repo=updates --setopt=clean_requirements_on_remove=False \
+        --setopt=install_weak_deps=False swap openh264 noopenh264
+else
+    sudo dnf5 -y --repo=fedora --repo=updates --setopt=install_weak_deps=False install noopenh264
+fi
+rpm -q noopenh264
+if ffmpeg -nostdin -hide_banner -loglevel error -f lavfi -i color=size=32x32:rate=1 \
+    -frames:v 1 -c:v libopenh264 -an -f null -; then
+    die 'The placeholder unexpectedly encoded H.264; the regression fixture is invalid.'
+fi
 rpm -qa --qf '%{NAME}\n' | sort -u > "$RUN/before"
 configure_obs_codecs
 configure_obs_codecs
