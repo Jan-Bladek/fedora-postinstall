@@ -1,0 +1,24 @@
+{
+  "result": "passed",
+  "modules": [
+    "snapshots",
+    "dependencies",
+    "hyprland",
+    "noctalia",
+    "terminal",
+    "development",
+    "browsers",
+    "multimedia",
+    "utilities",
+    "defaults",
+    "optimization",
+    "updates"
+  ],
+  "iso_sha256": {
+    "Fedora-Everything-netinst-x86_64-44-1.7.iso": "bd285201494dd0ba09b54d05ac707de1401668b8512a573edb5922dcf9d7067e",
+    "Fedora-KDE-Desktop-Live-44-1.7.x86_64.iso": "c8295961d4c41adbf785a31a17c21a971d3b7415fda72dcad0c11c49577bf03a"
+  },
+  "graphical_session": "not tested by this SSH-only fixture",
+  "source_commit": "641709d",
+  "run_url": "https://github.com/Jan-Bladek/fedora-postinstall/actions/runs/41304027246"
+}

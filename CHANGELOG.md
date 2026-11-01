@@ -1,5 +1,23 @@
 # Changelog
 
+## 0.2.1 — 2026-11-01
+
+- Walidacja sesji sprawdza aktywny socket Wayland, włączony monitor i odpowiedź
+  IPC Noctalia z limitem czasu. Sama obecność zawieszonego procesu nie wystarcza.
+- Usunięto zależność sprawdzenia monitorów od instrukcji Python `assert`, która
+  znika przy optymalizacji interpretera.
+- `validate-session --check-only` pozwala sprawdzać sesję automatycznie i jawnie
+  pozostawia wymóg ręcznej akceptacji przed usunięciem Plasma.
+- Dodano `scripts/plan-plasma-removal`: wspólną z modułem listę kandydatów i test
+  zależności RPM bez usuwania pakietów. Testy chronią aplikacje KDE i Qt.
+- Dodano interaktywny test portalu ScreenCast i rzeczywistych klatek PipeWire.
+- Moduł OBS zastępuje atrapę `noopenh264` prawdziwym kodekiem z dostarczanego
+  przez Fedorę repozytorium Cisco i sprawdza rzeczywiste kodowanie klatki H.264.
+  Pakiety wymagające atrapy po nazwie blokują wymianę zamiast być usuwane.
+- Dodano regresję odtwarzającą błąd kodera oraz test trzech zakodowanych klatek,
+  powtórzenia konfiguracji i zachowania pozostałych pakietów.
+- Wyniki kolejnych prób uśpienia i OBS są opisane w [TESTING.md](TESTING.md).
+
 ## 0.2.0 — 2026-10-31
 
 - Naprawiono instalację na Fedora 44: `polkit-kde`, `7zip`, `wget2-wget`,

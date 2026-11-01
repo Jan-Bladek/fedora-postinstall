@@ -34,7 +34,7 @@ Zachowaj kolejność powyżej. Moduły aplikacji potrzebują dostępu do sieci i
 | terminal | Kitty, Bash, EDITOR/VISUAL/TERMINAL |
 | development | Rust/Cargo, Python 3 (pip, nagłówki), C/C++ (GCC, CMake, Ninja, GDB), VSCodium RPM producenta; RustRover, IntelliJ IDEA, WebStorm z oficjalnego API JetBrains; Arduino IDE 2 AppImage z GitHub Arduino |
 | browsers | Brave i LibreWolf z repozytoriów dostawców |
-| multimedia | OBS z Fedory; Vesktop i Steam z Flathub |
+| multimedia | OBS i ffmpeg-free z Fedory, OpenH264 z dostarczanego przez Fedorę repozytorium Cisco; Vesktop i Steam z Flathub |
 | utilities | Obsidian i LocalSend z Flathub; Tailscale RPM, tailscaled bez logowania |
 | defaults | Brave HTTP/HTTPS/HTML, VSCodium text/plain, terminal Kitty |
 | optimization | Diagnostyka; zachowanie zarządzania energią Fedory, zram i zabezpieczeń |
@@ -62,11 +62,22 @@ Pliki użytkownika nie są nadpisywane; propozycja trafia do `.fedora-postinstal
 Po pierwszej instalacji wyloguj się i zaloguj do Hyprland. Sprawdź także Wi-Fi, Bluetooth, zewnętrzne monitory, blokadę, uśpienie i wybudzenie. Następnie:
 
 ```bash
+# Kontrola automatyczna; nie zastępuje ręcznych testów ani akceptacji sesji.
+bash scripts/validate-session --check-only
+# Plan można odczytać również przed uruchomieniem Hyprland.
+bash scripts/plan-plasma-removal
+# Pełna walidacja pyta o wyniki ręcznych testów.
 bash scripts/validate-session
 bash install.sh --modules "kde-removal"
 ```
 
 Etap wymaga aktywnej sesji, monitorów, braku błędów konfiguracji, procesu Noctalia, usług i ręcznego potwierdzenia testów. To test zdrowia plus akceptacja człowieka, nie dowód działania każdej funkcji. RPM analizuje zależności dokładnej listy. Jeśli zachowany pakiet wymaga Plasma, operacja zostaje zablokowana; nie rozszerza listy kosztem aplikacji. Archiwa dokładnych wersji RPM muszą być dostępne do pobrania przed usunięciem. Brak wersji w repozytorium blokuje usuwanie. Usunięcie używa `rpm -e` z zależnościami, bez kaskady i autoremove; końcowe `dnf5 check` weryfikuje bazę.
+
+`plan-plasma-removal` kończy się niezerowym kodem, jeśli RPM wykryje zależności
+blokujące usunięcie. Nie traktuj tego jako zgody na wymuszenie operacji. W VM
+potwierdzono m.in. zależność `sddm-wayland-plasma` oraz Plasma Login Manager od KWin.
+Przed usunięciem trzeba zapewnić menedżer logowania niezależny od usuwanych pakietów.
+Sam zainstalowany pakiet `sddm` nie jest dowodem takiej niezależności.
 
 Lista jest konserwatywna: lokalne dodatki Plasma spoza listy mogą pozostać. Ich usunięcie wymaga osobnego audytu. Autostarty należące do usuniętych RPM znikają wraz z nimi; własne autostarty użytkownika pozostają do przeglądu. Qt i aplikacje KDE są chronione przez zachowanie wszystkich pakietów spoza listy, a nie przez nazwy kilku aplikacji. Lista wszystkich zachowanych pakietów jest sprawdzana po operacji.
 
@@ -148,3 +159,30 @@ sesję Hyprland. W VM wykryto jej rekurencyjne awarie podczas tworzenia powiadom
 Nie wyłączamy systemd-coredump; zrzuty i dziennik pozostają dostępne. W sesji Plasma
 warunek nie ogranicza działania tej jednostki. Pierwsze uruchomienie Noctalia może
 pokazać oficjalny ekran powitalny i prośbę o skonfigurowanie magazynu kluczy.
+
+## Test portalu w jednorazowej VM
+
+`tests/vm/portal-smoke.py` jest klientem testowym ScreenCast/PipeWire. Wymaga
+Python GI, GStreamer i aktywnej sesji Wayland; nie jest częścią powłoki Noctalia.
+Uruchom go tylko w testowej VM po ustawieniu
+`FEDORA_POSTINSTALL_TEST_TARGET=disposable`. Zatwierdź w oknie portalu monitor
+maszyny testowej. Test odbiera trzy klatki RGB, sprawdza ich rozmiar i niejednorodność
+oraz zapisuje `portal-frame.ppm` w bieżącym katalogu. To obraz udostępnionego pulpitu;
+przed publikacją sprawdź jego zawartość. Sukces testu potwierdza portal i PipeWire,
+ale sam w sobie nie potwierdza nagrania w OBS.
+
+
+## Kodek nagrywania OBS
+
+Pakiet `noopenh264` jest atrapą zgodności ABI: obecność kodera na liście FFmpeg
+nie potwierdza możliwości nagrywania. Moduł multimedia sprawdza prawdziwy
+`openh264` i w razie potrzeby wymienia wyłącznie tę atrapę, korzystając z repozytorium
+`fedora-cisco-openh264` dostarczanego przez Fedorę, z włączonym sprawdzaniem podpisów.
+Następnie rzeczywiście koduje syntetyczną klatkę H.264. Nie zmienia profili OBS.
+Jeżeli zainstalowane SDK lub inne pakiety wymagają `noopenh264` po nazwie, instalacja
+zatrzymuje się z ich listą do przeglądu. Nie usuwa tych pakietów automatycznie.
+Niedostępność repozytorium również zatrzymuje weryfikację.
+
+Źródła: [opis OpenH264 w Fedorze](https://fedoraproject.org/wiki/OpenH264)
+i [opis pakietu noopenh264](https://packages.fedoraproject.org/pkgs/noopenh264/noopenh264/).
+Działanie NVENC/VAAPI wymaga osobnych testów na fizycznym GPU.

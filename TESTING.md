@@ -1,11 +1,81 @@
-# Validation record — 2026-10-31
+# Validation record — updated 2026-11-01
 
 **Full Fedora KDE 44 CLI installation, repeat and reboot passed** in
-[the final KVM run](https://github.com/Jan-Bladek/fedora-postinstall/actions/runs/41220450322).
-The separate local VM demonstrated Noctalia/Kitty GUI and lock/unlock; graphical
-suspend/resume failed in its TCG/VirGL setup. Positive Plasma removal is untested.
+[the follow-up KVM run](https://github.com/Jan-Bladek/fedora-postinstall/actions/runs/41304027246).
+The separate local VM demonstrated Noctalia/Kitty GUI, lock/unlock, portal frames
+and a short OBS recording. Graphical suspend/resume failed in its TCG/VirGL setup
+on both tested kernels. Positive Plasma removal is untested.
 
-## Actual Fedora KDE VM
+
+## Follow-up validation — v0.2.1
+
+[Full KVM run 41304027246](https://github.com/Jan-Bladek/fedora-postinstall/actions/runs/41304027246)
+passed at runtime commit `641709d`: all 12 default modules, repeat installation,
+compiler programs, configuration preservation, removal guards, reboot and DNF check.
+[Result JSON](tests/vm/evidence/fedora44-kvm-result-v0.2.1.json) records this run.
+It is an SSH-only fixture; it does not establish graphical suspend or recording.
+
+[Focused application run 41304746513](https://github.com/Jan-Bladek/fedora-postinstall/actions/runs/41304746513)
+passed at `bd3af75`, including the later protection for placeholder-specific SDKs.
+It deliberately installed Fedora's `noopenh264` stub, reproduced the encoder
+failure, invoked the real codec helper twice, and encoded/decoded three H.264 frames
+at 64×64. No original RPM other than the placeholder was removed, and `dnf5 check`
+passed. The same job also installed the selected Flatpaks/vendor RPMs and checked
+browser/editor associations. The [static/native checks](https://github.com/Jan-Bladek/fedora-postinstall/actions/runs/41304746404)
+passed Bash syntax, ShellCheck and **12** safety/regression tests. The local suite
+also passed all 12 tests on November 1.
+
+In the local graphical guest, `tests/vm/portal-smoke.py` received **three actual
+1280×800 RGB frames**, each with 256 distinct byte values, after interactive monitor
+approval in the Hyprland portal. This verifies a real ScreenCast/PipeWire frame path,
+rather than just the presence of services. The captured desktop was reviewed before
+publication:
+
+![Actual frame received from the ScreenCast portal](tests/vm/evidence/fedora44-portal-frame.png)
+
+Native OBS 32.1.1 was then tested interactively on kernel 7.2.13-200.fc44 with
+real OpenH264. After approving the PipeWire screen source, Start/Stop Recording
+produced a finalized 313344-byte MP4 lasting **12.501 seconds**. FFprobe decoded
+**375 H.264 video frames at 1024×640** and an AAC audio stream. A frame extracted
+from the actual recording shows the captured desktop:
+
+![Decoded frame from the actual OBS recording](tests/vm/evidence/fedora44-obs-decoded-frame.png)
+
+[FFprobe JSON](tests/vm/evidence/fedora44-obs-probe.json) records the file result.
+This was software encoding in TCG/VirGL: OBS reported **84.8% rendering lag** and
+**2.1% encoding lag**. It establishes a working short screen recording, not smooth
+performance or hardware acceleration. The audio source was a virtual null monitor;
+physical microphone/speaker capture and streaming were not tested. OBS subsequently
+closed normally with zero reported memory leaks. An earlier incomplete recording was
+0 bytes and was not counted as success. The older OBS process crashed while closing
+its preview (`obs_enter_graphics` in the core backtrace); that shutdown crash is not
+claimed fixed by replacing the codec. No raw core or full video is published.
+
+`validate-session --check-only` passed in a healthy real session, including after
+cold boot on kernel 7.2.13-200.fc44. New regression tests reject missing/disabled
+monitors and failed Noctalia IPC even with `PYTHONOPTIMIZE=1`. This automatic mode
+does not authorize removal; the destructive module still requires manual acceptance.
+
+The read-only Plasma plan was exercised in local and KVM guests. `rpm -e --test`
+reported dependencies from `sddm-wayland-plasma`, `plasma-login-manager`,
+`plasma-setup`, Fedora look-and-feel, Discover and NetworkManager subpackages.
+Complete installed-RPM inventories matched before and after the test. KDE apps and
+Qt remained installed. The refusal is intentional: simply installing SDDM does not
+replace its KWin-dependent greeter. **Positive Plasma removal remains unvalidated**;
+no dependency blockers were automatically deleted or manual acceptance fabricated.
+
+A fresh deep/S3 test on kernel **7.2.13-200.fc44** reproduced the graphical resume
+failure after OBS had closed. QEMU reported suspended, `system_wakeup` resumed the
+kernel and SSH with the same boot ID, and the journal reported `PM: suspend exit`.
+The display remained inactive. Session validation could not complete because
+Hyprland instance discovery returned an IPC error (`Resource temporarily unavailable`). This kernel update did not resolve graphical
+resume in this local fixture.
+
+The earlier kernel 6.19 s2idle follow-up also failed graphical recovery. RTC and
+keyboard did not wake it; an ACPI power-button event resumed the kernel, but Noctalia
+IPC failed and graphics did not recover. No permanent sleep-mode override is shipped.
+
+## Original v0.2.0 validation: actual Fedora KDE VM
 
 A separate QEMU VM was created from the Fedora 44 KDE Live filesystem, using the
 Fedora Everything netinst installer. The host is Omarchy; `/dev/kvm` is unavailable
@@ -151,7 +221,7 @@ not published.
 ## Not established by these results
 
 Physical GPU compatibility, real monitor hotplug/HiDPI, laptop energy use, audio
-hardware, OBS recording/screenshare, physical lock/suspend/resume, IDE activation and
+hardware, sustained OBS recording/streaming and hardware encoding, physical lock/suspend/resume, IDE activation and
 positive Plasma removal/reinstallation still require separate validation. Installing
 an application is not proof that all of its features work. Hyprmod remains explicitly
 skipped pending a supported Fedora installation method.
