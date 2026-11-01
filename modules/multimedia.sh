@@ -1,8 +1,12 @@
 #!/usr/bin/env bash
 configure_obs_codecs() {
-    packages ffmpeg-free
     if ! rpm -q openh264 >/dev/null 2>&1; then
-        local available
+        local available dependencies dependents
+        if rpm -q noopenh264 >/dev/null 2>&1; then
+            dependencies=$(rpm -qa --qf '%{NAME}\t[%{REQUIRENAME} ]\n') || return
+            dependents=$(awk -F '\t' '$2 ~ /(^|[^[:alnum:]_+.-])noopenh264([^[:alnum:]_+.-]|$)/ {print $1}' <<< "$dependencies") || return
+            [[ -z $dependents ]] || die "Retained packages explicitly require the placeholder; review before replacing it: $dependents"
+        fi
         log 'OBS H.264 requires the real codec, not Fedora noopenh264. Using the Fedora/Cisco repository shipped by Fedora.'
         available=$(sudo dnf5 --repo=fedora-cisco-openh264 --setopt=fedora-cisco-openh264.gpgcheck=1 -q repoquery --available openh264) || return
         [[ -n $available ]] || die 'OpenH264 is unavailable in the Fedora/Cisco repository; H.264 recording cannot be verified.'
@@ -17,6 +21,7 @@ configure_obs_codecs() {
                 --setopt=install_weak_deps=False install openh264 || return
         fi
     fi
+    packages ffmpeg-free
     rpm -q openh264 >/dev/null || die 'The real OpenH264 RPM was not installed.'
     if rpm -q noopenh264 >/dev/null 2>&1; then die 'The nonfunctional OpenH264 placeholder is still installed.'; fi
     packages openh264

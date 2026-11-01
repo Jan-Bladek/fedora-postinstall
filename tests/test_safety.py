@@ -142,6 +142,27 @@ plasma_removal_targets
         r = subprocess.run(['bash', str(ROOT/'install.sh'), '--dry-run', '--modules', '../lib/core'], capture_output=True)
         self.assertNotEqual(r.returncode, 0)
 
+    def test_codec_swap_refuses_placeholder_specific_consumers(self):
+        script = r"""
+source "$1/lib/core.sh"
+source "$1/modules/multimedia.sh"
+rpm() {
+    case "$*" in
+        '-q openh264') return 1 ;;
+        '-q noopenh264') return 0 ;;
+        *) printf 'custom-sdk\tnoopenh264(x86-64) glibc\n' ;;
+    esac
+}
+packages() { echo UNEXPECTED_MUTATION; return 88; }
+sudo() { echo UNEXPECTED_MUTATION; return 88; }
+configure_obs_codecs
+"""
+        result = subprocess.run(['bash', '-eu', '-c', script, 'test', str(ROOT)],
+                                capture_output=True, text=True)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn('custom-sdk', result.stderr)
+        self.assertNotIn('UNEXPECTED_MUTATION', result.stdout)
+
     def test_repository_rejects_unsafe_inputs(self):
         for body in ('baseurl=https://evil.example/rpm\ngpgkey=https://evil.example/key\ngpgcheck=1',
                      'baseurl=https://repo.vscodium.dev/rpm\ngpgkey=https://repo.vscodium.dev/key\ngpgcheck=0'):
