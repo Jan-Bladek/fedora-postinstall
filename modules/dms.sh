@@ -11,7 +11,7 @@ module_dms() {
     fi
     packages dms brightnessctl
     command -v dms >/dev/null || die 'The DMS executable is missing.'
-    run dms --version
+    run dms version
     select_shell dms
     log 'DMS starts only through Hyprland, not a global user service. Existing DMS profiles are retained.'
     log 'DMS provides its own Polkit agent; the Hyprland selector does not start polkit-kde for DMS.'

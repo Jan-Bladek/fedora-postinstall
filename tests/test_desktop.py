@@ -43,6 +43,17 @@ class DesktopChoice(unittest.TestCase):
                 self.assertNotIn('FORBIDDEN', result.stdout+result.stderr)
             self.assertEqual(list(home.iterdir()), [])
 
+    def test_dms_repo_rejects_an_unrelated_copr_dependency(self):
+        with tempfile.TemporaryDirectory() as temp:
+            repo = Path(temp)/'dms.repo'
+            for project, accepted in [('duxlabs/dms', True), ('duxlabs/dux-repo', True),
+                                      ('someone/another-shell', False)]:
+                repo.write_text('[dms]\ngpgcheck=1\nbaseurl=https://download.copr.fedorainfracloud.org/results/'+project+
+                                '/fedora-44-x86_64/\ngpgkey=https://download.copr.fedorainfracloud.org/results/'+project+'/pubkey.gpg\n')
+                result = subprocess.run(['python3', str(ROOT/'scripts/check-repo.py'), 'dms-copr', str(repo)],
+                                        capture_output=True)
+                self.assertEqual(result.returncode == 0, accepted)
+
     def test_shell_ipc_routes_only_to_selected_provider(self):
         with tempfile.TemporaryDirectory() as temp:
             work = Path(temp)
