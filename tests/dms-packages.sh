@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Only execute in a disposable Fedora 44 CI container, never on the workstation.
 set -Eeuo pipefail
-[[ ${FEDORA_POSTINSTALL_TEST_TARGET:-} == disposable  ]] || exit 1
+[[ ${FEDORA_POSTINSTALL_TEST_TARGET:-} == disposable ]] || exit 1
 source /etc/os-release
 [[ $ID == fedora && $VERSION_ID == 44 ]] || exit 1
 ROOT=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
@@ -13,7 +13,7 @@ if ((EUID == 0)); then
     useradd -m dms-tester
     printf 'dms-tester ALL=(ALL) NOPASSWD: ALL\n' > /etc/sudoers.d/dms-test
     chmod 440 /etc/sudoers.d/dms-test
-    exec runuser -u dms-tester -- env FEDORA_POSTINSTALL_TEST_TARGET=disposable bash "$ROOT/tests/dms-packages.sh"
+    exec sudo -H -u dms-tester env FEDORA_POSTINSTALL_TEST_TARGET=disposable bash "$ROOT/tests/dms-packages.sh"
 fi
 RUN=$(mktemp -d)
 CONFIG=$RUN/config

@@ -21,6 +21,7 @@ class SessionHealth(unittest.TestCase):
                 'systemctl': 'exit 0\n',
                 'kitty': 'exit 0\n',
                 'noctalia': 'echo PRIVATE_SESSION_STATUS; exit "$IPC_EXIT"\n',
+                'dms': 'echo PRIVATE_SESSION_STATUS; exit "$IPC_EXIT"\n',
             }
             for name, body in scripts.items():
                 executable = shim / name
@@ -36,17 +37,24 @@ class SessionHealth(unittest.TestCase):
                          ([dict(active, dpmsStatus=False)], '0', False),
                          ([dict(active, width=0)], '0', False),
                          ([active], '44', False), ([active], '0', True)]
-                for optimized in ('0', '1'):
-                    for monitors, ipc_exit, expected in cases:
-                        with self.subTest(optimized=optimized, monitors=monitors, ipc=ipc_exit):
-                            fixture.write_text(json.dumps(monitors))
-                            env = dict(os.environ, PATH=str(shim)+':'+os.environ['PATH'],
-                                       XDG_CONFIG_HOME=str(work/'config'),
-                                       XDG_RUNTIME_DIR=str(work), WAYLAND_DISPLAY=str(display),
-                                       HYPRLAND_INSTANCE_SIGNATURE='fixture', PYTHONOPTIMIZE=optimized,
-                                       MONITOR_FIXTURE=str(fixture), IPC_EXIT=ipc_exit)
-                            result = subprocess.run([str(ROOT/'scripts/validate-session'), '--check-only'],
-                                                    env=env, text=True, capture_output=True)
-                            self.assertEqual(result.returncode == 0, expected, result.stderr)
-                            self.assertNotIn('PRIVATE_SESSION_STATUS', result.stdout+result.stderr)
-                            self.assertNotIn('manual session acceptance passed', result.stdout)
+                for shell in ('noctalia', 'dms'):
+                    config = work/'config/fedora-postinstall'
+                    config.mkdir(parents=True, exist_ok=True)
+                    (config/'shell').write_text(shell+'\n')
+                    self.check_cases(work, shim, fixture, display, cases)
+
+    def check_cases(self, work, shim, fixture, display, cases):
+        for optimized in ('0', '1'):
+            for monitors, ipc_exit, expected in cases:
+                with self.subTest(optimized=optimized, monitors=monitors, ipc=ipc_exit):
+                    fixture.write_text(json.dumps(monitors))
+                    env = dict(os.environ, PATH=str(shim)+':'+os.environ['PATH'],
+                               XDG_CONFIG_HOME=str(work/'config'),
+                               XDG_RUNTIME_DIR=str(work), WAYLAND_DISPLAY=str(display),
+                               HYPRLAND_INSTANCE_SIGNATURE='fixture', PYTHONOPTIMIZE=optimized,
+                               MONITOR_FIXTURE=str(fixture), IPC_EXIT=ipc_exit)
+                    result = subprocess.run([str(ROOT/'scripts/validate-session'), '--check-only'],
+                                            env=env, text=True, capture_output=True)
+                    self.assertEqual(result.returncode == 0, expected, result.stderr)
+                    self.assertNotIn('PRIVATE_SESSION_STATUS', result.stdout+result.stderr)
+                    self.assertNotIn('manual session acceptance passed', result.stdout)
