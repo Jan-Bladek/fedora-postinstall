@@ -64,6 +64,11 @@ Oficjalne źródła: [instalacja DMS](https://duxlabs.dev/docs/dms/installation)
 [komendy IPC](https://duxlabs.dev/docs/dms/keybinds-ipc),
 [repozytorium upstream](https://github.com/duxlabs-dev/dux-shell).
 
+W lokalnej VM TCG/VirGL uruchomienie interfejsu DMS wymagało tymczasowego wyłączenia
+realtime Hyprland w konfiguracji testowej; instalator nie stosuje tego ustawienia
+na zwykłych komputerach. Dokładny zakres testów GUI, źródła wyników oraz ograniczenia
+są w [TESTING.md](TESTING.md).
+
 ## Uruchomienie
 
 ```bash
@@ -114,7 +119,7 @@ Priorytet źródeł nie oznacza instalowania nieutrzymywanych RPM z przypadkowyc
 
 Konfiguracja Hyprland wymaga wersji >=0.55 z Lua oraz wybranej Noctalia v5 lub DMS. Noctalia używa natywnego v5; nie instalujemy jej starego wariantu v4/Quickshell. DMS korzysta z Quickshell jako zależności RPM. Nie dodajemy Waybar, dunst ani osobnego launchera. Noctalia obsługuje interfejs, powiadomienia, schowek i funkcje sesji. Ustawienia Noctalia tworzy sam upstream; projekt nie wymyśla schematu settings. Dobierz idle, blokadę, monitory i skalowanie w ustawieniach Noctalia, następnie przetestuj przed usuwaniem Plasma.
 
-Super+Enter: Kitty; Super+Space: launcher wybranej powłoki; Super+S: panel; Super+B: Brave; Super+Q: zamknij; Super+F: fullscreen; Super+1–9: workspace; Shift+Super+1–9: przenieś okno. Układ klawiatury PL. Audio i screencast używają PipeWire/WirePlumber i portalu Hyprland, file chooser portalu GTK. Polkit uruchamia natywny pakiet Fedory `polkit-kde` (`/usr/libexec/kf6/polkit-kde-authentication-agent-1`). Agent pozostaje po usunięciu Plasma. SDDM jest instalowany jako dostępny zamiennik; istniejący menedżer logowania jest zachowany. Fedora KDE 44 domyślnie używa Plasma Login Manager, nie SDDM ([zmiana Fedory](https://fedoraproject.org/wiki/Changes/PlasmaLoginManager)). Wybierz Hyprland na ekranie logowania; zapamiętanie sesji zależy od menedżera logowania. Nie włączamy autologowania.
+Super+Enter: Kitty; Super+Space: launcher wybranej powłoki; Super+S: panel; Super+B: Brave; Super+Q: zamknij; Super+F: fullscreen; Super+1–9: workspace; Shift+Super+1–9: przenieś okno. Układ klawiatury PL. Audio i screencast używają PipeWire/WirePlumber i portalu Hyprland, file chooser portalu GTK. W wariancie Noctalia Polkit uruchamia natywny pakiet Fedory `polkit-kde` (`/usr/libexec/kf6/polkit-kde-authentication-agent-1`). Agent pozostaje po usunięciu Plasma. SDDM jest instalowany jako dostępny zamiennik; istniejący menedżer logowania jest zachowany. Fedora KDE 44 domyślnie używa Plasma Login Manager, nie SDDM ([zmiana Fedory](https://fedoraproject.org/wiki/Changes/PlasmaLoginManager)). Wybierz Hyprland na ekranie logowania; zapamiętanie sesji zależy od menedżera logowania. Nie włączamy autologowania.
 
 Pliki użytkownika nie są nadpisywane; propozycja trafia do `.fedora-postinstall-new`. Przy istniejącym hyprland.conf/Lua konieczne jest ręczne scalenie i sprawdzenie, którą konfigurację ładuje compositor. Zmienne środowiskowe environment.d wymagają nowego logowania. Dodaj ~/.local/bin do PATH. Brak uniwersalnego standardu domyślnego terminala: TERMINAL, MIME i skrót sesji wskazują Kitty.
 

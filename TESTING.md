@@ -31,6 +31,32 @@ manager symlink. Plasma Desktop/Workspace 6.7.5, Dolphin, Okular, KWrite and Qt6
 installed. This tests the Plasma preset with a limited module set, not a second full
 installation of every application.
 
+A real graphical DMS session also passed automatic session validation (active
+monitor, configuration, shell IPC, PipeWire/WirePlumber and portal services). The
+bar and wallpaper rendered, `lock isLocked` replied `false`, and **Super+Space**
+opened the launcher using the generated keybind and shared selector. Noctalia was
+absent; `dms.service` was disabled, so startup came from the compositor configuration.
+
+![Actual DMS launcher opened through Super+Space](tests/vm/evidence/fedora44-dms-launcher.png)
+
+This local TCG/VirGL test required **a fixture-only `HYPRLAND_NO_RT=1` override** in
+Hyprland's Lua configuration. Without it, session startup repeatedly entered safe
+mode and the log reported a realtime CPU budget overrun (`SIGXCPU`). A temporary
+SDDM environment override was not inherited and did not establish a workaround;
+setting `hl.env("HYPRLAND_NO_RT", "1")` in the test configuration allowed the session
+to complete. This implicates realtime scheduling in this fixture, but does not
+establish the entire crash mechanism. The installer does not ship this override.
+The setting is documented by [upstream Hyprland](https://wiki.hypr.land/configuring/core/environment-variables/).
+A separate `hyprland-dialog` crash during recovery was observed and is not claimed
+fixed. No raw cores are published.
+
+The existing local configuration contained a manually added EGL workaround comment;
+it was preserved, with a proposed file generated. The reviewed proposal was applied
+manually in this disposable VM for the GUI test. Exact unmodified-template migration
+is covered by regression tests. The stale GTK portal unit from earlier crashed
+sessions was restarted for this fixture. DMS logged QML binding-loop/audio warnings;
+physical audio, full lock/suspend tests and OBS in DMS were not established.
+
 Initial DMS CI failures exposed two test-fixture issues (root CLI use and absent
 `runuser`) and one installer error (`--version` instead of the supported `version`
 subcommand). These were corrected before the passing run. Container installation
