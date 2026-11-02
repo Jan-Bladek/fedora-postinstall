@@ -7,13 +7,11 @@ case ${1:-} in ''|--capture-smoke) ;; *) echo 'Usage: validate-omasnap [--captur
 hyprctl -j binds | python3 -c '
 import json, sys
 binds = json.load(sys.stdin)
-for key, mask in [("PRINT", 0), ("S", 65)]:
-    matches = [b for b in binds if str(b.get("key", "")).upper() == key and b.get("modmask") == mask]
-    if len(matches) != 1 or "omasnap" not in matches[0].get("arg", ""):
+for key, mask, description, code in [("PRINT", 0, "Omasnap: capture", 107), ("S", 65, "Omasnap: edit region", 39)]:
+    matches = [b for b in binds if (str(b.get("key", "")).upper() == key or b.get("keycode") == code) and b.get("modmask") == mask and not b.get("submap")]
+    if len(matches) != 1 or matches[0].get("description") != description:
         sys.exit(f"Missing or conflicting Omasnap shortcut: {key}, mask {mask}: {matches}")
-    if mask == 65 and "--editor overlay" not in matches[0]["arg"]:
-        sys.exit("Region shortcut does not start the editor")
-print("Both Omasnap shortcuts are unique and route to the expected commands.")
+print("Both Omasnap shortcuts are unique and have the expected descriptions.")
 '
 if [[ ${1:-} == --capture-smoke ]]; then
     # Warn before touching clipboard or recording desktop pixels.

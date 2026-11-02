@@ -29,7 +29,7 @@ def plan(selected, installed):
                 targets.update(p for p in installed if p == 'libreoffice' or p.startswith('libreoffice-'))
             elif not package.startswith('@') and package in installed:
                 targets.add(package)
-    return {'groups': keys, 'remove': sorted(targets), 'hide_uuctl': 'uuctl' in keys}
+    return {'groups': keys, 'remove': sorted(targets), 'hide_uuctl': 'uuctl' in keys, 'hide_menu_editor': 'menu-editor' in keys}
 
 
 if __name__ == '__main__':

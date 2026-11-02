@@ -116,7 +116,7 @@ Usuwane są tylko zainstalowane pakiety z listy, w tym konkretne podpakiety dane
 
 Przed usunięciem: plan JSON i test `rpm -e --test`, pobranie dokładnych wersji RPM do odzyskiwania, ponowny test zależności. Po usunięciu: porównanie inwentarza dowodzące zachowania pozostałych pakietów oraz `dnf5 check`. **Brak dokładnego RPM w repo lub zależność zachowanego programu blokuje czyszczenie.** Standardowy przebieg najpierw aktualizuje pakiety; po częściowym błędzie napraw przyczynę i uruchom ponownie.
 
-`uuctl` jest tylko ukrywany w launcherze, ponieważ należy do potrzebnego `uwsm`. Nie usuwamy uwsm, Qt, KWin ani systemowych usług tylko po to, by usunąć aplikację. `kworker` to wątki jądra: nie wyłączamy ich. Zatrzymujemy/wyłączamy wyłącznie jednostki użytkownika należące do usuwanych aplikacji oraz ich wskazany daemon KDE Connect. Współdzielony Akonadi może pozostać potrzebny innym programom, jeśli pozostawisz część PIM przez CLI. Własne autostarty użytkownika nie są kasowane.
+`uuctl` jest tylko ukrywany w launcherze, ponieważ należy do potrzebnego `uwsm`. Edytor menu `kmenuedit` również jest ukrywany, gdyż jest twardą zależnością zachowanej Plasma. Nie można bezpiecznie usunąć tego RPM i zachować kompletnych zależności Plasma. Nie usuwamy uwsm, Qt, KWin ani systemowych usług tylko po to, by usunąć aplikację. `kworker` to wątki jądra: nie wyłączamy ich. Zatrzymujemy/wyłączamy wyłącznie jednostki użytkownika należące do usuwanych aplikacji oraz ich wskazany daemon KDE Connect. Współdzielony Akonadi może pozostać potrzebny innym programom, jeśli pozostawisz część PIM przez CLI. Własne autostarty użytkownika nie są kasowane.
 
 Przywrócenie RPM z TTY:
 

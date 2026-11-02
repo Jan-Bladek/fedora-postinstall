@@ -42,7 +42,10 @@ module_cleanup() {
         if systemctl --user show-environment >/dev/null 2>&1; then run systemctl --user daemon-reload; fi
     fi
     if python3 -c 'import json,sys; sys.exit(not json.load(open(sys.argv[1]))["hide_uuctl"])' "$RUN/cleanup-plan.json"; then
-        python3 "$ROOT/scripts/hide-uuctl.py" "$CONFIG"
+        python3 "$ROOT/scripts/hide-launcher.py" uuctl.desktop
+    fi
+    if python3 -c 'import json,sys; sys.exit(not json.load(open(sys.argv[1]))["hide_menu_editor"])' "$RUN/cleanup-plan.json"; then
+        python3 "$ROOT/scripts/hide-launcher.py" org.kde.kmenuedit.desktop
     fi
     # Common alternate installations: remove only the selected app, retaining
     # Flatpak runtimes and application data (never use --unused/--delete-data).

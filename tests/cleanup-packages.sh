@@ -18,7 +18,7 @@ catalog=runpy.run_path(sys.argv[1]+'/scripts/cleanup-plan.py')['groups']()
 print('\n'.join(sorted({p for _, packages in catalog.values() for p in packages if not p.startswith('@') and p != 'codium'})))
 PY
 )
-    dnf5 -y install hyprland plasma-desktop plasma-workspace uwsm dolphin okular kwrite libreoffice-writer libreoffice-calc "${apps[@]}"
+    dnf5 -y install hyprland plasma-desktop plasma-workspace uwsm kmenuedit dolphin okular kwrite libreoffice-writer libreoffice-calc "${apps[@]}"
     useradd -m cleanup-tester
     printf 'cleanup-tester ALL=(ALL) NOPASSWD: ALL\n' > /etc/sudoers.d/cleanup-test
     chmod 440 /etc/sudoers.d/cleanup-test
@@ -32,14 +32,15 @@ CLEANUP_APPS=all
 export INSTALL_APPROVED=1
 mkdir -p "$CONFIG" "$HOME/Documents"
 printf 'keep-user-data\n' > "$HOME/Documents/keep.txt"
-rpm -q plasma-desktop plasma-workspace uwsm dolphin okular kwrite qt6-qtbase > "$RUN/protected-before"
+rpm -q plasma-desktop plasma-workspace uwsm kmenuedit dolphin okular kwrite qt6-qtbase > "$RUN/protected-before"
 mkdir -m 700 "$RUN/runtime"
 XDG_RUNTIME_DIR="$RUN/runtime" Hyprland --verify-config --config "$ROOT/config/hyprland/hyprland.lua"
 module_cleanup
 module_cleanup
-rpm -q plasma-desktop plasma-workspace uwsm dolphin okular kwrite qt6-qtbase > "$RUN/protected-after"
+rpm -q plasma-desktop plasma-workspace uwsm kmenuedit dolphin okular kwrite qt6-qtbase > "$RUN/protected-after"
 cmp "$RUN/protected-before" "$RUN/protected-after"
 [[ $(cat "$HOME/Documents/keep.txt") == keep-user-data ]]
+grep -Fxq 'NoDisplay=true' "$HOME/.local/share/applications/org.kde.kmenuedit.desktop"
 grep -Fxq 'NoDisplay=true' "$HOME/.local/share/applications/uuctl.desktop"
 for app in firefox libreoffice-writer kmail kde-connect; do
     if rpm -q "$app" >/dev/null 2>&1; then exit 1; fi

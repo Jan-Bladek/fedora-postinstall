@@ -32,11 +32,11 @@ kfind	KFind	kfind
 uuctl	Ukryj uuctl (zachowaj uwsm)	@hide-uuctl
 infocenter	Ośrodek informacyjny	kinfocenter
 vscodium	Stary VSCodium (zastąpiony przez VS Code)	codium
-kmail-import	Pomocnik importu KMail	akonadi-import-wizard mbox-importer
+kmail-import	Pomocnik importu KMail	akonadi-import-wizard mbox-importer kdepim-addons
 spectacle	Spectacle	spectacle
 dragon	Dragon Player	dragon
-krfb	Krfb	krfb
-gwenview	Gwenview	gwenview
+krfb	Krfb	krfb krfb-libs
+gwenview	Gwenview	gwenview gwenview-libs
 kaddressbook	Książka adresowa KDE	kaddressbook kaddressbook-libs
-krdc	KRDC	krdc
-menu-editor	Edytor menu KDE	kmenuedit
+krdc	KRDC	krdc krdc-libs
+menu-editor	Ukryj edytor menu KDE (wymagany przez Plasma)	@hide-kmenuedit
