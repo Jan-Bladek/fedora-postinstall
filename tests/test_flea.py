@@ -157,10 +157,11 @@ module_files
             target = root/'src/backend/sandbox.rs'
             target.parent.mkdir(parents=True)
             original = 'const FLAGS = &[\n    "--unshare-all",\n    "--symlink",\n    "usr/lib",\n    "/lib64",\n    "--ro-bind",\n    "/usr",\n];\n'
+            original += 'let a = Path::new("/etc/hostname");\nlet b = Path::new("/etc/hostname");\n'
             target.write_text(original)
             subprocess.run(['python3', str(ROOT/'scripts/flea-fedora-patch.py'), temporary],
                            capture_output=True, text=True, check=True)
-            expected = original.replace('"usr/lib"', '"usr/lib64"')
+            expected = original.replace('"usr/lib"', '"usr/lib64"').replace('/etc/hostname', '/etc/passwd')
             self.assertEqual(target.read_text(), expected)
             refusal = subprocess.run(['python3', str(ROOT/'scripts/flea-fedora-patch.py'), temporary],
                                      capture_output=True, text=True)
