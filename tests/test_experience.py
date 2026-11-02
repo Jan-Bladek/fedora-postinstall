@@ -23,7 +23,7 @@ class Experience(unittest.TestCase):
                      'qt6-qtbase', 'NetworkManager', 'libreoffice-writer', 'libreoffice-core'}
         result = planner(['all'], installed)
         self.assertEqual(set(result['remove']), {'firefox', 'firefox-langpacks', 'kmail', 'kmail-libs',
-                                                'libreoffice-writer', 'libreoffice-core'})
+                                                'libreoffice-writer', 'libreoffice-core', 'dolphin'})
         self.assertTrue(result['hide_uuctl'])
         self.assertEqual(planner(['firefox'], installed)['remove'], ['firefox', 'firefox-langpacks'])
         with self.assertRaises(ValueError):
@@ -258,12 +258,12 @@ printf '\nRETAINED:%s:%s\n' "$MODULES" "$CLEANUP_APPS"
         self.assertIn('RETAINED:dependencies:', output)
 
     @unittest.skipUnless(shutil.which('whiptail'), 'native whiptail is unavailable')
-    def test_native_ide_selector_returns_full_profile(self):
+    def test_native_ide_selector_selects_rustrover(self):
         script = r'''source "$1/lib/ui.sh"
 ui_development_choice
-printf '\nPROFILE:%s\n' "$DEV_PROFILE"
+printf '\nAPPS:%s\n' "$DEV_APPS"
 '''
         status, output = self.run_terminal(['bash', '-eu', '-c', script, 'test', str(ROOT)],
                                            b'\x1bOB \r', rows=24, columns=80, ready=b'VS Code')
         self.assertEqual(status, 0, output)
-        self.assertIn('PROFILE:full', output)
+        self.assertIn('APPS:code rustrover', output)

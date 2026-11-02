@@ -63,12 +63,12 @@ local selector = io.open(config_home .. "/fedora-postinstall/shell", "r")
 local selected = selector and selector:read("*l") or "noctalia"
 if selector then selector:close() end
 if selected == "dms" then
-    for _, name in ipairs({ "colors", "outputs", "layout", "cursor", "input", "windowrules" }) do
-        local path = config_home .. "/hypr/dms/" .. name .. ".lua"
-        local file = io.open(path, "r")
-        if file then
-            file:close()
-            dofile(path)
-        end
-    end
+    -- Literal require calls let both Hyprland and DMS discover the includes.
+    -- Hyprland watches these modules and reloads when Matugen rewrites colors.
+    require("dms.colors")
+    require("dms.outputs")
+    require("dms.layout")
+    require("dms.cursor")
+    require("dms.input")
+    require("dms.windowrules")
 end

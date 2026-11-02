@@ -19,9 +19,10 @@ Uruchamiaj jako zwykły użytkownik. Instalator pokazuje kolejno:
 
 1. Wybór **Plasma**, **Hyprland + Noctalia** albo **Hyprland + DMS**.
 2. Pytanie **Debloat Plasma: tak/nie** — cały zestaw z listy, bez wyboru pojedynczych aplikacji. Domyślnie nie.
-3. Wybór **tylko VS Code** albo **VS Code + JetBrains (RustRover, IntelliJ IDEA, WebStorm) + Arduino IDE**. Rust/Python/C++ są wspólne; domyślnie VS Code.
-4. Jedno podsumowanie zgody na zmiany, źródła pakietów i klucze dostawców.
-5. Ekran postępu z bieżącym etapem/aplikacją. Pełne wyjście poleceń trafia do logu.
+3. Osobny wybór VS Code, RustRover, IntelliJ IDEA, WebStorm, CLion i Arduino IDE. Rust jest instalowany z RustRover, C/C++ z CLion, Node.js z WebStorm. Domyślnie zaznaczone jest VS Code.
+4. Wybór LibreOffice Writer/Calc/Impress po polsku; wybór zachowuje go również przy debloat.
+5. Jedno podsumowanie zgody na zmiany, źródła pakietów i klucze dostawców.
+6. Ekran postępu z bieżącym etapem/aplikacją. Pełne wyjście poleceń trafia do logu.
 
 TUI korzysta z whiptail, a gdy go brakuje — z Python curses. Nie wymaga pobrania skryptu interfejsu z internetu. TUI jest sprawdzane w terminalu 80×24; większe okno ułatwia czytanie. W podsumowaniu PgUp/PgDn przewija opis. W whiptail klawisz Tab przechodzi z opisu do przycisków; Enter zatwierdza. Esc anuluje wybór.
 
@@ -41,7 +42,7 @@ bash install.sh --yes --desktop plasma --cleanup-apps "firefox libreoffice neoch
 bash install.sh --desktop noctalia --keep-hypr-config
 ```
 
-`--no-progress` pozostawia zwykły log w terminalu. `--dry-run` nie używa sudo, DNF, Flatpak ani sieci i działa również poza Fedorą; pokazuje wybrane moduły, nie rozwiązuje zależności na obcym systemie. `--dev-profile code|full` wybiera zestaw IDE w trybie wsadowym (domyślnie `code`). Własny wybór modułów pozostaje dostępny przez `--modules`; zwykłe TUI nie ma checklisty modułów. Lista identyfikatorów czyszczenia dla CLI:
+`--no-progress` pozostawia zwykły log w terminalu. `--dry-run` nie używa sudo, DNF, Flatpak ani sieci i działa również poza Fedorą; pokazuje wybrane moduły, nie rozwiązuje zależności na obcym systemie. `--dev-apps "code clion"` wybiera pojedyncze IDE (`none` = żadne). `--dev-profile code|full` wybiera zestaw IDE w trybie wsadowym (domyślnie `code`). Własny wybór modułów pozostaje dostępny przez `--modules`; zwykłe TUI nie ma checklisty modułów. Lista identyfikatorów czyszczenia dla CLI:
 
 ```bash
 python3 scripts/cleanup-plan.py --catalog
@@ -79,7 +80,9 @@ Selektor `~/.config/fedora-postinstall/shell` steruje autostartem i skrótami. D
 | noctalia / dms | Jedna wybrana powłoka, bez Waybar, dunst i dodatkowego launchera |
 | terminal | Kitty, Bash, JetBrains Mono, symbole Nerd Fonts, konfiguracja fontów i terminala; btop z przezroczystym tłem |
 | lazyvim | Neovim, oficjalny starter LazyVim, lazy.nvim, ripgrep, fd, tree-sitter-cli i narzędzia kompilacji |
-| development | Rust/Cargo, Python/venv/pip, GCC/C++, CMake/Ninja/GDB i VS Code; JetBrains/Arduino tylko dla `--dev-profile full` |
+| development | Tylko wybrane IDE i ich SDK; `full` zawiera też CLion |
+| libreoffice | Opcjonalny Writer, Calc i Impress z polskim pakietem językowym |
+| hyprmod | GTK4/libadwaita HyprMod w narzędziu uv, przypięta rewizja; tylko Hyprland |
 | files | Flea: przypięta kompilacja Rust i prywatne moduły QML, domyślny menedżer plików; bezpieczne usunięcie Nautilusa |
 | omasnap | Przypięty build upstream Omasnap, testy, skróty, zarządzane aktualizacje/odinstalowanie; tylko Hyprland |
 | vscode | Sam VS Code z oficjalnego repozytorium Microsoftu i wyłączoną telemetrią |
@@ -98,7 +101,7 @@ Priorytetem są RPM Fedory i dostawców. Hyprland, gdy nie jest dostępny natywn
 
 Definicje repozytoriów są danymi: kontrolujemy HTTPS, dozwolone hosty i `gpgcheck=1`; nie wykonujemy pobranego pliku `.repo`. Klucze standardowych źródeł zatwierdzasz w podsumowaniu, a DNF weryfikuje podpisy. Nie jest to niezależna weryfikacja tożsamości klucza. Istniejący odmienny `.repo` blokuje automatyczne nadpisanie.
 
-JetBrains RustRover, IntelliJ IDEA i WebStorm pochodzą z oficjalnego API i archiwów, z weryfikacją SHA256; Arduino z oficjalnego wydania AppImage i opublikowanego digest. Toolbox nie zarządza tymi kopiami. Licencje/trial aktywuje użytkownik. Aktualne i wcześniejsze wersje są w `~/.local/share/fedora-postinstall/apps/`; nie zastępujemy ich plikami z przypadkowych repozytoriów.
+JetBrains RustRover, IntelliJ IDEA, WebStorm i CLion pochodzą z oficjalnego API i archiwów, z weryfikacją SHA256; Arduino z oficjalnego wydania AppImage i opublikowanego digest. Toolbox nie zarządza tymi kopiami. Licencje/trial aktywuje użytkownik. Aktualne i wcześniejsze wersje są w `~/.local/share/fedora-postinstall/apps/`; nie zastępujemy ich plikami z przypadkowych repozytoriów.
 
 Desktop launchery JetBrains mają rzeczywisty SVG/PNG z archiwum, kanoniczne identyfikatory `jetbrains-*` i `StartupWMClass`. Naprawa działa także przy tej samej zainstalowanej wersji:
 
@@ -106,13 +109,13 @@ Desktop launchery JetBrains mają rzeczywisty SVG/PNG z archiwum, kanoniczne ide
 python3 scripts/vendor-apps.py repair
 ```
 
-Własny zmieniony launcher jest zachowywany, z propozycją `.fedora-postinstall-new`. Hyprmod pozostaje jawnie pomijany: brak potwierdzonego utrzymywanego sposobu instalacji na Fedorze.
+Własny zmieniony launcher jest zachowywany, z propozycją `.fedora-postinstall-new`. HyprMod jest instalowany zgodnie z [upstream](https://github.com/BlueManCZ/hyprmod), przez `uv tool install` z rewizji w `data/hyprmod-revision`, z natywnymi zależnościami GTK/PyGObject. `hyprmod --install` rejestruje launcher. `fedora-update` stosuje tylko rewizję dostarczoną z instalatorem. Usuwanie: `hyprmod --uninstall`, potem `uv tool uninstall hyprmod`. Instalacja w Fedorze wymaga jeszcze testu wykonawczego.
 
 ## Opcjonalne czyszczenie aplikacji
 
 Lista jest w [data/cleanup.tsv](data/cleanup.tsv). Stary VSCodium można usunąć przez pozycję `vscodium`; nowa instalacja używa wyłącznie VS Code. Dane wcześniejszego edytora nie są kasowane. Obejmuje wskazane aplikacje PIM/KDE, gry, Firefox, LibreOffice, nwg-panel, Konsole i interfejsy zgłaszania problemów, a także pomocniki importu KMail, Spectacle, Dragon Player, Krfb, Gwenview, KAddressBook, KRDC i edytor menu KDE. Zestaw uwzględnia wspólne pakiety: np. KMail zawiera KTnef, Kleopatra dziennik GnuPG, a grantlee-editor wszystkie trzy edytory wyglądu kontaktów/nagłówków.
 
-Usuwane są tylko zainstalowane pakiety z listy, w tym konkretne podpakiety danej aplikacji. Cały natywny LibreOffice obejmuje rodzinę `libreoffice-*`. Firefox i LibreOffice są również sprawdzane jako Flatpak użytkownika/systemu. Nie usuwamy danych aplikacji ani niewykorzystanych runtime’ów Flatpak.
+Usuwane są tylko zainstalowane pakiety z listy, w tym konkretne podpakiety danej aplikacji. Dolphin i dolphin-plugins są częścią debloat: przed ich usunięciem wymagane są działające Flea i zweryfikowane skojarzenie folderów `inode/directory`. Jeśli wybierzesz moduł `libreoffice`, czyszczenie `all` zachowa LibreOffice. Cały natywny LibreOffice obejmuje rodzinę `libreoffice-*`. Firefox i LibreOffice są również sprawdzane jako Flatpak użytkownika/systemu. Nie usuwamy danych aplikacji ani niewykorzystanych runtime’ów Flatpak.
 
 Przed usunięciem: plan JSON i test `rpm -e --test`, pobranie dokładnych wersji RPM do odzyskiwania, ponowny test zależności. Po usunięciu: porównanie inwentarza dowodzące zachowania pozostałych pakietów oraz `dnf5 check`. **Brak dokładnego RPM w repo lub zależność zachowanego programu blokuje czyszczenie.** Standardowy przebieg najpierw aktualizuje pakiety; po częściowym błędzie napraw przyczynę i uruchom ponownie.
 
@@ -148,7 +151,7 @@ JetBrains Mono jest instalowany z Fedory, z aliasami fontconfig i ustawieniem fo
 
 btop ma `theme_background = False`, więc używa tła terminala (w Kitty z jego przezroczystością). Pozostałe ustawienia btop są zachowywane; stara wartość i duplikaty tylko tego klucza są zastępowane.
 
-Kitty: `confirm_os_window_close 0`, `background_opacity 0.90`, JetBrains Mono. Inne własne ustawienia są zachowane; aktualizowany jest tylko oznaczony blok żądanych kluczy. VS Code: `TelemetryLevel=off` w `/etc/vscode/policy.json` i ustawienia użytkownika. JSONC jest scalany z zachowaniem wartości innych kluczy; oryginał z komentarzami znajduje się w kopii. Telemetria niezależnych rozszerzeń wymaga ich własnych ustawień; nie deklarujemy blokowania całego ruchu sieciowego.
+Kitty: **Win+C / Win+V** kopiują zaznaczenie i wklejają schowek (mapowania `super+c` i `super+v`); Ctrl+C zachowuje przerywanie poleceń. `confirm_os_window_close 0`, `background_opacity 0.90`, JetBrains Mono. Inne własne ustawienia są zachowane; aktualizowany jest tylko oznaczony blok żądanych kluczy. VS Code: `TelemetryLevel=off` w `/etc/vscode/policy.json` i ustawienia użytkownika. JSONC jest scalany z zachowaniem wartości innych kluczy; oryginał z komentarzami znajduje się w kopii. Telemetria niezależnych rozszerzeń wymaga ich własnych ustawień; nie deklarujemy blokowania całego ruchu sieciowego.
 
 ## Flea — domyślny menedżer plików
 
@@ -156,9 +159,9 @@ Moduł `files` zastępuje Nautilusa przez [Flea](https://github.com/thisisgm/fle
 
 GUI wymaga Quickshell >=0.3.1. Fedora 44 ma starszy pakiet, więc gdy nie ma odpowiedniego RPM, dodawany jest opisany wcześniej COPR `lionheartp/Hyprland`. Z Omarchy pobierane są tylko przypięte biblioteki komponentów `shell/Commons` i `shell/Ui`, umieszczane prywatnie obok Flea z licencją MIT. Nie instalujemy pakietu Omarchy, jego poleceń, panelu ani usług. Flea korzysta z własnej palety awaryjnej, gdy nie ma motywu Omarchy.
 
-Przed przełączeniem aktywnego payloadu instalator ładuje prawdziwe QML w odizolowanej sesji offscreen i czeka na `flea ready` przez IPC. Dopiero po sukcesie ustawia `com.thisisgm.flea.desktop` dla `inode/directory`, zapisuje aktywację D-Bus `org.freedesktop.FileManager1` i usuwa RPM `nautilus` przez test zależności oraz pobranie dokładnej kopii do odzyskiwania. Nie usuwa zależności przez autoremove, rozszerzeń na ślepo ani Dolphin/Qt. Wcześniejsza rejestracja FileManager1 jest kopiowana do katalogu przebiegu; już działający inny menedżer może zachować nazwę D-Bus do wylogowania.
+Przed przełączeniem aktywnego payloadu instalator ładuje prawdziwe QML w odizolowanej sesji offscreen i czeka na `flea ready` przez IPC. Dopiero po sukcesie ustawia `com.thisisgm.flea.desktop` dla `inode/directory`, zapisuje aktywację D-Bus `org.freedesktop.FileManager1` i usuwa RPM `nautilus` przez test zależności oraz pobranie dokładnej kopii do odzyskiwania. Nie usuwa zależności przez autoremove, rozszerzeń na ślepo ani Qt. Dolphin jest usuwany dopiero przez wybrany debloat. Wcześniejsza rejestracja FileManager1 jest kopiowana do katalogu przebiegu; już działający inny menedżer może zachować nazwę D-Bus do wylogowania.
 
-Nie uruchamiamy `flea --default` ani `--picker`, które zakładają konfigurację Omarchy. Portale otwierania/zapisywania plików i udostępniania ekranu pozostają skonfigurowane jak dotychczas. Funkcje powiązane z paskiem/poleceniami Omarchy oraz podgląd diagramów/matematyki wymagający QuickJS-NG nie są objęte tą integracją. Pozostałe zależności dostarcza DNF, w tym GVfs, UDisks, schowek, multimedia Qt i QtPdf. Nie instalujemy LibreOffice wyłącznie do opcjonalnych podglądów.
+Nie uruchamiamy `flea --default` ani `--picker`, które zakładają konfigurację Omarchy. Portale otwierania/zapisywania plików i udostępniania ekranu pozostają skonfigurowane jak dotychczas. Funkcje powiązane z paskiem/poleceniami Omarchy oraz podgląd diagramów/matematyki wymagający QuickJS-NG nie są objęte tą integracją. Bez istniejącego Cargo kompilator Rust jest doinstalowywany tylko na czas budowania Flea; po budowaniu (także po błędzie) usuwane są wyłącznie nowo dodane pakiety Rust/Cargo, po teście zależności. Wcześniejsze SDK i pozostałe zależności pozostają. Pozostałe zależności dostarcza DNF, w tym GVfs, UDisks, schowek, multimedia Qt i QtPdf. Nie instalujemy LibreOffice wyłącznie do opcjonalnych podglądów.
 
 ```bash
 # Migracja istniejącej instalacji bez zmiany głównego configu Hyprland:
@@ -259,3 +262,22 @@ bash tests/check.sh
 Testy integracyjne `tests/experience.sh`, `tests/obs-codec.sh` i `tests/vm/integration.py` są przeznaczone wyłącznie do jednorazowych kontenerów/VM. Nie uruchamiaj ich na głównym systemie. Interaktywny `tests/vm/portal-smoke.py` wymaga zgody na przechwycenie testowego pulpitu; przed publikacją sprawdź obraz.
 
 Oficjalne odniesienia: [VS Code RPM](https://code.visualstudio.com/docs/setup/linux), [polityki i telemetria](https://code.visualstudio.com/docs/enterprise/policies), [LazyVim](https://www.lazyvim.org/installation), [DMS](https://duxlabs.dev/docs/dms/installation), [Hyprland](https://wiki.hypr.land/), [OpenH264 Fedora](https://fedoraproject.org/wiki/OpenH264), [JetBrains Mono](https://www.jetbrains.com/lp/mono/).
+
+## Zmiany konfiguracji po v0.6
+
+`EDITOR=nano` i `VISUAL=nano`; Nano jest instalowane przez `terminal`. VS Code pozostaje graficznym skojarzeniem plików tekstowych. LazyVim uruchamiasz przez `nvim`; dodane animacje Snacks obejmują przewijanie i zakresy wcięć. Ich wyłączenie: `vim.g.snacks_animate = false`. Istniejący zmieniony plik wtyczki nie jest nadpisywany.
+
+Kolory obramowań DMS są ładowane przez jawne `require("dms.colors")` i analogiczne moduły układu/wyjść. To pozwala Hyprlandowi śledzić generowane pliki i DMS rozpoznać dołączenia. Moduł `dms` przygotowuje brakujące pliki i migruje wyłącznie znany stary blok instalatora, z kopią oraz weryfikacją Hyprland. Własne inne importy wymagają ręcznego scalenia. W ustawieniach DMS pozostaw włączone generowanie motywu Hyprland z tapety. Zmiany stosuje następne logowanie lub przeładowanie Hyprlanda.
+
+Przykładowa aktualizacja konfiguracji i dodanie HyprMod (po przejrzeniu planu):
+
+```bash
+bash install.sh --dry-run --desktop dms --modules "terminal dms lazyvim hyprmod updates"
+bash install.sh --yes --desktop dms --modules "terminal dms lazyvim hyprmod updates"
+# Tylko wybrane IDE i ich SDK:
+bash install.sh --yes --modules development --dev-apps "code clion"
+# Flea i debloat, z zachowaniem LibreOffice:
+bash install.sh --yes --modules "files cleanup libreoffice" --cleanup-apps all
+```
+
+Kompilatory C/C++ potrzebne do budowania Flea, Omasnap, wtyczek Neovim i HyprMod są zależnościami tych modułów także bez CLion. Wybór IDE nie usuwa wcześniej zainstalowanych SDK.

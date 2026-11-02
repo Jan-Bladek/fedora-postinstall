@@ -18,6 +18,7 @@ source "$ROOT/modules/lazyvim.sh"
 source "$ROOT/modules/vscode.sh"
 source "$ROOT/modules/defaults.sh"
 source "$ROOT/modules/files.sh"
+source "$ROOT/modules/hyprmod.sh"
 source "$ROOT/modules/updates.sh"
 RUN=$(mktemp -d)
 CONFIG=$HOME/.config
@@ -35,8 +36,13 @@ grep -Fxq 'theme_background = False' "$CONFIG/btop/btop.conf"
 grep -Fxq 'update_ms = 1500' "$CONFIG/btop/btop.conf"
 [[ $(grep -c '^theme_background =' "$CONFIG/btop/btop.conf") == 1 ]]
 sudo dnf5 -y install nautilus
+had_cargo=0
+if command -v cargo >/dev/null; then had_cargo=1; fi
 module_files
 module_files
+if [[ $had_cargo == 0 ]] && command -v cargo >/dev/null; then echo "Temporary Cargo was retained" >&2; exit 1; fi
+module_hyprmod
+module_hyprmod
 if rpm -q nautilus >/dev/null 2>&1; then exit 1; fi
 [[ $(xdg-mime query default inode/directory) == com.thisisgm.flea.desktop ]]
 grep -q '^scrollback_lines 5555$' "$CONFIG/kitty/kitty.conf"

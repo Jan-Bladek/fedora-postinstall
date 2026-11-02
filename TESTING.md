@@ -7,6 +7,31 @@ and a short OBS recording. Graphical suspend/resume failed in its TCG/VirGL setu
 on both tested kernels. Positive Plasma removal is untested.
 
 
+## Unreleased — installer options and DMS includes
+
+Changes: Kitty Super+C/V, optional LibreOffice with debloat retention, individual
+IDE selection including CLion and conditional SDKs, nano as EDITOR/VISUAL,
+Snacks animations, pinned HyprMod, Dolphin removal guarded by Flea health/default
+checks, tracked DMS Lua imports and migration, temporary Flea Rust compiler.
+
+Local Bash syntax and ShellCheck pass. Hyprland **0.56.2** accepted the new main
+configuration with all six DMS modules in an isolated `--verify-config` run
+(`config ok`, exit 0); no host session configuration was changed.
+
+**51 of 52 local regressions pass**; `test_session` cannot bind its temporary
+AF_UNIX socket in this execution sandbox (`PermissionError: Operation not
+permitted`). This is an environment restriction, not a passing session check.
+The other tests include native whiptail interaction, IDE-specific SDK selection,
+CLion-only downloads, office retention for both RPM and Flatpak cleanup, DMS
+migration preservation/idempotence, and temporary compiler cleanup on successful
+build, failed build and refused dependency checks.
+
+This revision has **not** been tested in the Fedora VM or with a live DMS wallpaper
+change. HyprMod installation, the actual transient Rust RPM transaction and visual
+LazyVim animations still need Fedora runtime validation. The previous v0.6 VM/CI
+results below apply to the previous code, not these changes. Network/DNS access
+from the local command runner is restricted in this session.
+
 ## v0.6.0 — Flea replaces Nautilus
 
 The final runtime commit `793b480` passed [all five CI jobs in run 41514377954](https://github.com/Jan-Bladek/fedora-postinstall/actions/runs/41514377954). Documentation and evidence were added afterward without changing runtime code.

@@ -61,6 +61,13 @@ printf '\n[9/10] Flea — sprawdzona adaptacja dla Fedory\n'
 if [[ -x $HOME/.local/share/fedora-postinstall/scripts/flea-manager ]]; then
     "$HOME/.local/share/fedora-postinstall/scripts/flea-manager" update
 fi
+if [[ -f $state/managed/hyprmod ]]; then
+    IFS= read -r revision < "$HOME/.local/share/fedora-postinstall/data/hyprmod-revision"
+    [[ $revision =~ ^[0-9a-f]{40}$ ]] || { echo 'Invalid Hyprmod revision' >&2; exit 1; }
+    uv tool install --python /usr/bin/python3 "git+https://github.com/BlueManCZ/hyprmod.git@$revision"
+    "$HOME/.local/bin/hyprmod" --install
+    printf '%s\n' "$revision" > "$state/managed/hyprmod"
+fi
 printf '\n[10/10] Kontrola zależności\n'
 sudo dnf5 check
 echo "Aktualizacja zakończona. Log: $run/update.log"

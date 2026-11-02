@@ -38,10 +38,9 @@ module_files() {
         kf6-kimageformats libheif fontconfig hicolor-icon-theme shared-mime-info \
         bat jq bubblewrap expect udisks2 gvfs gvfs-afc gvfs-gphoto2 gvfs-mtp gvfs-nfs gvfs-smb \
         usbmuxd util-linux wl-clipboard xdg-terminal-exec libarchive bsdtar gzip xz bzip2 unzip zip 7zip
-    if ! command -v cargo >/dev/null; then packages rust cargo; fi
     mkdir -p "$dest/scripts" "$dest/data" "$HOME/.local/bin"
     install -m 644 "$ROOT/data/flea-release" "$dest/data/flea-release"
-    for helper in flea-manager flea-launchers.py flea-fedora-patch.py validate-flea.py; do
+    for helper in flea-manager flea-build.sh flea-launchers.py flea-fedora-patch.py validate-flea.py; do
         install -m 755 "$ROOT/scripts/$helper" "$dest/scripts/$helper"
     done
     if declare -F ui_status >/dev/null; then ui_status 'Flea: kompilacja Rust, testy upstream i kontrola GUI'; fi

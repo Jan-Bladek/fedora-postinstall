@@ -41,3 +41,4 @@ kaddressbook	Książka adresowa KDE	kaddressbook kaddressbook-libs
 krdc	KRDC	krdc krdc-libs
 menu-editor	Ukryj edytor menu KDE (wymagany przez Plasma)	@hide-kmenuedit
 nautilus	Nautilus (zastąpiony przez Flea)	nautilus
+dolphin	Dolphin (zastąpiony przez Flea)	dolphin dolphin-plugins

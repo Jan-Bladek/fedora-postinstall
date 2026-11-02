@@ -3,6 +3,20 @@ module_cleanup() {
     local p unit path selection=${CLEANUP_APPS:-all}
     local -a targets=() keys=() units=() nevras=()
     read -r -a keys <<< "$selection"
+    # Keep optional office apps selected for installation, regardless of module order.
+    if [[ $selection == all && " ${MODULES:-} " == *" libreoffice "* ]]; then
+        mapfile -t keys < <(python3 "$ROOT/scripts/cleanup-plan.py" --catalog | cut -f1 | sed '/^libreoffice$/d')
+    fi
+    local key
+    for key in "${keys[@]}"; do
+        if [[ $key == all || $key == dolphin ]]; then
+            [[ -x $HOME/.local/bin/flea ]] || die 'Install the files module before removing Dolphin.'
+            run "$HOME/.local/share/fedora-postinstall/scripts/flea-manager" check
+            run xdg-mime default com.thisisgm.flea.desktop inode/directory
+            [[ $(xdg-mime query default inode/directory) == com.thisisgm.flea.desktop ]] || die 'Flea default check failed; Dolphin retained.'
+            break
+        fi
+    done
     python3 "$ROOT/scripts/cleanup-plan.py" "${keys[@]}" > "$RUN/cleanup-plan.json"
     cat "$RUN/cleanup-plan.json"
     mapfile -t targets < <(python3 -c 'import json,sys; print("\n".join(json.load(open(sys.argv[1]))["remove"]))' "$RUN/cleanup-plan.json")
@@ -52,6 +66,7 @@ module_cleanup() {
     if command -v flatpak >/dev/null; then
         local key app scope
         for key in firefox libreoffice; do
+            if [[ $key == libreoffice && " ${MODULES:-} " == *" libreoffice "* ]]; then continue; fi
             if [[ $selection == all || " $selection " == *" $key "* ]]; then
                 if [[ $key == firefox ]]; then app=org.mozilla.firefox; else app=org.libreoffice.LibreOffice; fi
                 for scope in --user --system; do

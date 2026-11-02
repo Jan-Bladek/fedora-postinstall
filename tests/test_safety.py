@@ -25,7 +25,9 @@ class Safety(unittest.TestCase):
 
     def test_language_tools_preserve_rust_distribution(self):
         script = r"""
+source "$1/lib/development.sh"
 source "$1/modules/development.sh"
+DEV_APPS="rustrover clion"
 packages() { printf 'PACKAGES %s\n' "$*"; }
 run() { printf 'RUN %s\n' "$*"; }
 command() {
@@ -38,7 +40,7 @@ install_language_tools
             env = dict(os.environ, RUSTUP_MISSING=missing)
             r = subprocess.run(['bash', '-eu', '-c', script, 'test', str(ROOT)],
                                env=env, capture_output=True, text=True, check=True)
-            self.assertIn('python3-pip python3-devel gcc gcc-c++', r.stdout)
+            self.assertIn('PACKAGES gcc gcc-c++', r.stdout)
             if missing == '0':
                 self.assertIn('RUN rustup toolchain install stable', r.stdout)
                 self.assertNotIn('PACKAGES rust cargo', r.stdout)

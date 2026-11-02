@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 module_terminal() {
-    packages btop kitty bash shadow-utils jetbrains-mono-fonts fontconfig
+    packages nano btop kitty bash shadow-utils jetbrains-mono-fonts fontconfig
     if [[ ! -e $CONFIG/kitty/kitty.conf && ! -L $CONFIG/kitty/kitty.conf ]]; then
         config_file "$ROOT/config/kitty/kitty.conf" "$CONFIG/kitty/kitty.conf"
     fi

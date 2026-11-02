@@ -99,6 +99,7 @@ module_hyprland() {
     log "$version"
     [[ $version =~ 0\.([0-9]+) && ${BASH_REMATCH[1]} -ge 55 ]] || die 'Lua config requires Hyprland >=0.55; no configuration was replaced.'
     install_shell_selector
+    if [[ ${DESKTOP:-} == dms ]]; then prepare_dms_includes; fi
     prepare_hyprland_config "$version"
     validate_hyprland_config
     write_hyprland_config

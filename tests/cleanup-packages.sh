@@ -26,18 +26,22 @@ PY
 fi
 source "$ROOT/lib/core.sh"
 source "$ROOT/modules/cleanup.sh"
+source "$ROOT/modules/files.sh"
 RUN=$(mktemp -d)
 CONFIG=$HOME/.config
 CLEANUP_APPS=all
 export INSTALL_APPROVED=1
 mkdir -p "$CONFIG" "$HOME/Documents"
 printf 'keep-user-data\n' > "$HOME/Documents/keep.txt"
-rpm -q plasma-desktop plasma-workspace uwsm kmenuedit dolphin okular kwrite qt6-qtbase > "$RUN/protected-before"
+rpm -q plasma-desktop plasma-workspace uwsm kmenuedit okular kwrite qt6-qtbase > "$RUN/protected-before"
 mkdir -m 700 "$RUN/runtime"
 XDG_RUNTIME_DIR="$RUN/runtime" Hyprland --verify-config --config "$ROOT/config/hyprland/hyprland.lua"
+module_files
 module_cleanup
 module_cleanup
-rpm -q plasma-desktop plasma-workspace uwsm kmenuedit dolphin okular kwrite qt6-qtbase > "$RUN/protected-after"
+if rpm -q dolphin >/dev/null 2>&1; then exit 1; fi
+[[ $(xdg-mime query default inode/directory) == com.thisisgm.flea.desktop ]]
+rpm -q plasma-desktop plasma-workspace uwsm kmenuedit okular kwrite qt6-qtbase > "$RUN/protected-after"
 cmp "$RUN/protected-before" "$RUN/protected-after"
 [[ $(cat "$HOME/Documents/keep.txt") == keep-user-data ]]
 grep -Fxq 'NoDisplay=true' "$HOME/.local/share/applications/org.kde.kmenuedit.desktop"

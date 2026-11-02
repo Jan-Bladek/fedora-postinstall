@@ -82,7 +82,7 @@ class DesktopChoice(unittest.TestCase):
             self.assertEqual(result.returncode, 1)
             self.assertFalse((ROOT/'NEVER_EXECUTE').exists())
 
-    def test_tui_desktop_then_debloat_then_development_without_app_checklists(self):
+    def test_tui_desktop_then_debloat_then_development_with_ide_checklist(self):
         with tempfile.TemporaryDirectory() as temp:
             work = Path(temp)
             shim = work/'bin'
@@ -110,7 +110,7 @@ esac
             self.assertIn('Fedora Post-Install', menus[0])
             self.assertIn('Debloat Plasma', menus[1])
             self.assertIn('Zestaw programistyczny', menus[2])
-            self.assertNotIn('--checklist', '\n'.join(menus))
+            self.assertIn('--checklist', menus[2])
 
     def test_lua_loads_generated_settings_only_for_dms(self):
         runner = """
@@ -118,6 +118,7 @@ local proxy = {}
 setmetatable(proxy, { __index = function() return proxy end,
                      __call = function() return function() end end })
 hl = proxy
+package.path = os.getenv("XDG_CONFIG_HOME") .. "/hypr/?.lua;" .. package.path
 dofile(arg[1])
 """
         for shell in ('noctalia', 'dms'):
@@ -127,7 +128,7 @@ dofile(arg[1])
                 (work/'fedora-postinstall/shell').write_text(shell+'\n')
                 settings = work/'hypr/dms'
                 settings.mkdir(parents=True)
-                for name in ('outputs', 'layout', 'colors'):
+                for name in ('outputs', 'layout', 'colors', 'cursor', 'input', 'windowrules'):
                     (settings/(name+'.lua')).write_text('local f = assert(io.open(os.getenv("TRACE"), "a")); f:write("'+name+'\\n"); f:close()\n')
                 trace = work/'loaded'
                 env = dict(os.environ, XDG_CONFIG_HOME=str(work), TRACE=str(trace))
@@ -135,7 +136,7 @@ dofile(arg[1])
                                         env=env, text=True, capture_output=True)
                 self.assertEqual(result.returncode, 0, result.stderr)
                 if shell == 'dms':
-                    self.assertEqual(set(trace.read_text().splitlines()), {'outputs', 'layout', 'colors'})
+                    self.assertEqual(set(trace.read_text().splitlines()), {'outputs', 'layout', 'colors', 'cursor', 'input', 'windowrules'})
                 else:
                     self.assertFalse(trace.exists())
 

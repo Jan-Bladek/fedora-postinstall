@@ -53,6 +53,7 @@ def arduino():
 APP_INFO = {
     'rustrover': ('JetBrains RustRover', 'jetbrains-rustrover', 'rustrover'),
     'intellij-idea': ('IntelliJ IDEA', 'jetbrains-idea', 'idea'),
+    'clion': ('JetBrains CLion', 'jetbrains-clion', 'clion'),
     'webstorm': ('JetBrains WebStorm', 'jetbrains-webstorm', 'webstorm'),
     'arduino-ide': ('Arduino IDE', 'fedora-postinstall-arduino-ide', None),
 }
@@ -154,17 +155,26 @@ def install(name, metadata, launcher):
     (target / 'origin.json').write_text(json.dumps({'version': version, 'url': url, 'sha256': digest}, indent=2))
 
 if __name__ == '__main__':
-    if len(sys.argv) != 2 or sys.argv[1] not in {'install', 'update', 'repair'}:
+    if len(sys.argv) < 2 or sys.argv[1] not in {'install', 'update', 'repair'}:
         raise SystemExit('Usage: vendor-apps.py install|update|repair')
+    selected = set(sys.argv[2:])
+    if selected - APP_INFO.keys():
+        raise SystemExit('Unknown vendor application')
+    if sys.argv[1] != 'install' and selected:
+        raise SystemExit('Application selection applies only to install')
     if os.geteuid() == 0:
         raise SystemExit('Run as desktop user')
     for name, code, launcher in [('rustrover', 'RR', 'bin/rustrover.sh'),
                                   ('intellij-idea', 'IIU', 'bin/idea.sh'),
-                                  ('webstorm', 'WS', 'bin/webstorm.sh')]:
+                                  ('webstorm', 'WS', 'bin/webstorm.sh'),
+                                  ('clion', 'CL', 'bin/clion.sh')]:
+        if sys.argv[1] == 'install' and selected and name not in selected:
+            continue
         if sys.argv[1] == 'repair':
             if (BASE / name / 'current').is_symlink():
                 register_launcher(name, launcher)
         elif sys.argv[1] == 'install' or (BASE / name / 'current').is_symlink():
             install(name, jetbrains(code), launcher)
-    if sys.argv[1] != 'repair' and (sys.argv[1] == 'install' or (BASE / 'arduino-ide' / 'current').is_symlink()):
+    if ((sys.argv[1] == 'install' and (not selected or 'arduino-ide' in selected)) or
+            (sys.argv[1] == 'update' and (BASE / 'arduino-ide' / 'current').is_symlink())):
         install('arduino-ide', arduino(), 'arduino-ide')

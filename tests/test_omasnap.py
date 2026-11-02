@@ -84,6 +84,8 @@ assert(events[1] == "unbind:PRINT" and events[2] == "unbind:SUPER + SHIFT + S")
     def test_code_profile_never_downloads_jetbrains_or_arduino(self):
         with tempfile.TemporaryDirectory() as temp:
             work = Path(temp)
+            (work/'lib').mkdir()
+            shutil.copyfile(ROOT/'lib/development.sh', work/'lib/development.sh')
             (work/'modules').mkdir()
             (work/'modules/repositories.sh').write_text('# fixture\n')
             (work/'modules/vscode.sh').write_text('module_vscode() { echo CODE; }\n')

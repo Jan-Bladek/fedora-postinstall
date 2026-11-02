@@ -6,7 +6,9 @@ source /etc/os-release
 [[ $ID == fedora && $VERSION_ID == 44 && $EUID == 0 ]] || exit 1
 ROOT=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
 source "$ROOT/modules/dependencies.sh"
+source "$ROOT/lib/development.sh"
 source "$ROOT/modules/development.sh"
+DEV_APPS="rustrover clion webstorm"
 packages() { dnf5 -y install "$@"; }
 log() { printf '%s\n' "$*"; }
 run() {
@@ -16,7 +18,7 @@ run() {
     if [[ $1 == dnf5 ]]; then shift; dnf5 -y "$@"; else "$@"; fi
 }
 module_dependencies
-packages polkit-kde noctalia
+packages polkit-kde noctalia python3-pip
 install_language_tools
 test -x /usr/libexec/kf6/polkit-kde-authentication-agent-1
 command -v wget

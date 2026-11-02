@@ -4,14 +4,15 @@
 ui_confirm_plan() {
     local summary
     summary="Pulpit: $DESKTOP
-Zestaw programistyczny: ${DEV_PROFILE:-code} (code = VS Code; full = VS Code + JetBrains + Arduino)
+Wybrane IDE: ${DEV_APPS:-brak}
 Moduły: $MODULES
 Usuwanie aplikacji: ${CLEANUP_APPS:-nie}
 
 Zostaną wykonane kopie konfiguracji. Zatwierdzasz instalację wybranych aplikacji,
 aktualizację RPM i klucze oficjalnych dostawców / wskazanych COPR:
 Fedora, Microsoft, Brave, LibreWolf, Tailscale, lionheartp/Hyprland, duxlabs/DMS.
-Flea i Omasnap: przypięte źródła; Flea używa prywatnych bibliotek QML Omarchy.
+Flea, Omasnap i HyprMod: przypięte źródła; HyprMod używa uv/PyPI.
+Flea używa prywatnych bibliotek QML Omarchy i tymczasowego Rust przy braku Cargo.
 
 Wybrany moduł Hyprland stosuje profil Omarchy i zapisuje kopię poprzedniej konfiguracji.
 --keep-hypr-config zachowuje własny plik. Kitty zmienia tylko wskazane ustawienia. Usuwanie aplikacji odbywa się
@@ -31,7 +32,7 @@ ui_cleanup_choice() {
     local answer
     if command -v whiptail >/dev/null; then
         if ! whiptail --title 'Fedora · Debloat Plasma' --yes-button 'Tak, usuń' --no-button 'Nie, zachowaj' --defaultno \
-            --yesno 'Usunąć cały przygotowany zestaw zbędnych aplikacji KDE/Fedory? Obejmuje m.in. KMail/PIM, KDE Connect, gry, Firefox, LibreOffice, Spectacle, Gwenview, Dragon, KRDC/Krfb i edytor menu. Sam pulpit Plasma, Qt i dane użytkownika pozostaną. Pełna lista: data/cleanup.tsv.' 16 78; then return 0; fi
+            --yesno 'Usunąć cały przygotowany zestaw zbędnych aplikacji KDE/Fedory? Obejmuje m.in. KMail/PIM, KDE Connect, gry, Firefox, Dolphin (po kontroli Flea), LibreOffice (jeśli nie wybierzesz instalacji), Spectacle, Gwenview, Dragon, KRDC/Krfb i edytor menu. Sam pulpit Plasma, Qt i dane użytkownika pozostaną. Pełna lista: data/cleanup.tsv.' 16 78; then return 0; fi
         CLEANUP_APPS=all
     else
         read -r -p 'Usunąć cały zestaw debloat Plasma? [t/N]: ' answer
@@ -41,13 +42,29 @@ ui_cleanup_choice() {
 }
 ui_development_choice() {
     if command -v whiptail >/dev/null; then
-        DEV_PROFILE=$(whiptail --title 'Fedora · Zestaw programistyczny' --radiolist \
-            'Wybierz edytory/IDE. Rust, Python i C++ są instalowane w obu wariantach.' 15 78 2 \
-            code 'Tylko VS Code' ON full 'VS Code + JetBrains (3 IDE) + Arduino IDE' OFF 3>&1 1>&2 2>&3) || return
+        DEV_APPS=$(whiptail --title 'Fedora · Zestaw programistyczny' --separate-output --checklist \
+            'Wybierz IDE. Rust tylko z RustRover, C/C++ z CLion, Node.js z WebStorm.' 19 78 6 \
+            code 'VS Code' ON rustrover 'RustRover + Rust' OFF \
+            intellij-idea 'IntelliJ IDEA' OFF webstorm 'WebStorm + Node.js' OFF \
+            clion 'CLion + C/C++' OFF arduino-ide 'Arduino IDE' OFF 3>&1 1>&2 2>&3) || return
     else
-        read -r -p 'Zestaw IDE: code = VS Code, full = VS Code + JetBrains + Arduino [code]: ' DEV_PROFILE
-        DEV_PROFILE=${DEV_PROFILE:-code}
+        read -r -p 'IDE (code rustrover intellij-idea webstorm clion arduino-ide; Enter = code, none = brak): ' DEV_APPS
+        DEV_APPS=${DEV_APPS:-code}
+        [[ $DEV_APPS != none ]] || DEV_APPS=''
     fi
+    DEV_APPS=${DEV_APPS//$'\n'/ }
+    export DEV_PROFILE=custom
+}
+ui_office_choice() {
+    local answer
+    if command -v whiptail >/dev/null; then
+        if ! whiptail --title 'Fedora · LibreOffice' --yes-button 'Instaluj / zachowaj' --no-button 'Pomiń' --defaultno \
+            --yesno 'Zainstalować LibreOffice Writer, Calc i Impress po polsku? Ten wybór zachowuje LibreOffice także przy debloat.' 12 78; then return 0; fi
+    else
+        read -r -p 'Zainstalować / zachować LibreOffice? [t/N]: ' answer
+        [[ $answer == t || $answer == T || $answer == y || $answer == Y ]] || return 0
+    fi
+    MODULES+=' libreoffice'
 }
 ui_status() {
     if [[ -n ${FEDORA_PROGRESS_STATUS:-} ]]; then
@@ -97,7 +114,7 @@ ui_module_label() {
         dms) echo 'Powłoka DankMaterialShell / Dux Shell' ;;
         terminal) echo 'Kitty, Bash, JetBrains Mono i ikony fontów' ;;
         lazyvim) echo 'LazyVim + wtyczki (kopia starego Neovim)' ;;
-        development) echo 'VS Code, Rust, Python, C++, JetBrains, Arduino' ;;
+        development) echo 'Wybrane IDE i ich narzędzia' ;;
         browsers) echo 'Brave (domyślna) + LibreWolf' ;;
         multimedia) echo 'OBS, Vesktop i Steam' ;;
         utilities) echo 'Obsidian, LocalSend i Tailscale' ;;

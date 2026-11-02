@@ -5,6 +5,7 @@ export ROOT
 source "$ROOT/lib/core.sh"
 source "$ROOT/lib/desktop.sh"
 source "$ROOT/lib/ui.sh"
+source "$ROOT/lib/development.sh"
 if [[ -t 0 ]] && ! command -v whiptail >/dev/null && python3 -c 'import curses' 2>/dev/null; then
     whiptail() { python3 "$ROOT/scripts/tui.py" "$@"; }
 fi
@@ -25,10 +26,11 @@ while (($#)); do
         --keep-hypr-config) APPLY_HYPR_PRESET=0 ;;
         --no-progress) USE_PROGRESS=-1 ;;
         --cleanup-apps) shift; CLEANUP_APPS=${1:?Missing application selection} ;;
+        --dev-apps) shift; DEV_APPS=${1:?Missing development apps (use none for empty)}; [[ $DEV_APPS != none ]] || DEV_APPS='' ;;
         --dev-profile) shift; DEV_PROFILE=${1:?Missing development profile} ;;
         --desktop) shift; DESKTOP=${1:?Missing desktop choice} ;;
         --modules) shift; MODULES=${1:?Missing module list}; EXPLICIT_MODULES=1 ;;
-        --help) echo 'install.sh [--dry-run] [--yes] [--no-progress] [--keep-hypr-config] [--cleanup-apps "all|id id"] [--desktop noctalia|dms|plasma] [--dev-profile code|full] [--modules "snapshots dependencies hyprland noctalia dms terminal lazyvim vscode development files omasnap browsers multimedia utilities defaults optimization updates cleanup kde-removal"]'; exit 0 ;;
+        --help) echo 'install.sh [--dry-run] [--yes] [--no-progress] [--keep-hypr-config] [--cleanup-apps "all|id id"] [--desktop noctalia|dms|plasma] [--dev-profile code|full] [--dev-apps "code rustrover intellij-idea webstorm clion arduino-ide|none"] [--modules "snapshots dependencies hyprland noctalia dms terminal lazyvim vscode development libreoffice hyprmod files omasnap browsers multimedia utilities defaults optimization updates cleanup kde-removal"]'; exit 0 ;;
         *) die "Unknown option: $1" ;;
     esac
     shift
@@ -58,9 +60,11 @@ elif [[ -t 0 && $DRY_RUN == 0 && $EXPLICIT_MODULES == 0 && $INSTALL_APPROVED == 
 fi
 if [[ -t 0 && $DRY_RUN == 0 && $EXPLICIT_MODULES == 0 && $INSTALL_APPROVED == 0 ]]; then
     ui_development_choice || exit 0
+    ui_office_choice || exit 0
 fi
-case $DEV_PROFILE in code|full) ;; *) die "Unknown development profile: $DEV_PROFILE" ;; esac
+case $DEV_PROFILE in code|full|custom) ;; *) die "Unknown development profile: $DEV_PROFILE" ;; esac
 export DEV_PROFILE
+resolve_dev_apps
 # whiptail returns one module per line; verification uses a space-separated list.
 MODULES=${MODULES//$'\n'/ }
 [[ -n $MODULES ]] || exit 0
@@ -78,7 +82,7 @@ PY_CHECK
 fi
 preflight
 if ((DRY_RUN)); then
-    echo "PLAN Fedora 44 x86_64, desktop: $DESKTOP, development: $DEV_PROFILE, modules: $MODULES"
+    echo "PLAN Fedora 44 x86_64, desktop: $DESKTOP, development: $DEV_PROFILE ($DEV_APPS), modules: $MODULES"
     for module in $MODULES; do
         printf '\n[%s] Planned module (not executed):\n' "$module"
         cat "$ROOT/modules/$module.sh"
