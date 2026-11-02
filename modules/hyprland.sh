@@ -15,13 +15,17 @@ LUA
 
 validate_hyprland_config() {
     # Configuration-only validation must never share the live session's sockets.
-    local config_root=$RUN/hypr-verify-config runtime=$RUN/hypr-verify-runtime
-    mkdir -p "$config_root/fedora-postinstall" "$config_root/hypr" "$runtime"
+    local config_root runtime
+    config_root=$(mktemp -d "$RUN/hypr-verify-config.XXXXXX")
+    runtime=$(mktemp -d "$RUN/hypr-verify-runtime.XXXXXX")
+    mkdir -p "$config_root/fedora-postinstall" "$config_root/hypr"
     chmod 700 "$runtime"
     printf '%s\n' "${DESKTOP:-noctalia}" > "$config_root/fedora-postinstall/shell"
-    if [[ -d $CONFIG/hypr/dms && ! -e $config_root/hypr/dms ]]; then ln -s "$CONFIG/hypr/dms" "$config_root/hypr/dms"; fi
+    # Preserve relative imports in custom configs, while keeping runtime sockets isolated.
+    if [[ -d $CONFIG/hypr ]]; then cp -a -- "$CONFIG/hypr/." "$config_root/hypr/"; fi
+    atomic_config "$RUN/hyprland.lua" "$config_root/hypr/hyprland.lua"
     run env -u HYPRLAND_INSTANCE_SIGNATURE -u WAYLAND_DISPLAY XDG_RUNTIME_DIR="$runtime" \
-        XDG_CONFIG_HOME="$config_root" HYPRLAND_NO_RT=1 Hyprland --verify-config --config "$RUN/hyprland.lua" \
+        XDG_CONFIG_HOME="$config_root" HYPRLAND_NO_RT=1 Hyprland --verify-config --config "$config_root/hypr/hyprland.lua" \
         > "$RUN/hyprland-verify.log" 2>&1
     cat "$RUN/hyprland-verify.log"
     grep -Fq 'config ok' "$RUN/hyprland-verify.log" || die 'Hyprland rejected the proposed configuration; previous main config retained.'

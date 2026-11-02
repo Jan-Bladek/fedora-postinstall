@@ -78,7 +78,7 @@ PY_CHECK
 fi
 preflight
 if ((DRY_RUN)); then
-    echo "PLAN Fedora 44 x86_64, desktop: $DESKTOP, modules: $MODULES"
+    echo "PLAN Fedora 44 x86_64, desktop: $DESKTOP, development: $DEV_PROFILE, modules: $MODULES"
     for module in $MODULES; do
         printf '\n[%s] Planned module (not executed):\n' "$module"
         cat "$ROOT/modules/$module.sh"

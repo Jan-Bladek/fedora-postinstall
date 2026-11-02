@@ -16,7 +16,7 @@ module_omasnap() {
     if [[ -e $module ]]; then cp -- "$module" "$RUN/omasnap-bindings-before.lua"; fi
     cp -- "$CONFIG/hypr/hyprland.lua" "$RUN/hyprland-before-omasnap.lua"
     # Keep the user's main config intact except for our last-loaded block.
-    atomic_config "$ROOT/config/hyprland/omasnap.lua" "$module"
+    cp -- "$ROOT/config/hyprland/omasnap.lua" "$RUN/omasnap-proposed.lua"
     if [[ -n ${HYPRLAND_INSTANCE_SIGNATURE:-} ]]; then
         run hyprctl -j binds > "$RUN/bindings-before-omasnap.json"
         python3 - "$RUN/bindings-before-omasnap.json" <<'PY'
@@ -26,9 +26,11 @@ for bind in json.load(open(sys.argv[1])):
         print('Screenshot shortcut override:', bind.get('key'), bind.get('modmask'), bind.get('arg'))
 PY
     fi
-    python3 "$ROOT/scripts/omasnap-bindings.py" "$CONFIG/hypr/hyprland.lua" "$module" "$RUN/hyprland.lua"
+    python3 "$ROOT/scripts/omasnap-bindings.py" "$CONFIG/hypr/hyprland.lua" "$RUN/omasnap-proposed.lua" "$RUN/hyprland.lua"
     source "$ROOT/modules/hyprland.sh"
     validate_hyprland_config
+    atomic_config "$ROOT/config/hyprland/omasnap.lua" "$module"
+    python3 "$ROOT/scripts/omasnap-bindings.py" "$CONFIG/hypr/hyprland.lua" "$module" "$RUN/hyprland.lua"
     atomic_config "$RUN/hyprland.lua" "$CONFIG/hypr/hyprland.lua"
     run "$dest/scripts/omasnap-manager" check
     if [[ -n ${HYPRLAND_INSTANCE_SIGNATURE:-} ]]; then

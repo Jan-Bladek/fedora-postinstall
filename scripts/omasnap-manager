@@ -69,6 +69,18 @@ else
     cmake --install "$work/build"
     QT_QPA_PLATFORM=offscreen "$work/prefix/bin/omasnap" --version
     QT_QPA_PLATFORM=offscreen "$work/prefix/bin/omasnap" --help >/dev/null
+    python3 - "$work/prefix/share/applications/omasnap.desktop" "$app/current/bin/omasnap" <<'PY_DESKTOP'
+from pathlib import Path
+import sys
+path, binary = Path(sys.argv[1]), sys.argv[2]
+if any(char in binary for char in ('\n', '\r')):
+    raise ValueError('Invalid launcher path')
+for char in ('\\', '"', '`', '$'):
+    binary = binary.replace(char, '\\'+char)
+binary = binary.replace('%', '%%')
+path.write_text(''.join('Exec="'+binary+'"\n' if line.startswith('Exec=') else line
+                        for line in path.read_text().splitlines(keepends=True)))
+PY_DESKTOP
     printf '%s\n' "$revision" > "$work/prefix/revision"
     # Never rewrite a working payload in place; Qt updates may require a rebuild.
     payload=$revision-$(date +%Y%m%dT%H%M%S)-$$

@@ -25,8 +25,10 @@ CONFIG=$HOME/.config
 DESKTOP=noctalia
 export INSTALL_APPROVED=1
 mkdir -p "$CONFIG/hypr"
+printf '%s\n' '-- custom imported file' 'hl.config({ misc = { disable_hyprland_logo = true } })' > "$CONFIG/hypr/personal.lua"
 cat > "$CONFIG/hypr/hyprland.lua" <<'LUA'
 -- keep my personal Hyprland config
+dofile((os.getenv("XDG_CONFIG_HOME") or (os.getenv("HOME") .. "/.config")) .. "/hypr/personal.lua")
 hl.monitor({ output = "", mode = "preferred", position = "auto", scale = "auto" })
 hl.bind("PRINT", hl.dsp.exec_cmd("old-screenshot"))
 hl.bind("SUPER + SHIFT + S", hl.dsp.exec_cmd("old-editor"))

@@ -242,3 +242,28 @@ printf '\nSELECTED:%s\n' "$CLEANUP_APPS"
         self.assertIn('┌', output)
         self.assertIn('SELECTED:', output)
         self.assertIn('SELECTED:all', output)
+
+    def test_curses_debloat_defaults_to_no(self):
+        script = r'''source "$1/lib/ui.sh"
+ROOT=$1
+MODULES=dependencies
+CLEANUP_APPS=''
+whiptail() { python3 "$ROOT/scripts/tui.py" "$@"; }
+ui_cleanup_choice
+printf '\nRETAINED:%s:%s\n' "$MODULES" "$CLEANUP_APPS"
+'''
+        status, output = self.run_terminal(['bash', '-eu', '-c', script, 'test', str(ROOT)],
+                                           b'\n', rows=24, columns=80)
+        self.assertEqual(status, 0, output)
+        self.assertIn('RETAINED:dependencies:', output)
+
+    @unittest.skipUnless(shutil.which('whiptail'), 'native whiptail is unavailable')
+    def test_native_ide_selector_returns_full_profile(self):
+        script = r'''source "$1/lib/ui.sh"
+ui_development_choice
+printf '\nPROFILE:%s\n' "$DEV_PROFILE"
+'''
+        status, output = self.run_terminal(['bash', '-eu', '-c', script, 'test', str(ROOT)],
+                                           b'\x1bOB \r', rows=24, columns=80, ready=b'VS Code')
+        self.assertEqual(status, 0, output)
+        self.assertIn('PROFILE:full', output)
