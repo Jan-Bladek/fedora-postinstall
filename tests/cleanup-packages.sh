@@ -6,7 +6,12 @@ source /etc/os-release
 [[ $ID == fedora && $VERSION_ID == 44 ]] || exit 1
 ROOT=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
 if ((EUID == 0)); then
-    dnf5 -y install python3 sudo diffutils shadow-utils
+    dnf5 -y install python3 sudo diffutils shadow-utils curl
+    source "$ROOT/lib/core.sh"
+    source "$ROOT/modules/repositories.sh"
+    RUN=$(mktemp -d)
+    INSTALL_APPROVED=1
+    vendor_repo hyprland-copr "https://copr.fedorainfracloud.org/coprs/lionheartp/Hyprland/repo/fedora-$VERSION_ID/lionheartp-Hyprland-fedora-$VERSION_ID.repo"
     mapfile -t apps < <(python3 - "$ROOT" <<'PY'
 import runpy, sys
 catalog=runpy.run_path(sys.argv[1]+'/scripts/cleanup-plan.py')['groups']()
@@ -34,6 +39,8 @@ rpm -q plasma-desktop plasma-workspace uwsm dolphin okular kwrite qt6-qtbase > "
 cmp "$RUN/protected-before" "$RUN/protected-after"
 [[ $(cat "$HOME/Documents/keep.txt") == keep-user-data ]]
 grep -Fxq 'NoDisplay=true' "$HOME/.local/share/applications/uuctl.desktop"
-if rpm -q firefox libreoffice-writer kmail kde-connect >/dev/null 2>&1; then exit 1; fi
+for app in firefox libreoffice-writer kmail kde-connect; do
+    if rpm -q "$app" >/dev/null 2>&1; then exit 1; fi
+done
 printf 'Application cleanup, repeat and retained desktop validation passed.\n'
 sudo dnf5 check
