@@ -32,6 +32,9 @@ printf '{ // keep my setting\n "files.autoSave": "onFocusChange",\n}\n' > "$CONF
 printf 'theme_background = True\nupdate_ms = 1500\n' > "$CONFIG/btop/btop.conf"
 module_terminal
 module_terminal
+[[ $(getent passwd "$USER" | cut -d: -f7) == /bin/zsh ]]
+lua -v
+zsh -ic '[[ $EDITOR == nano && $VISUAL == nano ]] && (( $+functions[_zsh_autosuggest_start] && $+functions[_zsh_highlight] && $+functions[zic-completion] ))'
 grep -Fxq 'theme_background = False' "$CONFIG/btop/btop.conf"
 grep -Fxq 'update_ms = 1500' "$CONFIG/btop/btop.conf"
 [[ $(grep -c '^theme_background =' "$CONFIG/btop/btop.conf") == 1 ]]

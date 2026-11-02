@@ -12,5 +12,8 @@ module_updates() {
     for helper in flea-manager flea-build.sh flea-launchers.py flea-fedora-patch.py validate-flea.py; do
         install -m 755 "$ROOT/scripts/$helper" "$dest/scripts/$helper"
     done
+    install -m 755 "$ROOT/scripts/zsh-manager.py" "$dest/scripts/zsh-manager.py"
+    install -m 644 "$ROOT/data/zsh-sources.json" "$dest/data/zsh-sources.json"
+    install -m 644 "$ROOT/config/zsh/init.zsh" "$dest/data/zsh-init.zsh"
     log 'fedora-update installed into ~/.local/bin (add this directory to PATH if necessary).'
 }

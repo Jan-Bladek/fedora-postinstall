@@ -13,6 +13,7 @@ aktualizację RPM i klucze oficjalnych dostawców / wskazanych COPR:
 Fedora, Microsoft, Brave, LibreWolf, Tailscale, lionheartp/Hyprland, duxlabs/DMS.
 Flea, Omasnap i HyprMod: przypięte źródła; HyprMod używa uv/PyPI.
 Flea używa prywatnych bibliotek QML Omarchy i tymczasowego Rust przy braku Cargo.
+Terminal: Zsh + Oh My Zsh, trzy wtyczki z GitHub i Starship z SHA256. Historia schowka zapisuje kopiowane wpisy lokalnie.
 
 Wybrany moduł Hyprland stosuje profil Omarchy i zapisuje kopię poprzedniej konfiguracji.
 --keep-hypr-config zachowuje własny plik. Kitty zmienia tylko wskazane ustawienia. Usuwanie aplikacji odbywa się
@@ -112,7 +113,7 @@ ui_module_label() {
         hyprland) echo 'Hyprland + profil Omarchy (kopia poprzedniego configu)' ;;
         noctalia) echo 'Powłoka Noctalia' ;;
         dms) echo 'Powłoka DankMaterialShell / Dux Shell' ;;
-        terminal) echo 'Kitty, Bash, JetBrains Mono i ikony fontów' ;;
+        terminal) echo 'Kitty, Zsh + Oh My Zsh, prompt Omarchy i fonty' ;;
         lazyvim) echo 'LazyVim + wtyczki (kopia starego Neovim)' ;;
         development) echo 'Wybrane IDE i ich narzędzia' ;;
         browsers) echo 'Brave (domyślna) + LibreWolf' ;;

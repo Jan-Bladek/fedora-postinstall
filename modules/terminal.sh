@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 module_terminal() {
-    packages nano btop kitty bash shadow-utils jetbrains-mono-fonts fontconfig
+    packages lua nano btop kitty bash shadow-utils jetbrains-mono-fonts fontconfig
     if [[ ! -e $CONFIG/kitty/kitty.conf && ! -L $CONFIG/kitty/kitty.conf ]]; then
         config_file "$ROOT/config/kitty/kitty.conf" "$CONFIG/kitty/kitty.conf"
     fi
@@ -29,5 +29,6 @@ module_terminal() {
     printf 'theme_background = False\n' > "$RUN/btop-patch.conf"
     python3 "$ROOT/scripts/merge-config-block.py" "$CONFIG/btop/btop.conf" "$RUN/btop-patch.conf" "$RUN/btop-merged.conf" BTOP --replace-keys
     atomic_config "$RUN/btop-merged.conf" "$CONFIG/btop/btop.conf"
-    if [[ $(getent passwd "$USER" | cut -d: -f7) != /bin/bash ]]; then run sudo usermod --shell /bin/bash "$USER"; fi
+    source "$ROOT/modules/zsh.sh"
+    module_zsh
 }

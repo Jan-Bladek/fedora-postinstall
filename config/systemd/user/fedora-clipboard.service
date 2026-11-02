@@ -1,0 +1,10 @@
+[Unit]
+Description=Wayland clipboard history for Fedora Post-Install
+ConditionEnvironment=WAYLAND_DISPLAY
+PartOf=graphical-session.target
+
+[Service]
+ExecStart=/usr/bin/wl-paste --watch /usr/bin/cliphist store
+Restart=on-failure
+RestartSec=2
+UMask=0077

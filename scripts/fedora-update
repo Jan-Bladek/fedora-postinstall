@@ -68,6 +68,9 @@ if [[ -f $state/managed/hyprmod ]]; then
     "$HOME/.local/bin/hyprmod" --install
     printf '%s\n' "$revision" > "$state/managed/hyprmod"
 fi
+if [[ -f $state/managed/zsh ]]; then
+    python3 "$HOME/.local/share/fedora-postinstall/scripts/zsh-manager.py" update
+fi
 printf '\n[10/10] Kontrola zależności\n'
 sudo dnf5 check
 echo "Aktualizacja zakończona. Log: $run/update.log"

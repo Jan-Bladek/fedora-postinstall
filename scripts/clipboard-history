@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+case ${1:-open} in
+    start)
+        [[ -n ${WAYLAND_DISPLAY:-} ]] || exit 0
+        systemctl --user import-environment WAYLAND_DISPLAY
+        systemctl --user start fedora-clipboard.service
+        ;;
+    open) exec kitty --class fedora-clipboard --title 'Historia schowka' "$0" pick ;;
+    pick)
+        # A fixed, single-selection UI: copied content never becomes shell code.
+        entries=$(cliphist list)
+        [[ -n $entries ]] || exit 0
+        if selection=$(printf '%s\n' "$entries" | env FZF_DEFAULT_OPTS='' FZF_DEFAULT_OPTS_FILE='' \
+            fzf --sync --no-multi --no-sort --cycle --layout=reverse --border \
+                --delimiter='\t' --with-nth=2.. --prompt='Schowek > ' \
+                --header='Tab / Shift+Tab / ↑↓: wybór · Enter: kopiuj · Esc: zamknij' \
+                --bind='tab:down,shift-tab:up,up:up,down:down'); then
+            [[ -n $selection ]] || exit 0
+            # wl-copy forks a clipboard owner. Detach its output from the PTY,
+            # otherwise Kitty stays open after the picker exits.
+            errors=$(mktemp "${XDG_RUNTIME_DIR:-/tmp}/clipboard-history.XXXXXX")
+            trap 'rm -f -- "$errors"' EXIT
+            if printf '%s\n' "$selection" | cliphist decode | wl-copy >/dev/null 2>"$errors"; then
+                :
+            else
+                status=$?
+                cat "$errors" >&2
+                exit "$status"
+            fi
+        else
+            status=$?
+            # fzf: empty history or user cancellation leaves clipboard unchanged.
+            if [[ $status != 1 && $status != 130 ]]; then exit "$status"; fi
+        fi
+        ;;
+    clear) cliphist wipe ;;
+    *) echo 'Usage: clipboard-history [open|pick|start|clear]' >&2; exit 2 ;;
+esac

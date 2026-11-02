@@ -18,6 +18,7 @@ run() {
     if [[ $1 == dnf5 ]]; then shift; dnf5 -y "$@"; else "$@"; fi
 }
 module_dependencies
+lua -v
 packages polkit-kde noctalia python3-pip
 install_language_tools
 test -x /usr/libexec/kf6/polkit-kde-authentication-agent-1

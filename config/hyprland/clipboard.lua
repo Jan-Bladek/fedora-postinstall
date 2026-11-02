@@ -1,0 +1,12 @@
+-- Own only the requested history shortcut. Super+V stays available to Kitty.
+hl.unbind("SUPER + SHIFT + V")
+hl.unbind("SHIFT + SUPER + V")
+hl.unbind("SUPER + SHIFT + code:55")
+hl.unbind("SHIFT + SUPER + code:55")
+hl.bind("SUPER + SHIFT + V", hl.dsp.exec_cmd("$HOME/.local/bin/clipboard-history"), { description = "Clipboard history: Tab / arrows" })
+hl.on("hyprland.start", function()
+    hl.exec_cmd("$HOME/.local/bin/clipboard-history start")
+end)
+hl.on("hyprland.shutdown", function()
+    hl.exec_cmd("systemctl --user stop fedora-clipboard.service")
+end)

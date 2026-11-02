@@ -78,7 +78,9 @@ Selektor `~/.config/fedora-postinstall/shell` steruje autostartem i skrótami. D
 | dependencies | Aktualizacja bazowych RPM, Git, curl, wget, archiwizacja, diagnostyka, schowek Wayland |
 | hyprland | Hyprland, XWayland, portale Hyprland/GTK, PipeWire, WirePlumber, Polkit, NetworkManager, Bluetooth, Mesa |
 | noctalia / dms | Jedna wybrana powłoka, bez Waybar, dunst i dodatkowego launchera |
-| terminal | Kitty, Bash, JetBrains Mono, symbole Nerd Fonts, konfiguracja fontów i terminala; btop z przezroczystym tłem |
+| terminal | Kitty, Zsh + Oh My Zsh, prompt Starship w stylu Omarchy, Lua 5.4 z DNF, JetBrains Mono, symbole Nerd Fonts, konfiguracja fontów i terminala; btop z przezroczystym tłem |
+| zsh | Sam Zsh + Oh My Zsh i przypięte wtyczki, z kopią i scaleniem `.zshrc` |
+| clipboard | Historia schowka pod Win+Shift+V: cliphist + fzf w Kitty, Tab/strzałki/Enter/Esc; tylko Hyprland |
 | lazyvim | Neovim, oficjalny starter LazyVim, lazy.nvim, ripgrep, fd, tree-sitter-cli i narzędzia kompilacji |
 | development | Tylko wybrane IDE i ich SDK; `full` zawiera też CLion |
 | libreoffice | Opcjonalny Writer, Calc i Impress z polskim pakietem językowym |
@@ -281,3 +283,23 @@ bash install.sh --yes --modules "files cleanup libreoffice" --cleanup-apps all
 ```
 
 Kompilatory C/C++ potrzebne do budowania Flea, Omasnap, wtyczek Neovim i HyprMod są zależnościami tych modułów także bez CLion. Wybór IDE nie usuwa wcześniej zainstalowanych SDK.
+
+## Zsh, Lua i historia schowka
+
+`dependencies` i `terminal` instalują natywny pakiet `lua` przez DNF; w Fedorze 44 dostarcza on interpreter **Lua 5.4.8**. Nie dodajemy drugiego interpretera pod ręcznie utworzonym aliasem `lua5.4`.
+
+Moduł `terminal` instaluje teraz **Zsh jako powłokę logowania i powłokę Kitty**. Instalator nadal działa w Bash. Oh My Zsh oraz wtyczki [zsh-autosuggestions](https://github.com/zsh-users/zsh-autosuggestions), [zsh-syntax-highlighting](https://github.com/zsh-users/zsh-syntax-highlighting) i [zsh-interactive-cd](https://github.com/johannjhang/zsh-interactive-cd) są przypięte do rewizji z `data/zsh-sources.json`. Oh My Zsh ładuje też swoje wtyczki `git` i `fzf`. Żaden pobrany skrypt instalacyjny nie jest uruchamiany. Automatyczny updater Oh My Zsh jest wyłączony; `fedora-update` stosuje sprawdzone rewizje dostarczone wraz z projektem.
+
+Wygląd zapewnia Starship: ten sam format ścieżki, statusu Git i cyjanowego znaku `❯` co w Omarchy. Natywne archiwum Starship jest weryfikowane przez SHA256; nie wymaga kompilatora Rust. Konfiguracja promptu pochodzi z Omarchy i jest objęta [licencją MIT](licenses/Omarchy-MIT.txt). `.zshrc` jest scalane w oznaczonym bloku i kopiowane przed zmianą; własny plik promptu jest zachowywany. `EDITOR`, `VISUAL` i `SUDO_EDITOR` pozostają ustawione na Nano. Zmiana powłoki obowiązuje w nowym terminalu; powrót do Bash: `chsh -s /bin/bash` i zmiana ustawienia `shell` w Kitty.
+
+**Win+Shift+V** otwiera listę historii z wyszukiwaniem. **Tab / Shift+Tab / ↑ / ↓** przesuwają zaznaczenie; **Enter** przywraca wybrany wpis do schowka; **Esc** zamyka bez zmiany. Następnie wklejasz Win+V w Kitty. Obsługiwane są tekst i obrazy, z zachowaniem oryginalnych bajtów. Wpisy zapisuje `cliphist` lokalnie na dysku; wyczyszczenie: `clipboard-history clear`. Usługa `fedora-clipboard.service` startuje tylko z sesji Hyprland. Nie jest włączana globalnie w Plasma ani podczas SSH.
+
+Aktualizacja istniejącej instalacji:
+
+```bash
+bash install.sh --dry-run --desktop noctalia --modules "terminal clipboard updates"
+bash install.sh --yes --desktop noctalia --modules "terminal clipboard updates"
+# Dla DMS użyj --desktop dms. Sam Zsh: --modules zsh.
+```
+
+Moduł `clipboard` dopisuje tylko własny blok do konfiguracji Hyprland, z kopią i sprawdzeniem parserem. Win+V w Kitty pozostaje skrótem wklejania.

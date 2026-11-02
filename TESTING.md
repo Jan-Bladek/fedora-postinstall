@@ -7,6 +7,36 @@ and a short OBS recording. Graphical suspend/resume failed in its TCG/VirGL setu
 on both tested kernels. Positive Plasma removal is untested.
 
 
+## Zsh, Lua and clipboard — 2026-11-02
+
+- Local Bash syntax, ShellCheck and **56 regressions passed**, including real fzf
+  keyboard interaction for Tab, Up and Down; byte-preserving selection without
+  executing copied shell text; empty/failed history; and preserving other binds.
+- In the existing Fedora KDE 44 VM, DNF installed `lua` **5.4.8**, `zsh` **5.9**,
+  `fzf` and `cliphist`. The installer applied `terminal clipboard updates`, passed
+  its package checks, and retained SELinux **Enforcing**.
+- Starship **1.27.0** passed the pinned SHA256 check. Oh My Zsh and all three
+  requested external plugins were fetched at the exact revisions in
+  `data/zsh-sources.json`. The account shell is `/bin/zsh`; Kitty starts Zsh.
+  An actual SSH PTY confirmed the three plugin functions, the interactive-cd Tab
+  widget, and `EDITOR=VISUAL=nano` (`RUNTIME_ZSH_OK`).
+- A repeated `zsh clipboard` installation retained identical `.zshrc` bytes and
+  the same managed shell payload. Hyprland **0.57.0** accepted the merged Lua
+  configuration; the live compositor reported no configuration errors.
+- In the live **Noctalia + Hyprland** VM, the collector captured two distinct
+  clipboard values. Physical Win+Shift+V through VNC opened the list; Tab and
+  Down followed by Enter restored the selected bytes, including the final newline.
+  A correction detaches wl-copy's background owner from Kitty's PTY so the picker
+  window closes after selection while the selected clipboard content remains.
+
+![Clipboard history opened with Win+Shift+V](tests/vm/evidence/fedora44-clipboard-history.png)
+
+The host Omarchy configuration was used only as a read-only prompt reference.
+This is a focused update of the existing guest, not a fresh full installation.
+DMS-specific GUI operation and the earlier automatic wallpaper-border fix were
+not retested here; the clipboard picker uses the same independent service and
+shortcut in both shell profiles.
+
 ## Unreleased — installer options and DMS includes
 
 Changes: Kitty Super+C/V, optional LibreOffice with debloat retention, individual
