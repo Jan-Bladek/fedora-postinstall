@@ -31,3 +31,4 @@ journald-browser	Przeglądarka journald	kjournald
 kfind	KFind	kfind
 uuctl	Ukryj uuctl (zachowaj uwsm)	@hide-uuctl
 infocenter	Ośrodek informacyjny	kinfocenter
+vscodium	Stary VSCodium (zastąpiony przez VS Code)	codium

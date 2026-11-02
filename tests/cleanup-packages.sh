@@ -15,7 +15,7 @@ if ((EUID == 0)); then
     mapfile -t apps < <(python3 - "$ROOT" <<'PY'
 import runpy, sys
 catalog=runpy.run_path(sys.argv[1]+'/scripts/cleanup-plan.py')['groups']()
-print('\n'.join(sorted({p for _, packages in catalog.values() for p in packages if not p.startswith('@')})))
+print('\n'.join(sorted({p for _, packages in catalog.values() for p in packages if not p.startswith('@') and p != 'codium'})))
 PY
 )
     dnf5 -y install plasma-desktop plasma-workspace uwsm dolphin okular kwrite libreoffice-writer libreoffice-calc "${apps[@]}"
