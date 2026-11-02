@@ -152,7 +152,7 @@ Kitty: `confirm_os_window_close 0`, `background_opacity 0.90`, JetBrains Mono. I
 
 ## Flea — domyślny menedżer plików
 
-Moduł `files` zastępuje Nautilusa przez [Flea](https://github.com/thisisgm/flea). Upstream oficjalnie wymaga Omarchy. To **adaptacja dla Fedory utrzymywana w tym projekcie**, a nie deklarowane przez autora wsparcie Fedory. Instalator buduje wersję `0.3.12` z przypiętej rewizji (`data/flea-release`), używa `cargo --locked --offline` i uruchamia testy Rust upstream. Nie używa pakietów Arch ani pacmana.
+Moduł `files` zastępuje Nautilusa przez [Flea](https://github.com/thisisgm/flea). Upstream oficjalnie wymaga Omarchy. To **adaptacja dla Fedory utrzymywana w tym projekcie**, a nie deklarowane przez autora wsparcie Fedory. Instalator buduje wersję `0.3.12` z przypiętej rewizji (`data/flea-release`), używa `cargo --locked --offline` i uruchamia testy Rust upstream. Nie używa pakietów Arch ani pacmana. Mała poprawka źródeł mapuje `/lib64` na `usr/lib64` wewnątrz sandboxu bubblewrap, zgodnie z układem Fedory; zachowuje wszystkie flagi izolacji. Nieznany układ upstream blokuje patchowanie, a digest poprawki jest częścią zapisu wersji payloadu.
 
 GUI wymaga Quickshell >=0.3.1. Fedora 44 ma starszy pakiet, więc gdy nie ma odpowiedniego RPM, dodawany jest opisany wcześniej COPR `lionheartp/Hyprland`. Z Omarchy pobierane są tylko przypięte biblioteki komponentów `shell/Commons` i `shell/Ui`, umieszczane prywatnie obok Flea z licencją MIT. Nie instalujemy pakietu Omarchy, jego poleceń, panelu ani usług. Flea korzysta z własnej palety awaryjnej, gdy nie ma motywu Omarchy.
 

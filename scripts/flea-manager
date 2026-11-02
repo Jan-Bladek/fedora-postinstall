@@ -8,6 +8,8 @@ script_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 read -r version revision components < "$script_dir/../data/flea-release"
 [[ $version =~ ^[0-9]+\.[0-9]+\.[0-9]+$ && $revision =~ ^[0-9a-f]{40}$ && $components =~ ^[0-9a-f]{40}$ ]] || exit 1
 app=$HOME/.local/share/fedora-postinstall/apps/flea
+patch_digest=$(sha256sum "$script_dir/flea-fedora-patch.py")
+patch_digest=${patch_digest%% *}
 binary=$HOME/.local/bin/flea
 desktop=$HOME/.local/share/applications/com.thisisgm.flea.desktop
 if [[ $action == check ]]; then
@@ -51,7 +53,7 @@ if [[ $action == update ]]; then
         echo "Flea upstream: $latest; reviewed Fedora adaptation: $version. Update the installer for a reviewed revision."
     fi
 fi
-if [[ -f $app/current/revisions && $(cat "$app/current/revisions") == "$revision $components" ]] && "$app/current/bin/flea" --version >/dev/null; then
+if [[ -f $app/current/revisions && $(cat "$app/current/revisions") == "$revision $components $patch_digest" ]] && "$app/current/bin/flea" --version >/dev/null; then
     echo "Flea $version: reviewed payload already installed."
     python3 "$script_dir/flea-launchers.py" --repair "$app/current" "$app/current"
     python3 "$script_dir/validate-flea.py" "$app/current"
@@ -63,6 +65,7 @@ else
     git -C "$work/source" -c core.hooksPath=/dev/null fetch --depth 1 origin "$revision"
     [[ $(git -C "$work/source" rev-parse FETCH_HEAD) == "$revision" ]] || exit 1
     git -C "$work/source" -c core.hooksPath=/dev/null checkout --detach FETCH_HEAD
+    python3 "$script_dir/flea-fedora-patch.py" "$work/source"
     git init -q "$work/components"
     git -C "$work/components" remote add origin https://github.com/omacom/omarchy.git
     git -C "$work/components" config remote.origin.promisor true
@@ -99,7 +102,7 @@ else
     done
     cp -- "$work/source/packaging/com.thisisgm.flea.svg" "$prefix/share/applications/flea.svg"
     python3 "$script_dir/flea-launchers.py" "$prefix" "$app/current"
-    printf '%s %s\n' "$revision" "$components" > "$prefix/revisions"
+    printf '%s %s %s\n' "$revision" "$components" "$patch_digest" > "$prefix/revisions"
     "$prefix/bin/flea" --version
     python3 "$script_dir/validate-flea.py" "$prefix"
     payload=$revision-$(date +%Y%m%dT%H%M%S)-$$

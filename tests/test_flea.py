@@ -132,6 +132,7 @@ module_files
             self.skipTest('xdg-mime is unavailable')
         with tempfile.TemporaryDirectory(prefix='flea home ') as temporary:
             home = Path(temporary)
+            (home/'.config').mkdir()
             prefix = home/'payload'
             (prefix/'bin').mkdir(parents=True)
             (prefix/'share/applications').mkdir(parents=True)
@@ -149,3 +150,19 @@ module_files
             result = subprocess.run(['xdg-mime', 'query', 'default', 'inode/directory'],
                                     env=env, capture_output=True, text=True, check=True)
             self.assertEqual(result.stdout.strip(), 'com.thisisgm.flea.desktop', result.stderr)
+
+    def test_fedora_patch_changes_only_lib64_and_refuses_unknown_source(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            target = root/'src/backend/sandbox.rs'
+            target.parent.mkdir(parents=True)
+            original = 'const FLAGS = &[\n    "--unshare-all",\n    "--symlink",\n    "usr/lib",\n    "/lib64",\n    "--ro-bind",\n    "/usr",\n];\n'
+            target.write_text(original)
+            subprocess.run(['python3', str(ROOT/'scripts/flea-fedora-patch.py'), temporary],
+                           capture_output=True, text=True, check=True)
+            expected = original.replace('"usr/lib"', '"usr/lib64"')
+            self.assertEqual(target.read_text(), expected)
+            refusal = subprocess.run(['python3', str(ROOT/'scripts/flea-fedora-patch.py'), temporary],
+                                     capture_output=True, text=True)
+            self.assertNotEqual(refusal.returncode, 0)
+            self.assertEqual(target.read_text(), expected)
