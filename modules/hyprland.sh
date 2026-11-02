@@ -25,6 +25,15 @@ write_hyprland_config() {
         cp -- "$target" "$RUN/hyprland-before-shell-selector.lua"
         install -m 600 "$RUN/hyprland.lua" "$target"
         log 'Migrated the unmodified v0.2 Hyprland template to the shell selector; backup saved in this run.'
+    elif [[ ! -L $target && -f $target ]]; then
+        cp -- "$ROOT/config/hyprland/legacy-v0.3.lua" "$legacy"
+        if [[ -s $RUN/legacy-quirk ]]; then printf '\n' >> "$legacy"; cat "$RUN/legacy-quirk" >> "$legacy"; fi
+        if cmp -s "$legacy" "$target"; then
+            cp -- "$target" "$RUN/hyprland-before-omarchy-settings.lua"
+            install -m 600 "$RUN/hyprland.lua" "$target"
+        else
+            config_file "$RUN/hyprland.lua" "$target"
+        fi
     else
         config_file "$RUN/hyprland.lua" "$target"
         if ! cmp -s "$RUN/hyprland.lua" "$target"; then

@@ -1,7 +1,14 @@
 #!/usr/bin/env bash
 log() { printf '[%s] %s\n' "$(date -Is)" "$*"; }
 die() { echo "ERROR: $*" >&2; exit 1; }
-run() { log "$(printf '%q ' "$@")"; "$@"; }
+run() {
+    log "$(printf '%q ' "$@")"
+    if [[ ${INSTALL_APPROVED:-0} == 1 ]]; then
+        if [[ $1 == sudo && ${2:-} == dnf5 ]]; then shift 2; set -- sudo dnf5 --assumeyes "$@"
+        elif [[ $1 == dnf5 ]]; then shift; set -- dnf5 --assumeyes "$@"; fi
+    fi
+    "$@"
+}
 confirm() { local reply; read -r -p "$1 [type YES]: " reply; [[ $reply == YES ]]; }
 preflight() {
     ((EUID != 0)) || die 'Run as your desktop user; sudo is used only where required.'
@@ -28,17 +35,27 @@ init_state() {
     RUN=$STATE/runs/$(date +%Y%m%dT%H%M%S)-$$
     export RUN
     mkdir -p "$RUN"
-    exec > >(tee -a "$RUN/install.log") 2>&1
+    if [[ ${USE_PROGRESS:-0} == 1 ]]; then
+        exec > "$RUN/install.log" 2>&1
+    else
+        exec > >(tee -a "$RUN/install.log") 2>&1
+    fi
     # shellcheck disable=SC2154
     trap 'rc=$?; echo "Interrupted/failed (exit $rc). Recovery: see README and $RUN" >&2; exit "$rc"' ERR
     trap 'exit 130' INT
+    trap 'rc=$?; if declare -F ui_finish >/dev/null; then ui_finish "$rc"; fi; if [[ -n ${SUDO_KEEPALIVE_PID:-} ]]; then if kill -0 "$SUDO_KEEPALIVE_PID" 2>/dev/null; then kill "$SUDO_KEEPALIVE_PID"; fi; fi' EXIT
     sudo -v
+    if [[ ${INSTALL_APPROVED:-0} == 1 ]]; then
+        (exec 9>&-; while sleep 45; do sudo -n -v || exit; done) &
+        SUDO_KEEPALIVE_PID=$!
+    fi
 }
 packages() {
     local p; local missing=()
     for p in "$@"; do
         if ! rpm -q "$p" >/dev/null 2>&1; then missing+=("$p"); fi
     done
+    if declare -F ui_status >/dev/null; then ui_status "Instalowanie: ${missing[*]:-pakiety już obecne}"; fi
     if ((${#missing[@]})); then run sudo dnf5 install "${missing[@]}" || return; fi
     for p in "$@"; do rpm -q "$p" >/dev/null || die "Requested RPM was not installed: $p"; done
     printf '%s\n' "$@" >> "$RUN/expected-rpm"
@@ -55,6 +72,7 @@ config_file() {
 }
 flatpak_app() {
     local id=$1
+    if declare -F ui_status >/dev/null; then ui_status "Flatpak: $id"; fi
     packages flatpak
     if ! flatpak remote-list --user --columns=name | grep -Fxq flathub; then
         run flatpak remote-add --user flathub https://flathub.org/repo/flathub.flatpakrepo
@@ -65,4 +83,9 @@ flatpak_app() {
         run flatpak install --user --assumeyes --noninteractive flathub "$id"
     fi
     printf '%s\n' "$id" >> "$RUN/expected-flatpak"
+}
+
+consent() {
+    if [[ ${INSTALL_APPROVED:-0} == 1 ]]; then log "Approved in summary: $*"; return 0; fi
+    confirm "$@"
 }

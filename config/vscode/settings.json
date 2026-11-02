@@ -1,0 +1,7 @@
+{
+  "telemetry.telemetryLevel": "off",
+  "telemetry.feedback.enabled": false,
+  "editor.fontFamily": "'JetBrains Mono', monospace",
+  "terminal.integrated.fontFamily": "JetBrains Mono",
+  "editor.fontLigatures": true
+}

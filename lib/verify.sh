@@ -17,9 +17,9 @@ verify() {
                 [[ $(xdg-mime query default "$type") == brave-browser.desktop ]] || die "Brave default verification failed: $type"
             done
         fi
-        if command -v codium >/dev/null; then
-            desktop=$(codium_desktop_id) || die 'VSCodium desktop entry verification failed.'
-            [[ $(xdg-mime query default text/plain) == "$desktop" ]] || die 'VSCodium default verification failed.'
+        if command -v code >/dev/null; then
+            desktop=$(code_desktop_id) || die 'VS Code desktop entry verification failed.'
+            [[ $(xdg-mime query default text/plain) == "$desktop" ]] || die 'VS Code default verification failed.'
         fi
     fi
     run sudo dnf5 check

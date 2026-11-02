@@ -4,6 +4,7 @@ import configparser
 import sys
 from urllib.parse import urlparse
 allowed = {
+    'vscode': {'packages.microsoft.com'},
     'brave-browser': {'brave-browser-rpm-release.s3.brave.com'},
     'vscodium': {'repo.vscodium.dev'},
     'tailscale': {'pkgs.tailscale.com'},

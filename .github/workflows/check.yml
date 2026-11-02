@@ -28,3 +28,14 @@ jobs:
         env:
           FEDORA_POSTINSTALL_TEST_TARGET: disposable
         run: bash tests/dms-packages.sh
+
+  experience:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    container: fedora:44
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Kitty, fonts, VS Code, LazyVim and run the unified updater
+        env:
+          FEDORA_POSTINSTALL_TEST_TARGET: disposable
+        run: bash tests/experience.sh

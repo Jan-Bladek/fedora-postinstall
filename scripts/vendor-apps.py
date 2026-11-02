@@ -44,6 +44,55 @@ def arduino():
         raise ValueError('Arduino release has no authenticated SHA256 digest; refusing unverified binary')
     return release['tag_name'], asset['browser_download_url'], digest[7:]
 
+APP_INFO = {
+    'rustrover': ('JetBrains RustRover', 'jetbrains-rustrover', 'rustrover'),
+    'intellij-idea': ('IntelliJ IDEA', 'jetbrains-idea', 'idea'),
+    'webstorm': ('JetBrains WebStorm', 'jetbrains-webstorm', 'webstorm'),
+    'arduino-ide': ('Arduino IDE', 'fedora-postinstall-arduino-ide', None),
+}
+
+
+def register_launcher(name, launcher):
+    app = BASE / name
+    current = app / 'current'
+    link = BIN / name
+    if not (current / launcher).is_file():
+        raise ValueError(f'Missing launcher for {name}')
+    BIN.mkdir(parents=True, exist_ok=True)
+    if link.exists() and not link.is_symlink():
+        raise ValueError(f'User executable collision: {link}')
+    if link.is_symlink():
+        link.unlink()
+    link.symlink_to(current / launcher)
+    title, desktop_id, icon_name = APP_INFO[name]
+    icon = 'applications-development'
+    if icon_name:
+        icon_file = next((current/'bin'/(icon_name+ext) for ext in ('.svg', '.png')
+                          if (current/'bin'/(icon_name+ext)).is_file()), None)
+        if icon_file is None:
+            raise ValueError(f'Vendor icon missing for {name}; cannot repair its launcher')
+        icon = str(icon_file)
+    content = (f'[Desktop Entry]\nType=Application\nName={title}\nExec="{link}" %U\n'
+               f'Icon={icon}\nStartupWMClass={desktop_id}\nTerminal=false\nCategories=Development;\n')
+    DESKTOP.mkdir(parents=True, exist_ok=True)
+    desktop = DESKTOP / (desktop_id+'.desktop')
+    receipt = app/'desktop-sha256'
+    legacy = DESKTOP / f'fedora-postinstall-{name}.desktop'
+    old = f'[Desktop Entry]\nType=Application\nName={name}\nExec="{link}" %U\nTerminal=false\nCategories=Development;\n'
+    owned = (not desktop.exists() or desktop.read_text() == old or
+             (receipt.exists() and hashlib.sha256(desktop.read_bytes()).hexdigest() == receipt.read_text().strip()))
+    if owned:
+        desktop.write_text(content)
+        receipt.write_text(hashlib.sha256(content.encode()).hexdigest()+'\n')
+        if legacy != desktop and legacy.exists() and legacy.read_text() == old:
+            legacy.unlink()
+    elif desktop.read_text() != content:
+        desktop.with_name(desktop.name+'.fedora-postinstall-new').write_text(content)
+        print(f'Preserved custom launcher {desktop}; review its proposed replacement')
+    if shutil.which('update-desktop-database'):
+        subprocess.run(['update-desktop-database', str(DESKTOP)], check=True)
+
+
 def install(name, metadata, launcher):
     version, url, digest = metadata
     if not re.fullmatch(r'[A-Za-z0-9._+-]+', version) or not re.fullmatch(r'[0-9a-fA-F]{64}', digest):
@@ -52,10 +101,14 @@ def install(name, metadata, launcher):
     target = app / version
     current = app / 'current'
     if current.is_symlink() and current.resolve() == target and target.exists():
-        print(f'{name}: already installed {version}')
+        register_launcher(name, launcher)
+        print(f'{name}: already installed {version}; launcher checked')
         return
     print(f'{name}: {version} from {url}, SHA256 {digest}')
-    if sys.argv[1] == 'update' and input('Install reviewed vendor release? [YES]: ') != 'YES':
+    status = os.environ.get('FEDORA_PROGRESS_STATUS')
+    if status:
+        Path(status).write_text(f'Instalowanie {APP_INFO[name][0]} {version}\n')
+    if sys.argv[1] == 'update' and os.environ.get('INSTALL_APPROVED') != '1' and input('Install reviewed vendor release? [YES]: ') != 'YES':
         return
     blob = fetch(url)
     if hashlib.sha256(blob).hexdigest().lower() != digest.lower():
@@ -91,28 +144,21 @@ def install(name, metadata, launcher):
         pending.unlink()
     pending.symlink_to(version)
     pending.replace(current)
-    BIN.mkdir(parents=True, exist_ok=True)
-    link = BIN / name
-    if link.exists() and not link.is_symlink():
-        raise ValueError(f'User executable collision: {link}')
-    if link.is_symlink():
-        link.unlink()
-    link.symlink_to(current / launcher)
-    DESKTOP.mkdir(parents=True, exist_ok=True)
-    desktop = DESKTOP / f'fedora-postinstall-{name}.desktop'
-    if not desktop.exists():
-        desktop.write_text(f'[Desktop Entry]\nType=Application\nName={name}\nExec="{link}" %U\nTerminal=false\nCategories=Development;\n')
+    register_launcher(name, launcher)
     (target / 'origin.json').write_text(json.dumps({'version': version, 'url': url, 'sha256': digest}, indent=2))
 
 if __name__ == '__main__':
-    if len(sys.argv) != 2 or sys.argv[1] not in {'install', 'update'}:
-        raise SystemExit('Usage: vendor-apps.py install|update')
+    if len(sys.argv) != 2 or sys.argv[1] not in {'install', 'update', 'repair'}:
+        raise SystemExit('Usage: vendor-apps.py install|update|repair')
     if os.geteuid() == 0:
         raise SystemExit('Run as desktop user')
     for name, code, launcher in [('rustrover', 'RR', 'bin/rustrover.sh'),
                                   ('intellij-idea', 'IIU', 'bin/idea.sh'),
                                   ('webstorm', 'WS', 'bin/webstorm.sh')]:
-        if sys.argv[1] == 'install' or (BASE / name / 'current').is_symlink():
+        if sys.argv[1] == 'repair':
+            if (BASE / name / 'current').is_symlink():
+                register_launcher(name, launcher)
+        elif sys.argv[1] == 'install' or (BASE / name / 'current').is_symlink():
             install(name, jetbrains(code), launcher)
-    if sys.argv[1] == 'install' or (BASE / 'arduino-ide' / 'current').is_symlink():
+    if sys.argv[1] != 'repair' and (sys.argv[1] == 'install' or (BASE / 'arduino-ide' / 'current').is_symlink()):
         install('arduino-ide', arduino(), 'arduino-ide')

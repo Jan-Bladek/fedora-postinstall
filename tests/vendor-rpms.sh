@@ -14,8 +14,8 @@ trap 'rm -rf -- "$RUN"' EXIT
 CONFIG=${XDG_CONFIG_HOME:-$HOME/.config}
 mkdir -p "$CONFIG"
 module_browsers
-vendor_repo vscodium https://repo.vscodium.dev/vscodium.repo
-packages codium
+source "$ROOT/modules/vscode.sh"
+module_vscode
 vendor_repo tailscale https://pkgs.tailscale.com/stable/fedora/tailscale.repo
 packages tailscale
 module_defaults
@@ -31,10 +31,10 @@ printf 'Default web browser: <%s>\n' "$actual"
 [[ $actual == brave-browser.desktop ]] || die 'Wrong xdg-settings browser'
 actual=$(xdg-mime query default text/plain)
 printf 'Default text editor: <%s>\n' "$actual"
-desktop=$(codium_desktop_id)
+desktop=$(code_desktop_id)
 [[ $actual == "$desktop" ]] || die 'Wrong text editor association'
 rpm -qf "/usr/share/applications/$actual"
-rpm -q brave-browser librewolf codium tailscale
+rpm -q brave-browser librewolf code tailscale
 # A container is not a systemd boot test; the KVM workflow checks tailscaled.
 tailscale version
 sudo dnf5 check

@@ -2,8 +2,8 @@
 # Parse desktop choices before preflight, including dry runs on non-Fedora hosts.
 default_modules() {
     case $DESKTOP in
-        noctalia|dms) echo "snapshots dependencies hyprland $DESKTOP terminal development browsers multimedia utilities defaults optimization updates" ;;
-        plasma) echo 'snapshots dependencies terminal development browsers multimedia utilities defaults optimization updates' ;;
+        noctalia|dms) echo "snapshots dependencies hyprland $DESKTOP terminal lazyvim development browsers multimedia utilities defaults optimization updates" ;;
+        plasma) echo 'snapshots dependencies terminal lazyvim development browsers multimedia utilities defaults optimization updates' ;;
         *) die "Unknown desktop: $DESKTOP (choose noctalia, dms or plasma)" ;;
     esac
 }

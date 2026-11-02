@@ -19,7 +19,7 @@ module_snapshots() {
     packages snapper
     if sudo snapper -c root list >/dev/null 2>&1; then
         run sudo snapper -c root create --type single --description 'Before Fedora postinstall' --print-number
-    elif confirm 'Configure Snapper root and create a snapshot? This does not add bootloader integration.'; then
+    elif consent 'Configure Snapper root and create a snapshot? This does not add bootloader integration.'; then
         run sudo snapper -c root create-config /
         run sudo snapper -c root create --description 'Before Fedora postinstall' --print-number
     else log 'Snapper declined; file backups remain available.'; fi

@@ -1,0 +1,33 @@
+# id<TAB>label<TAB>exact RPM names (LibreOffice is the only family expansion)
+pim-calendar	KOrganizer	korganizer korganizer-libs
+kleopatra	Kleopatra + dziennik GnuPG	kleopatra
+neochat	NeoChat	neochat
+solitaire	Pasjans / KPatience	kpat
+firefox	Firefox	firefox firefox-langpacks
+qrca	Qrca	qrca
+systemmonitor	Monitor systemowy Plasma	plasma-systemmonitor
+partitionmanager	Zarządzanie partycjami KDE	kde-partitionmanager
+welcome	Powitalnia KDE	plasma-welcome plasma-welcome-fedora
+nwg-panel	Panel i ustawienia nwg-panel	nwg-panel
+libreoffice	Cały LibreOffice	@libreoffice
+kamoso	Kamoso	kamoso
+kdeconnect	KDE Connect + SMS + wskaźnik + daemon	kde-connect kdeconnectd kde-connect-libs
+kmail	KMail + KTnef + pomocnik konta	kmail kmail-account-wizard kmail-libs
+contact-themes	Wygląd kontaktów / drukowanych / nagłówków	grantlee-editor grantlee-editor-libs
+kdebugsettings	KDebugSettings	kdebugsettings
+crash-viewer	Przeglądarka wysypanych aplikacji / DrKonqi	plasma-drkonqi
+akregator	Akregator	akregator akregator-libs
+helpcenter	Ośrodek pomocy KDE	khelpcenter
+mahjongg	Mahjongg	kmahjongg
+filelight	Filelight	filelight
+kmouth	KMouth	kmouth
+sieve	Edytor Sieve	pim-sieve-editor
+pim-export	Eksportowanie danych ZIO	pim-data-exporter pim-data-exporter-libs
+mines	KMiny	kmines
+problem-reporting	Zgłaszanie problemów — interfejsy ABRT	abrt-desktop abrt-gui gnome-abrt
+kontact	Kontact	kontact kontact-libs
+konsole	Konsole / Konsola	konsole
+journald-browser	Przeglądarka journald	kjournald
+kfind	KFind	kfind
+uuctl	Ukryj uuctl (zachowaj uwsm)	@hide-uuctl
+infocenter	Ośrodek informacyjny	kinfocenter
