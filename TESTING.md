@@ -1,4 +1,4 @@
-# Validation record — updated 2026-11-01
+# Validation record — updated 2026-11-02
 
 **Full Fedora KDE 44 CLI installation, repeat and reboot passed** in
 [the follow-up KVM run](https://github.com/Jan-Bladek/fedora-postinstall/actions/runs/41304027246).
@@ -6,6 +6,92 @@ The separate local VM demonstrated Noctalia/Kitty GUI, lock/unlock, portal frame
 and a short OBS recording. Graphical suspend/resume failed in its TCG/VirGL setup
 on both tested kernels. Positive Plasma removal is untested.
 
+
+## v0.4.0 — guided install, app cleanup and developer experience
+
+The fresh-ISO KVM runs below belong to earlier releases. **A complete v0.4.0 install
+from fresh media has not been tested.** The new modules were tested in disposable
+Fedora 44 containers and the existing verified-ISO Fedora KDE VM.
+
+- [Native experience run 41492135377](https://github.com/Jan-Bladek/fedora-postinstall/actions/runs/41492135377)
+  passed: Kitty/font installation twice, preservation of a custom scrollback setting,
+  exactly one managed settings block, Nerd Font SHA256 installation, native Microsoft
+  VS Code installation twice, telemetry policy and preservation of unrelated JSONC
+  settings, RPM-owned default-editor association, LazyVim bootstrap twice, and the
+  unified updater. The initializer configuration remained unchanged by the update.
+- [Application/update run 41494921683](https://github.com/Jan-Bladek/fedora-postinstall/actions/runs/41494921683)
+  passed with real Vesktop, Steam, Obsidian and LocalSend Flatpaks, Brave/LibreWolf,
+  Microsoft VS Code and Tailscale RPMs. `fedora-update --yes` completed DNF and both
+  Flatpak scopes, retained selected applications/MIME associations and passed DNF
+  dependency checks. Native OBS codec regression also passed. This job has no
+  JetBrains payloads or Rustup, so those update paths are not established by this run.
+- [Native cleanup run 41493511047](https://github.com/Jan-Bladek/fedora-postinstall/actions/runs/41493511047)
+  seeded real Plasma, the requested app packages and uwsm, removed the selected apps,
+  repeated cleanup and compared retained Plasma/Qt/uwsm/Dolphin/Okular/KWrite RPMs.
+  User document data remained intact. Exact recovery RPMs were downloaded before
+  erasure and `dnf5 check` passed. [Run 41494710969](https://github.com/Jan-Bladek/fedora-postinstall/actions/runs/41494710969)
+  also passed the real Hyprland parser with the Omarchy-style profile before cleanup.
+- Local Bash syntax/ShellCheck and **28 regression tests** passed, including actual
+  curses selection/progress in PTYs, dependency-failure refusal before erasure or
+  service stops, exact app allowlisting, JSONC string/comment handling, JetBrains
+  launcher repair, custom launcher preservation, atomic-write failure preservation,
+  and explicit preset replacement with backup.
+
+The local existing KDE VM completed `dependencies hyprland vscode terminal lazyvim
+defaults cleanup updates` without prompt input using `--yes`. It **removed 63 selected
+RPMs**. The exact before/after check found no removals outside the selected app list.
+Plasma Desktop/Workspace, uwsm, Dolphin, Okular, KWrite and Qt remained installed;
+SELinux stayed Enforcing and NetworkManager/display-manager were active.
+[Reviewed result JSON](tests/vm/evidence/fedora44-v0.4-cleanup.json) records the actual
+app list and retained versions. Configuration/data directories were not purged.
+
+An earlier limited guest attempt deliberately stopped before erasure because its
+old kde-connect NEVRA was no longer downloadable. After the standard base-upgrade
+step, current recovery RPMs were available and cleanup completed. This refusal
+remains intentional rather than silently substituting a different recovery version.
+
+The compositor parser accepted the proposed Omarchy-style configuration before it
+was installed. A live-session check initially reported a cached cannot-open-config
+error although the installed file existed; `hyprctl reload` cleared the error and
+automatic session validation passed. Subsequent writes use an atomic replacement
+rather than an unlink/recreate window. The exact cause of that initial stale error
+was not established solely from the log.
+
+The latest native/static run [41495940675](https://github.com/Jan-Bladek/fedora-postinstall/actions/runs/41495940675)
+passed all four jobs after the atomic-write changes, including 28 regression tests
+and repeated native VS Code/Kitty/fonts/LazyVim installation plus centralized updates.
+Super+W closed the actual test Kitty window without a confirmation dialog, and
+session validation passed again afterward.
+
+The final module set was staged again in the same guest and `hyprland vscode
+terminal lazyvim defaults cleanup updates` completed successfully. The second
+cleanup found no remaining selected RPMs. Automatic session validation passed
+without a manual reload following the atomic configuration replacement.
+
+A real Wayland Kitty window rendered with the requested configuration and the
+new window borders/gaps. Its terminal text below is a **test summary printed by
+the fixture**, not independent evidence of telemetry or package state; the RPM
+inventory, configured policy and CI results above establish those separate checks.
+A first-run keyring request was cancelled in this disposable account, not bypassed
+by storing an empty password.
+
+![Actual Kitty window in the Fedora guest after the v0.4 modules](tests/vm/evidence/fedora44-v0.4-kitty.png)
+
+The Microsoft package in these tests is **1.144.0** and owns
+`com.microsoft.VSCode.desktop` / `com.microsoft.VSCode.UrlHandler.desktop`.
+The installer supports these and the older code.desktop ID. An initial fixture
+assumed the old ID and was corrected; a separate minimal-container failure was
+missing diffutils. The updater's first Flatpak follow-up used the wrong LocalSend
+ID in its assertion; the actual updater had succeeded. The corrected assertion
+uses org.localsend.localsend_app.
+
+Telemetry validation checks the configured TelemetryLevel=off policy and user
+settings; it is not a network-capture audit of VS Code or third-party extensions.
+JetBrains icon repair is tested with representative installed layouts, including
+same-version repairs and custom desktop files. All three proprietary IDE windows
+and their icons were not separately launched and visually validated in DMS for
+v0.4.0. LazyVim core/bootstrap/update passed; optional language-server providers and
+all third-party plugin combinations still need individual health checks.
 
 ## Desktop choices — v0.3.0
 

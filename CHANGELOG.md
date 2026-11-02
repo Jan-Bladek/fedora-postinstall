@@ -1,5 +1,26 @@
 # Changelog
 
+## 0.4.0 — 2026-11-02
+
+- TUI wyboru Plasma / Noctalia / DMS, osobna lista opcjonalnych aplikacji do usunięcia,
+  jedno podsumowanie zgody, pasek postępu oraz pełny log. Fallback curses bez newt.
+- Dodano `--yes`, `--cleanup-apps` i `--keep-hypr-config`; brak ciągłego wpisywania YES.
+- Czyszczenie używa jawnej listy RPM, testu zależności, pobrania dokładnych RPM
+  do odzyskiwania i kontroli zachowania pozostałych pakietów. uuctl jest ukrywany,
+  uwsm zachowany. Nie wyłączamy kworker ani współdzielonych usług systemowych.
+- VS Code zastępuje VSCodium w nowych instalacjach; polityka TelemetryLevel=off,
+  aktualne desktop IDs Microsoftu i scalanie ustawień JSONC.
+- Naprawiono ikony i identyfikatory desktop / StartupWMClass archiwów JetBrains,
+  również gdy bieżąca wersja aplikacji jest już zainstalowana.
+- Profil Hyprland według Omarchy: odstępy, obramowania, animacje i skróty,
+  z aplikacjami Fedory i wybraną powłoką. Poprzedni plik jest kopiowany do backupu.
+- JetBrains Mono jako domyślny font, weryfikowane symbole Nerd Fonts, Kitty 90%
+  opacity i wyłączone potwierdzanie zamykania, zachowanie innych ustawień terminala.
+- LazyVim z przypiętego oficjalnego startera, kopią wcześniejszego środowiska Neovim
+  i automatyczną instalacją wtyczek przez lazy.nvim.
+- `fedora-update` obejmuje DNF/COPR, Flatpak, archiwa IDE/AppImage, Rustup,
+  zarządzany LazyVim, symbole fontów i rozszerzenia VS Code.
+
 ## 0.3.0 — 2026-11-01
 
 - Dodano wybór pulpitu w menu i przez `--desktop noctalia|dms|plasma`.
