@@ -81,3 +81,31 @@ module_files
                                     env=dict(os.environ, HOME=temporary), text=True, capture_output=True)
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertEqual(list(Path(temporary).iterdir()), [])
+
+    def test_optional_ci_token_is_api_only_and_is_not_forwarded_on_redirect(self):
+        import runpy
+        from unittest.mock import patch
+        from urllib.request import HTTPRedirectHandler
+        fetch = runpy.run_path(str(ROOT/'scripts/vendor-apps.py'))['fetch']
+        captured = []
+        class Response:
+            def __init__(self, request):
+                self.url = request.full_url
+            def __enter__(self):
+                return self
+            def __exit__(self, *args):
+                return False
+            def read(self):
+                return b'{}'
+        def open_fixture(request, timeout):
+            captured.append(request)
+            return Response(request)
+        fetch.__globals__['urlopen'] = open_fixture
+        with patch.dict(os.environ, FEDORA_POSTINSTALL_GITHUB_TOKEN='fake-ci-token'):
+            fetch('https://api.github.com/repos/owner/repo/releases/latest')
+            fetch('https://github.com/owner/repo/releases/download/v1/file.zip')
+        self.assertEqual(captured[0].get_header('Authorization'), 'Bearer fake-ci-token')
+        self.assertIsNone(captured[1].get_header('Authorization'))
+        redirected = HTTPRedirectHandler().redirect_request(captured[0], None, 302, 'Found', {},
+                                                             'https://github.com/owner/repo')
+        self.assertIsNone(redirected.get_header('Authorization'))

@@ -10,7 +10,7 @@ if ((EUID == 0)); then
     useradd -m experience-tester
     printf 'experience-tester ALL=(ALL) NOPASSWD: ALL\n' > /etc/sudoers.d/experience-test
     chmod 440 /etc/sudoers.d/experience-test
-    exec sudo -H -u experience-tester env FEDORA_POSTINSTALL_TEST_TARGET=disposable bash "$ROOT/tests/experience.sh"
+    exec sudo -H -u experience-tester env FEDORA_POSTINSTALL_GITHUB_TOKEN="${FEDORA_POSTINSTALL_GITHUB_TOKEN:-}" FEDORA_POSTINSTALL_TEST_TARGET=disposable bash "$ROOT/tests/experience.sh"
 fi
 source "$ROOT/lib/core.sh"
 source "$ROOT/modules/terminal.sh"

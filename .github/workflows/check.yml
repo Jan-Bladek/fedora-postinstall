@@ -37,6 +37,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install Kitty, fonts, Flea, VS Code, LazyVim and run the unified updater
         env:
+          FEDORA_POSTINSTALL_GITHUB_TOKEN: ${{ github.token }}
           FEDORA_POSTINSTALL_TEST_TARGET: disposable
         run: bash tests/experience.sh
 

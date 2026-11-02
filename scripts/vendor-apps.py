@@ -24,7 +24,13 @@ def fetch(url):
     u = urlparse(url)
     if u.scheme != 'https' or u.hostname not in HOSTS:
         raise ValueError(f'Untrusted URL: {url}')
-    with urlopen(Request(url, headers={'User-Agent': 'fedora-postinstall'}), timeout=90) as response:
+    request = Request(url, headers={'User-Agent': 'fedora-postinstall'})
+    token = os.environ.get('FEDORA_POSTINSTALL_GITHUB_TOKEN')
+    if u.hostname == 'api.github.com' and token:
+        # urllib excludes unredirected headers from every redirect request.
+        # Never send the CI token to vendor/CDN/download URLs.
+        request.add_unredirected_header('Authorization', 'Bearer '+token)
+    with urlopen(request, timeout=90) as response:
         if urlparse(response.url).scheme != 'https' or urlparse(response.url).hostname not in HOSTS:
             raise ValueError('Unexpected download redirect')
         return response.read()
