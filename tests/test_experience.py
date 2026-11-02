@@ -229,7 +229,7 @@ ui_confirm_plan
         self.assertIn('Zamknij Neovim', output)
 
     @unittest.skipUnless(shutil.which('whiptail'), 'native whiptail is unavailable')
-    def test_native_cleanup_checklist_in_an_80_by_24_terminal(self):
+    def test_native_debloat_yes_selects_all_without_a_checklist_in_80_by_24(self):
         script = r'''source "$1/lib/ui.sh"
 ROOT=$1
 MODULES=dependencies
@@ -237,9 +237,8 @@ ui_cleanup_choice
 printf '\nSELECTED:%s\n' "$CLEANUP_APPS"
 '''
         status, output = self.run_terminal(['bash', '-eu', '-c', script, 'test', str(ROOT)],
-                                           [b'\r', b'\r'], rows=24, columns=80,
-                                           ready=[b'Wybierz aplikacje', b'firefox'])
+                                           b'\t\r', rows=24, columns=80, ready=b'Tak, usu')
         self.assertEqual(status, 0, output)
         self.assertIn('┌', output)
         self.assertIn('SELECTED:', output)
-        self.assertIn('firefox', output)
+        self.assertIn('SELECTED:all', output)

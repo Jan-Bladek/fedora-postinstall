@@ -13,6 +13,9 @@ code_desktop_id() {
 
 module_defaults() {
     local type desktop handler path
+    if command -v nautilus >/dev/null; then
+        run xdg-mime default org.gnome.Nautilus.desktop inode/directory
+    fi
     if command -v brave-browser >/dev/null; then
         run xdg-settings set default-web-browser brave-browser.desktop
         for type in x-scheme-handler/http x-scheme-handler/https text/html application/xhtml+xml; do run xdg-mime default brave-browser.desktop "$type"; done

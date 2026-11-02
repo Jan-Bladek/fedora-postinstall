@@ -2,8 +2,8 @@
 # Parse desktop choices before preflight, including dry runs on non-Fedora hosts.
 default_modules() {
     case $DESKTOP in
-        noctalia|dms) echo "snapshots dependencies hyprland $DESKTOP terminal lazyvim development browsers multimedia utilities defaults optimization updates" ;;
-        plasma) echo 'snapshots dependencies terminal lazyvim development browsers multimedia utilities defaults optimization updates' ;;
+        noctalia|dms) echo "snapshots dependencies hyprland $DESKTOP terminal files omasnap lazyvim development browsers multimedia utilities defaults optimization updates" ;;
+        plasma) echo 'snapshots dependencies terminal files lazyvim development browsers multimedia utilities defaults optimization updates' ;;
         *) die "Unknown desktop: $DESKTOP (choose noctalia, dms or plasma)" ;;
     esac
 }
@@ -13,7 +13,7 @@ validate_desktop_modules() {
     for module in $MODULES; do
         case $module in
             noctalia|dms) [[ $module == "$DESKTOP" ]] || die "Module $module conflicts with desktop $DESKTOP." ;;
-            hyprland|kde-removal) [[ $DESKTOP != plasma ]] || die "Plasma preservation conflicts with module $module." ;;
+            hyprland|omasnap|kde-removal) [[ $DESKTOP != plasma ]] || die "Plasma preservation conflicts with module $module." ;;
         esac
     done
 }

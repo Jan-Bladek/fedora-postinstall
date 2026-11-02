@@ -17,17 +17,25 @@ source "$ROOT/modules/terminal.sh"
 source "$ROOT/modules/lazyvim.sh"
 source "$ROOT/modules/vscode.sh"
 source "$ROOT/modules/defaults.sh"
+source "$ROOT/modules/files.sh"
 source "$ROOT/modules/updates.sh"
 RUN=$(mktemp -d)
 CONFIG=$HOME/.config
 STATE=$HOME/.local/state/fedora-postinstall
 DESKTOP=dms
 export INSTALL_APPROVED=1
-mkdir -p "$CONFIG/kitty" "$CONFIG/Code/User" "$STATE"
+mkdir -p "$CONFIG/btop" "$CONFIG/kitty" "$CONFIG/Code/User" "$STATE"
 printf '# my terminal preference\nscrollback_lines 5555\n' > "$CONFIG/kitty/kitty.conf"
 printf '{ // keep my setting\n "files.autoSave": "onFocusChange",\n}\n' > "$CONFIG/Code/User/settings.json"
+printf 'theme_background = True\nupdate_ms = 1500\n' > "$CONFIG/btop/btop.conf"
 module_terminal
 module_terminal
+grep -Fxq 'theme_background = False' "$CONFIG/btop/btop.conf"
+grep -Fxq 'update_ms = 1500' "$CONFIG/btop/btop.conf"
+[[ $(grep -c '^theme_background =' "$CONFIG/btop/btop.conf") == 1 ]]
+module_files
+module_files
+[[ $(xdg-mime query default inode/directory) == org.gnome.Nautilus.desktop ]]
 grep -q '^scrollback_lines 5555$' "$CONFIG/kitty/kitty.conf"
 grep -q '^confirm_os_window_close 0$' "$CONFIG/kitty/kitty.conf"
 [[ $(grep -c '^# BEGIN FEDORA-POSTINSTALL KITTY$' "$CONFIG/kitty/kitty.conf") == 1 ]]

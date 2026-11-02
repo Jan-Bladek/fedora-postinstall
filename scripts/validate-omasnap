@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+# Non-destructive runtime checks; capture/clipboard writing is explicitly opt-in.
+set -Eeuo pipefail
+case ${1:-} in ''|--capture-smoke) ;; *) echo 'Usage: validate-omasnap [--capture-smoke]' >&2; exit 2 ;; esac
+[[ -n ${HYPRLAND_INSTANCE_SIGNATURE:-} && -n ${WAYLAND_DISPLAY:-} ]] || { echo 'Run inside Hyprland.' >&2; exit 1; }
+"$HOME/.local/share/fedora-postinstall/scripts/omasnap-manager" check
+hyprctl -j binds | python3 -c '
+import json, sys
+binds = json.load(sys.stdin)
+for key, mask in [("PRINT", 0), ("S", 65)]:
+    matches = [b for b in binds if str(b.get("key", "")).upper() == key and b.get("modmask") == mask]
+    if len(matches) != 1 or "omasnap" not in matches[0].get("arg", ""):
+        sys.exit(f"Missing or conflicting Omasnap shortcut: {key}, mask {mask}: {matches}")
+    if mask == 65 and "--editor overlay" not in matches[0]["arg"]:
+        sys.exit("Region shortcut does not start the editor")
+print("Both Omasnap shortcuts are unique and route to the expected commands.")
+'
+if [[ ${1:-} == --capture-smoke ]]; then
+    # Warn before touching clipboard or recording desktop pixels.
+    echo 'Capture smoke test: copies the current monitor to the clipboard.'
+    "$HOME/.local/bin/omasnap" --capture-fullscreen --copy
+    timeout 10 wl-paste --type image/png | python3 -c '
+import struct, sys
+header = sys.stdin.buffer.read(24)
+if len(header) != 24 or header[:8] != b"\x89PNG\r\n\x1a\n":
+    sys.exit("No PNG image on Wayland clipboard")
+w, h = struct.unpack(">II", header[16:24])
+if w < 1 or h < 1:
+    sys.exit("Empty screenshot")
+# Consume the stream so wl-paste does not fail with a misleading broken pipe.
+while sys.stdin.buffer.read(65536):
+    pass
+print(f"Wayland capture and PNG clipboard passed: {w}x{h}")
+'
+fi
+echo 'Interactive region selection, arrow/text/blur editing and save/copy still require a GUI check.'

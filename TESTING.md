@@ -7,6 +7,24 @@ and a short OBS recording. Graphical suspend/resume failed in its TCG/VirGL setu
 on both tested kernels. Positive Plasma removal is untested.
 
 
+## v0.5.0 — simplified choices and Omasnap (validation in progress)
+
+Local Bash syntax/ShellCheck and **35 regressions** passed after the new desktop →
+debloat yes/no → IDE profile flow. Regression coverage includes preserving arbitrary
+Lua while adding exactly one last-loaded module, unbinding only the two screenshot
+keys, no JetBrains/Arduino download in the code profile, preservation of btop settings,
+and retaining the old working payload when a source fetch fails.
+
+The official Omasnap v1.24.0 revision was built in the existing Fedora 44 KVM guest.
+Its CTest smoke suite passed (40 seconds). An initial post-build `--version` check
+without a display aborted in Qt platform initialization: the guest journal reported
+`could not connect to display`, and the core backtrace reached
+`QGuiApplicationPrivate::createPlatformIntegration`. This was a headless installer
+probe, not a capture test. The manager now uses `QT_QPA_PLATFORM=offscreen` solely
+for `--version`/`--help` probes; interactive captures keep Wayland. Subsequent build,
+interactive capture/edit/clipboard tests and native CI results are recorded below
+when available. No v0.5 complete fresh-media installation is established here.
+
 ## v0.4.0 — guided install, app cleanup and developer experience
 
 The fresh-ISO KVM runs below belong to earlier releases. **A complete v0.4.0 install

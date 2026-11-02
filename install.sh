@@ -12,6 +12,7 @@ INSTALL_APPROVED=0
 USE_PROGRESS=0
 CLEANUP_APPS=''
 APPLY_HYPR_PRESET=1
+DEV_PROFILE=code
 DRY_RUN=0
 EXPLICIT_MODULES=0
 DESKTOP=''
@@ -24,9 +25,10 @@ while (($#)); do
         --keep-hypr-config) APPLY_HYPR_PRESET=0 ;;
         --no-progress) USE_PROGRESS=-1 ;;
         --cleanup-apps) shift; CLEANUP_APPS=${1:?Missing application selection} ;;
+        --dev-profile) shift; DEV_PROFILE=${1:?Missing development profile} ;;
         --desktop) shift; DESKTOP=${1:?Missing desktop choice} ;;
         --modules) shift; MODULES=${1:?Missing module list}; EXPLICIT_MODULES=1 ;;
-        --help) echo 'install.sh [--dry-run] [--yes] [--no-progress] [--keep-hypr-config] [--cleanup-apps "all|id id"] [--desktop noctalia|dms|plasma] [--modules "snapshots dependencies hyprland noctalia dms terminal lazyvim vscode development browsers multimedia utilities defaults optimization updates cleanup kde-removal"]'; exit 0 ;;
+        --help) echo 'install.sh [--dry-run] [--yes] [--no-progress] [--keep-hypr-config] [--cleanup-apps "all|id id"] [--desktop noctalia|dms|plasma] [--dev-profile code|full] [--modules "snapshots dependencies hyprland noctalia dms terminal lazyvim vscode development files omasnap browsers multimedia utilities defaults optimization updates cleanup kde-removal"]'; exit 0 ;;
         *) die "Unknown option: $1" ;;
     esac
     shift
@@ -49,24 +51,16 @@ fi
 # Explicit module lists retain their meaning; presets affect only default modules.
 if ((EXPLICIT_MODULES == 0)); then MODULES=$(default_modules); fi
 export DESKTOP
-if [[ -t 0 && $DRY_RUN == 0 && $EXPLICIT_MODULES == 0 && $INSTALL_APPROVED == 0 ]]; then
-    if command -v whiptail >/dev/null; then
-        items=()
-        for module in $MODULES; do items+=("$module" "$(ui_module_label "$module")" ON); done
-        MODULES=$(whiptail --title "Fedora · $DESKTOP" --separate-output --checklist 'Wybierz moduły (Spacja zaznacza, Enter dalej)' 22 78 12 "${items[@]}" 3>&1 1>&2 2>&3) || exit 0
-    else
-        printf 'Fedora Post-Install · %s\nAvailable default modules:\n%s\n' "$DESKTOP" "$MODULES"
-        if [[ $DESKTOP != plasma ]]; then echo 'Optional: kde-removal (requires a validated Hyprland session and separate confirmation).'; fi
-        read -r -p 'Enter module names, press Enter for defaults, or type EXIT: ' selection
-        [[ $selection != EXIT ]] || exit 0
-        if [[ -n $selection ]]; then MODULES=$selection; fi
-    fi
-fi
 if [[ -n $CLEANUP_APPS ]]; then
     if [[ ! " $MODULES " =~ [[:space:]]cleanup[[:space:]] ]]; then MODULES+=" cleanup"; fi
 elif [[ -t 0 && $DRY_RUN == 0 && $EXPLICIT_MODULES == 0 && $INSTALL_APPROVED == 0 ]]; then
     ui_cleanup_choice
 fi
+if [[ -t 0 && $DRY_RUN == 0 && $EXPLICIT_MODULES == 0 && $INSTALL_APPROVED == 0 ]]; then
+    ui_development_choice || exit 0
+fi
+case $DEV_PROFILE in code|full) ;; *) die "Unknown development profile: $DEV_PROFILE" ;; esac
+export DEV_PROFILE
 # whiptail returns one module per line; verification uses a space-separated list.
 MODULES=${MODULES//$'\n'/ }
 [[ -n $MODULES ]] || exit 0

@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.5.0 — 2026-11-02
+
+- Uproszczone TUI: pulpit, debloat tak/nie, zestaw VS Code albo VS Code + JetBrains + Arduino; brak checklist aplikacji/modułów w zwykłym przebiegu.
+- Rozszerzona lista debloat o import KMail, Spectacle, Dragon, Krfb, Gwenview, KAddressBook, KRDC i edytor menu KDE.
+- Nautilus jako domyślny menedżer plików i aplikacja skrótu Super+Shift+F.
+- Przezroczyste tło btop z zachowaniem pozostałych ustawień.
+- Omasnap 1.24.0 ze sprawdzonej rewizji upstream: zależności DNF, kompilacja bez roota, testy upstream, odwracalne przełączenie payloadów, Print i Super+Shift+S, usuwanie kolizji przez unbind i osobny ostatni moduł Lua.
+- Kontrola `validate-omasnap`, opcjonalny test Wayland/PNG, zarządzanie aktualizacją i odinstalowaniem bez instalowania Omarchy.
+
 ## 0.4.0 — 2026-11-02
 
 - TUI wyboru Plasma / Noctalia / DMS, osobna lista opcjonalnych aplikacji do usunięcia,

@@ -18,8 +18,8 @@ bash install.sh
 Uruchamiaj jako zwykły użytkownik. Instalator pokazuje kolejno:
 
 1. Wybór **Plasma**, **Hyprland + Noctalia** albo **Hyprland + DMS**.
-2. Listę modułów do zaznaczenia.
-3. Pytanie o opcjonalne czyszczenie aplikacji i listę wyboru.
+2. Pytanie **Debloat Plasma: tak/nie** — cały zestaw z listy, bez wyboru pojedynczych aplikacji. Domyślnie nie.
+3. Wybór **tylko VS Code** albo **VS Code + JetBrains (RustRover, IntelliJ IDEA, WebStorm) + Arduino IDE**. Rust/Python/C++ są wspólne; domyślnie VS Code.
 4. Jedno podsumowanie zgody na zmiany, źródła pakietów i klucze dostawców.
 5. Ekran postępu z bieżącym etapem/aplikacją. Pełne wyjście poleceń trafia do logu.
 
@@ -34,14 +34,14 @@ bash install.sh --desktop noctalia
 bash install.sh --desktop dms
 bash install.sh --desktop plasma
 # Tryb wsadowy po przejrzeniu planu:
-bash install.sh --yes --desktop dms --cleanup-apps all
+bash install.sh --yes --desktop dms --cleanup-apps all --dev-profile full
 # Własny wybór aplikacji do usunięcia:
 bash install.sh --yes --desktop plasma --cleanup-apps "firefox libreoffice neochat"
 # Zachowaj własny główny config Hyprland i otrzymaj propozycję zmian:
 bash install.sh --desktop noctalia --keep-hypr-config
 ```
 
-`--no-progress` pozostawia zwykły log w terminalu. `--dry-run` nie używa sudo, DNF, Flatpak ani sieci i działa również poza Fedorą; pokazuje wybrane moduły, nie rozwiązuje zależności na obcym systemie. Lista identyfikatorów czyszczenia:
+`--no-progress` pozostawia zwykły log w terminalu. `--dry-run` nie używa sudo, DNF, Flatpak ani sieci i działa również poza Fedorą; pokazuje wybrane moduły, nie rozwiązuje zależności na obcym systemie. `--dev-profile code|full` wybiera zestaw IDE w trybie wsadowym (domyślnie `code`). Własny wybór modułów pozostaje dostępny przez `--modules`; zwykłe TUI nie ma checklisty modułów. Lista identyfikatorów czyszczenia dla CLI:
 
 ```bash
 python3 scripts/cleanup-plan.py --catalog
@@ -77,9 +77,11 @@ Selektor `~/.config/fedora-postinstall/shell` steruje autostartem i skrótami. D
 | dependencies | Aktualizacja bazowych RPM, Git, curl, wget, archiwizacja, diagnostyka, schowek Wayland |
 | hyprland | Hyprland, XWayland, portale Hyprland/GTK, PipeWire, WirePlumber, Polkit, NetworkManager, Bluetooth, Mesa |
 | noctalia / dms | Jedna wybrana powłoka, bez Waybar, dunst i dodatkowego launchera |
-| terminal | Kitty, Bash, JetBrains Mono, symbole Nerd Fonts, konfiguracja fontów i terminala |
+| terminal | Kitty, Bash, JetBrains Mono, symbole Nerd Fonts, konfiguracja fontów i terminala; btop z przezroczystym tłem |
 | lazyvim | Neovim, oficjalny starter LazyVim, lazy.nvim, ripgrep, fd, tree-sitter-cli i narzędzia kompilacji |
-| development | Rust/Cargo, Python/venv/pip, GCC/C++, CMake/Ninja/GDB, VS Code, trzy IDE JetBrains i Arduino IDE 2 |
+| development | Rust/Cargo, Python/venv/pip, GCC/C++, CMake/Ninja/GDB i VS Code; JetBrains/Arduino tylko dla `--dev-profile full` |
+| files | Nautilus RPM, domyślny menedżer plików (`inode/directory`) |
+| omasnap | Przypięty build upstream Omasnap, testy, skróty, zarządzane aktualizacje/odinstalowanie; tylko Hyprland |
 | vscode | Sam VS Code z oficjalnego repozytorium Microsoftu i wyłączoną telemetrią |
 | browsers | Brave jako domyślny, LibreWolf jako dodatkowy |
 | multimedia | OBS i rzeczywisty OpenH264; Vesktop i Steam z Flathub |
@@ -90,7 +92,7 @@ Selektor `~/.config/fedora-postinstall/shell` steruje autostartem i skrótami. D
 | cleanup | Wybrane aplikacje z jawnej listy, bez usuwania Plasma/Qt/shared services |
 | kde-removal | Oddzielny, ręcznie potwierdzany etap usuwania całej Plasma z działającej sesji Hyprland |
 
-Jawne `--modules "dependencies hyprland noctalia terminal lazyvim updates"` określa dokładną listę i kolejność; pomija menu modułów. Bazowa aktualizacja w `dependencies` chroni przed konfliktami starych pakietów z ISO z aktualnymi zależnościami. Po aktualizacji kernela zaplanuj restart.
+Jawne `--modules "dependencies hyprland noctalia terminal lazyvim updates"` określa dokładną listę i kolejność; pomija interaktywne wybory zestawu. Bazowa aktualizacja w `dependencies` chroni przed konfliktami starych pakietów z ISO z aktualnymi zależnościami. Po aktualizacji kernela zaplanuj restart.
 
 Priorytetem są RPM Fedory i dostawców. Hyprland, gdy nie jest dostępny natywnie, korzysta z COPR `lionheartp/Hyprland`. DMS używa stabilnego RPM, a w razie potrzeby upstream COPR `duxlabs/dms` wraz z `duxlabs/dux-repo`. COPR to źródła społecznościowe. Nie dodajemy AUR, nie używamy `--allowerasing`, nie wykonujemy `curl | sh`.
 
@@ -108,13 +110,13 @@ Własny zmieniony launcher jest zachowywany, z propozycją `.fedora-postinstall-
 
 ## Opcjonalne czyszczenie aplikacji
 
-Lista jest w [data/cleanup.tsv](data/cleanup.tsv). Stary VSCodium można usunąć przez pozycję `vscodium`; nowa instalacja używa wyłącznie VS Code. Dane wcześniejszego edytora nie są kasowane. Obejmuje wskazane aplikacje PIM/KDE, gry, Firefox, LibreOffice, nwg-panel, Konsole i interfejsy zgłaszania problemów. Menu pokazuje wspólne pakiety: np. KMail zawiera KTnef, Kleopatra dziennik GnuPG, a grantlee-editor wszystkie trzy edytory wyglądu kontaktów/nagłówków.
+Lista jest w [data/cleanup.tsv](data/cleanup.tsv). Stary VSCodium można usunąć przez pozycję `vscodium`; nowa instalacja używa wyłącznie VS Code. Dane wcześniejszego edytora nie są kasowane. Obejmuje wskazane aplikacje PIM/KDE, gry, Firefox, LibreOffice, nwg-panel, Konsole i interfejsy zgłaszania problemów, a także pomocniki importu KMail, Spectacle, Dragon Player, Krfb, Gwenview, KAddressBook, KRDC i edytor menu KDE. Zestaw uwzględnia wspólne pakiety: np. KMail zawiera KTnef, Kleopatra dziennik GnuPG, a grantlee-editor wszystkie trzy edytory wyglądu kontaktów/nagłówków.
 
 Usuwane są tylko zainstalowane pakiety z listy, w tym konkretne podpakiety danej aplikacji. Cały natywny LibreOffice obejmuje rodzinę `libreoffice-*`. Firefox i LibreOffice są również sprawdzane jako Flatpak użytkownika/systemu. Nie usuwamy danych aplikacji ani niewykorzystanych runtime’ów Flatpak.
 
 Przed usunięciem: plan JSON i test `rpm -e --test`, pobranie dokładnych wersji RPM do odzyskiwania, ponowny test zależności. Po usunięciu: porównanie inwentarza dowodzące zachowania pozostałych pakietów oraz `dnf5 check`. **Brak dokładnego RPM w repo lub zależność zachowanego programu blokuje czyszczenie.** Standardowy przebieg najpierw aktualizuje pakiety; po częściowym błędzie napraw przyczynę i uruchom ponownie.
 
-`uuctl` jest tylko ukrywany w launcherze, ponieważ należy do potrzebnego `uwsm`. Nie usuwamy uwsm, Qt, KWin ani systemowych usług tylko po to, by usunąć aplikację. `kworker` to wątki jądra: nie wyłączamy ich. Zatrzymujemy/wyłączamy wyłącznie jednostki użytkownika należące do usuwanych aplikacji oraz ich wskazany daemon KDE Connect. Współdzielony Akonadi może pozostać potrzebny innym programom, np. KAddressBook. Własne autostarty użytkownika nie są kasowane.
+`uuctl` jest tylko ukrywany w launcherze, ponieważ należy do potrzebnego `uwsm`. Nie usuwamy uwsm, Qt, KWin ani systemowych usług tylko po to, by usunąć aplikację. `kworker` to wątki jądra: nie wyłączamy ich. Zatrzymujemy/wyłączamy wyłącznie jednostki użytkownika należące do usuwanych aplikacji oraz ich wskazany daemon KDE Connect. Współdzielony Akonadi może pozostać potrzebny innym programom, jeśli pozostawisz część PIM przez CLI. Własne autostarty użytkownika nie są kasowane.
 
 Przywrócenie RPM z TTY:
 
@@ -126,7 +128,7 @@ Lista i dane aplikacji Flatpak pozostają oddzielne; ich ponowna instalacja wyma
 
 ## Hyprland, Kitty i font
 
-Profil przenosi do Fedory układ Omarchy: gaps 5/10, border 2, brak zaokrągleń/cieni/blur, gradient aktywnego obramowania, animacje okien, dwindle i scratchpad. Używa Kitty, Brave, Dolphin, VS Code i wybranej powłoki; nie zależy od poleceń `omarchy-*` ani narzędzi Arch. Atrybucja: [Omarchy MIT](licenses/Omarchy-MIT.txt).
+Profil przenosi do Fedory układ Omarchy: gaps 5/10, border 2, brak zaokrągleń/cieni/blur, gradient aktywnego obramowania, animacje okien, dwindle i scratchpad. Używa Kitty, Brave, Nautilusa, VS Code i wybranej powłoki; nie zależy od poleceń `omarchy-*` ani narzędzi Arch. Atrybucja: [Omarchy MIT](licenses/Omarchy-MIT.txt).
 
 Moduł Hyprland stosuje żądany profil z kopią głównego pliku do katalogu przebiegu. Użyj `--keep-hypr-config`, aby zachować własną konfigurację i otrzymać propozycję zmian. Monitor domyślnie używa trybu i skali automatycznej. W DMS istniejące pliki monitorów/wyglądu z `~/.config/hypr/dms/*.lua` są wczytywane tylko przy wybranym DMS; jego zestaw skrótów nie zastępuje wybranych aplikacji.
 
@@ -140,11 +142,44 @@ Moduł Hyprland stosuje żądany profil z kopią głównego pliku do katalogu pr
 | Super+S / Alt+S | Scratchpad / przeniesienie do scratchpada |
 | Super+Ctrl+S | Panel powłoki (wcześniej Super+S) |
 | Super+Shift+Enter lub B | Brave |
-| Super+Shift+F / N | Dolphin / VS Code |
+| Super+Shift+F / N | Nautilus / VS Code |
 
 JetBrains Mono jest instalowany z Fedory, z aliasami fontconfig i ustawieniem fontu Qt/DMS. Symbole Nerd Fonts są dodatkowym fontem z oficjalnego wydania, z digest SHA256; Kitty używa ich jako fallback dla ikon.
 
+btop ma `theme_background = False`, więc używa tła terminala (w Kitty z jego przezroczystością). Pozostałe ustawienia btop są zachowywane; stara wartość i duplikaty tylko tego klucza są zastępowane.
+
 Kitty: `confirm_os_window_close 0`, `background_opacity 0.90`, JetBrains Mono. Inne własne ustawienia są zachowane; aktualizowany jest tylko oznaczony blok żądanych kluczy. VS Code: `TelemetryLevel=off` w `/etc/vscode/policy.json` i ustawienia użytkownika. JSONC jest scalany z zachowaniem wartości innych kluczy; oryginał z komentarzami znajduje się w kopii. Telemetria niezależnych rozszerzeń wymaga ich własnych ustawień; nie deklarujemy blokowania całego ruchu sieciowego.
+
+## Omasnap: screenshoty i edycja
+
+Instalujemy wyłącznie [Omasnap upstream](https://github.com/omacom/omasnap), bez Omarchy i bez uruchamiania jego `install-omarchy`. Wersja `1.24.0` i pełna rewizja są przypięte w `data/omasnap-release`. Zależności Fedora RPM: GCC/C++, Git, CMake, Ninja, pkgconf, Qt6 >=6.8 (base-devel/Wayland), layer-shell-qt-devel, wayland-devel/protocols-devel, libdeflate-devel, wl-clipboard, xdg-utils oraz Tesseract z angielskim modelem. Budowanie ma dwa równoległe zadania i wykonuje testy upstream przez CTest przed przełączeniem launchera.
+
+- **Print** otwiera inteligentny wybór obszaru/okna/monitora; wynik jest kopiowany i domyślnie zapisywany w `~/Pictures/Screenshots`.
+- **Super+Shift+S** otwiera wybór obszaru z natychmiastową edycją (`--capture-region --editor overlay`).
+- Edytor upstream zapewnia strzałki, tekst i narzędzie rozmywania. Copy/Save zapisują spłaszczony obraz; schowek używa wl-copy/wl-paste.
+
+Te dwa skróty mają pierwszeństwo nad dotychczasowym screenshotem DMS/Noctalia lub własnymi przypisaniami. Osobny plik `~/.config/hypr/fedora-postinstall-omasnap.lua` jest wczytywany na końcu głównego Lua; wywołuje `hl.unbind` przed nowym `hl.bind`. Nie przepisujemy pozostałych skrótów ani profili powłok. Przy aktywnej sesji wcześniejsze kolizje trafiają do logu JSON, wykonywany jest reload i kontrola błędów. Kopia głównej konfiguracji: `hyprland-before-omasnap.lua` w katalogu przebiegu. Konfiguracja użytkownika `~/.config/omasnap/omasnap.conf` pozostaje nietknięta. Nie wykluczamy warstwy Omasnap z screen sharingu — upstream ostrzega, że psuje to przechwytywanie przewijanej zawartości.
+
+```bash
+# Dodanie do istniejącej konfiguracji Hyprland bez stosowania całego presetu:
+bash install.sh --yes --desktop noctalia --modules "files omasnap defaults updates"
+# W działającej sesji:
+validate-omasnap
+# Jawny test przechwycenia monitora — zastępuje obraz w schowku:
+validate-omasnap --capture-smoke
+```
+
+Kontrola CLI/parsera i testy offscreen nie zastępują interaktywnego testu zaznaczania, strzałek, tekstu, blur i Copy/Save na danym GPU. Obsługa Plasma nie jest deklarowana — preset Plasma nie instaluje Omasnap. Integracja powłok dotyczy wspólnych skrótów Hyprlanda; przyciski screenshotów wewnątrz DMS/Noctalia pozostają zarządzane przez te projekty. Powiadomienia Omarchy są opcjonalne w upstream; nie instalujemy ich zamiennika.
+
+Zarządzanie buildem:
+
+```bash
+~/.local/share/fedora-postinstall/scripts/omasnap-manager check
+~/.local/share/fedora-postinstall/scripts/omasnap-manager update
+~/.local/share/fedora-postinstall/scripts/omasnap-manager uninstall
+```
+
+Updater sprawdza dostępne tagi upstream i instaluje/przebudowuje tylko rewizję zatwierdzoną w instalatorze, jeśli brakuje jej lub przestał działać CLI po zmianie bibliotek Qt. Nowy tag wymaga aktualizacji sprawdzonego manifestu projektu; nie kompilujemy dowolnego Git HEAD ani nie nadpisujemy konfiguracji. Nieudany build zachowuje działający payload. Odinstalowanie usuwa wyłącznie zarządzane launchery i link current; stare payloady, kopie oraz screenshoty zostają. Blok Lua nie aktywuje skrótów, jeśli zarządzany plik wykonywalny nie istnieje; po odinstalowaniu przeładuj Hyprland, aby wrócić do wcześniejszych przypisań.
 
 ## LazyVim
 
@@ -160,7 +195,7 @@ fedora-update
 fedora-update --yes
 ```
 
-Obejmuje DNF i aktywne COPR/repozytoria dostawców, Flatpak user/system, zarządzane archiwa JetBrains i Arduino AppImage, Rustup jeśli używany, zarządzany LazyVim, symbole Nerd Fonts i zainstalowane rozszerzenia VS Code. Noctalia i DMS aktualizują się przez RPM. Niezainstalowane aplikacje producentów nie są pobierane.
+Obejmuje DNF i aktywne COPR/repozytoria dostawców, Flatpak user/system, zarządzane archiwa JetBrains i Arduino AppImage, Rustup jeśli używany, zarządzany LazyVim, symbole Nerd Fonts i zainstalowane rozszerzenia VS Code. Noctalia i DMS aktualizują się przez RPM. Osobny etap Omasnap sprawdza tagi i obsługuje przypiętą, sprawdzoną rewizję bez modyfikacji konfiguracji. Niezainstalowane aplikacje producentów nie są pobierane.
 
 LazyVim używa `Lazy check/update`, bez `git pull` konfiguracji; kopia lockfile pozwala na próbę `Lazy restore` po błędzie. Nie obiecujemy zgodności każdej zewnętrznej wtyczki. Narzędzie nie aktualizuje arbitralnych plików w `/usr/local/bin`, nie dotyka cudzych checkoutów Git, środowisk pip ani projektów npm. Aktualizacje RPM pokrywają systemowe Python/C++/Rust. Logi: `~/.local/state/fedora-postinstall/updates/`.
 

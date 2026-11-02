@@ -65,7 +65,7 @@ def dialog(screen, args, incoming):
     title = option(args, '--title', 'Instalator')
     yes = option(args, '--yes-button', 'Dalej')
     no = option(args, '--no-button', 'Anuluj')
-    cursor = 0
+    cursor = 1 if kind == '--yesno' and '--defaultno' in args else 0
     prompt_offset = 0
     selected = {key for key, _, on in items if on}
     if kind == '--gauge':

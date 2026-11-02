@@ -21,7 +21,13 @@ module_development() {
     source "$ROOT/modules/repositories.sh"
     source "$ROOT/modules/vscode.sh"
     module_vscode
-    packages fuse fuse-libs
-    run python3 "$ROOT/scripts/vendor-apps.py" install
+    case ${DEV_PROFILE:-code} in
+        code) log 'VS Code profile: JetBrains and Arduino downloads skipped.' ;;
+        full)
+            packages fuse fuse-libs
+            run python3 "$ROOT/scripts/vendor-apps.py" install
+            ;;
+        *) die 'Unknown development profile.' ;;
+    esac
     log 'IDE licenses and Arduino board-specific udev rules require user setup. No blanket USB permissions applied.'
 }

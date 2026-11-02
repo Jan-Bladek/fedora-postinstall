@@ -4,6 +4,7 @@
 ui_confirm_plan() {
     local summary
     summary="Pulpit: $DESKTOP
+Zestaw programistyczny: ${DEV_PROFILE:-code} (code = VS Code; full = VS Code + JetBrains + Arduino)
 Moduły: $MODULES
 Usuwanie aplikacji: ${CLEANUP_APPS:-nie}
 
@@ -26,23 +27,26 @@ Zamknij Neovim i aplikacje wybrane do usunięcia. Licencje IDE aktywujesz samodz
     fi
 }
 ui_cleanup_choice() {
-    local answer key label
-    local -a items=()
+    local answer
     if command -v whiptail >/dev/null; then
-        if ! whiptail --title 'Fedora · Aplikacje dodatkowe' --yes-button 'Wybierz aplikacje' --no-button 'Zachowaj aplikacje' \
-            --yesno 'Czy chcesz usunąć wskazane zbędne aplikacje KDE/Fedory? Sam pulpit Plasma, biblioteki Qt i dane użytkownika zostaną zachowane.' 12 78; then return; fi
-        while IFS=$'\t' read -r key label; do items+=("$key" "$label" ON); done < <(python3 "$ROOT/scripts/cleanup-plan.py" --catalog)
-        CLEANUP_APPS=$(whiptail --title 'Usuwanie aplikacji — Spacja zaznacza' --separate-output --checklist \
-            'Odznacz aplikacje, które chcesz zachować. Zależności mogą zablokować usunięcie.' 22 78 10 "${items[@]}" 3>&1 1>&2 2>&3) || return
-        CLEANUP_APPS=${CLEANUP_APPS//$'\n'/ }
+        if ! whiptail --title 'Fedora · Debloat Plasma' --yes-button 'Tak, usuń' --no-button 'Nie, zachowaj' --defaultno \
+            --yesno 'Usunąć cały przygotowany zestaw zbędnych aplikacji KDE/Fedory? Obejmuje m.in. KMail/PIM, KDE Connect, gry, Firefox, LibreOffice, Spectacle, Gwenview, Dragon, KRDC/Krfb i edytor menu. Sam pulpit Plasma, Qt i dane użytkownika pozostaną. Pełna lista: data/cleanup.tsv.' 16 78; then return 0; fi
+        CLEANUP_APPS=all
     else
-        read -r -p 'Usunąć opcjonalne aplikacje z listy cleanup? [t/N]: ' answer
-        if [[ $answer == t || $answer == T ]]; then
-            python3 "$ROOT/scripts/cleanup-plan.py" --catalog
-            read -r -p 'Wpisz identyfikatory lub all: ' CLEANUP_APPS
-        fi
+        read -r -p 'Usunąć cały zestaw debloat Plasma? [t/N]: ' answer
+        if [[ $answer == t || $answer == T || $answer == y || $answer == Y ]]; then CLEANUP_APPS=all; fi
     fi
     if [[ -n ${CLEANUP_APPS:-} ]]; then MODULES+=" cleanup"; fi
+}
+ui_development_choice() {
+    if command -v whiptail >/dev/null; then
+        DEV_PROFILE=$(whiptail --title 'Fedora · Zestaw programistyczny' --radiolist \
+            'Wybierz edytory/IDE. Rust, Python i C++ są instalowane w obu wariantach.' 15 78 2 \
+            code 'Tylko VS Code' ON full 'VS Code + JetBrains (3 IDE) + Arduino IDE' OFF 3>&1 1>&2 2>&3) || return
+    else
+        read -r -p 'Zestaw IDE: code = VS Code, full = VS Code + JetBrains + Arduino [code]: ' DEV_PROFILE
+        DEV_PROFILE=${DEV_PROFILE:-code}
+    fi
 }
 ui_status() {
     if [[ -n ${FEDORA_PROGRESS_STATUS:-} ]]; then

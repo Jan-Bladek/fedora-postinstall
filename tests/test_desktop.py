@@ -82,7 +82,7 @@ class DesktopChoice(unittest.TestCase):
             self.assertEqual(result.returncode, 1)
             self.assertFalse((ROOT/'NEVER_EXECUTE').exists())
 
-    def test_tui_plasma_choice_omits_destructive_and_hyprland_modules(self):
+    def test_tui_desktop_then_debloat_then_development_without_app_checklists(self):
         with tempfile.TemporaryDirectory() as temp:
             work = Path(temp)
             shim = work/'bin'
@@ -91,7 +91,7 @@ class DesktopChoice(unittest.TestCase):
             executable.write_text('''#!/bin/sh
 printf '%s\\n' "$*" >> "$MENU_LOG"
 case " $* " in
- *" --radiolist "*) echo plasma >&2 ;;
+ *" --radiolist "*" noctalia "*) echo plasma >&2 ;;
  *) exit 1 ;;
 esac
 ''')
@@ -105,9 +105,12 @@ esac
                 os.close(master)
                 os.close(slave)
             self.assertEqual(result.returncode, 0, result.stderr)
-            checklist = (work/'menu').read_text().splitlines()[1]
-            for forbidden in ('kde-removal', 'hyprland', 'noctalia', 'dms'):
-                self.assertNotIn(forbidden, checklist)
+            menus = (work/'menu').read_text().splitlines()
+            self.assertEqual(len(menus), 3)
+            self.assertIn('Fedora Post-Install', menus[0])
+            self.assertIn('Debloat Plasma', menus[1])
+            self.assertIn('Zestaw programistyczny', menus[2])
+            self.assertNotIn('--checklist', '\n'.join(menus))
 
     def test_lua_loads_generated_settings_only_for_dms(self):
         runner = """

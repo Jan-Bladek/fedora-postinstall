@@ -39,3 +39,16 @@ jobs:
         env:
           FEDORA_POSTINSTALL_TEST_TARGET: disposable
         run: bash tests/experience.sh
+
+  omasnap:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    container: fedora:44
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Build Omasnap, run upstream tests, retain custom config and repeat
+        env:
+          FEDORA_POSTINSTALL_TEST_TARGET: disposable
+        run: bash tests/omasnap-packages.sh

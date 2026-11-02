@@ -19,7 +19,7 @@ validate_hyprland_config() {
     mkdir -p "$config_root/fedora-postinstall" "$config_root/hypr" "$runtime"
     chmod 700 "$runtime"
     printf '%s\n' "${DESKTOP:-noctalia}" > "$config_root/fedora-postinstall/shell"
-    if [[ -d $CONFIG/hypr/dms ]]; then ln -s "$CONFIG/hypr/dms" "$config_root/hypr/dms"; fi
+    if [[ -d $CONFIG/hypr/dms && ! -e $config_root/hypr/dms ]]; then ln -s "$CONFIG/hypr/dms" "$config_root/hypr/dms"; fi
     run env -u HYPRLAND_INSTANCE_SIGNATURE -u WAYLAND_DISPLAY XDG_RUNTIME_DIR="$runtime" \
         XDG_CONFIG_HOME="$config_root" HYPRLAND_NO_RT=1 Hyprland --verify-config --config "$RUN/hyprland.lua" \
         > "$RUN/hyprland-verify.log" 2>&1

@@ -1,0 +1,86 @@
+#!/usr/bin/env bash
+# Build only the reviewed upstream revision. No Omarchy installer or root build.
+set -Eeuo pipefail
+((EUID != 0)) || { echo 'Run as desktop user.' >&2; exit 1; }
+action=${1:-check}
+case $action in install|update|check|uninstall) ;; *) echo 'Usage: omasnap-manager install|update|check|uninstall' >&2; exit 2 ;; esac
+script_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
+manifest=$script_dir/../data/omasnap-release
+IFS=' ' read -r version revision < "$manifest"
+[[ $version =~ ^[0-9]+\.[0-9]+\.[0-9]+$ && $revision =~ ^[0-9a-f]{40}$ ]] || exit 1
+app=$HOME/.local/share/fedora-postinstall/apps/omasnap
+binary=$HOME/.local/bin/omasnap
+desktop=$HOME/.local/share/applications/omasnap.desktop
+owned_link() { [[ -L $1 && $(readlink -- "$1") == "$2" ]]; }
+if [[ $action == update && ! -L $app/current ]]; then exit 0; fi
+if [[ $action != check ]]; then
+    mkdir -p "$app"
+    exec 8>"$app/lock"
+    flock -n 8 || { echo 'Another Omasnap build is running.' >&2; exit 1; }
+fi
+if [[ $action == update ]]; then
+    tags=$(timeout 90 git ls-remote --tags https://github.com/omacom/omasnap.git 'refs/tags/v*')
+    latest=$(printf '%s\n' "$tags" | sed -nE 's@.*refs/tags/v([0-9]+\.[0-9]+\.[0-9]+)$@\1@p' | sort -V | tail -n 1)
+    if [[ -n $latest && $latest != "$version" ]]; then
+        echo "Omasnap upstream: $latest; installer reviewed: $version. Update the installer to review/install a newer revision."
+    fi
+fi
+if [[ $action == uninstall ]]; then
+    for link in "$binary" "$desktop"; do
+        case $link in "$binary") target=$app/current/bin/omasnap ;; *) target=$app/current/share/applications/omasnap.desktop ;; esac
+        if owned_link "$link" "$target"; then rm -- "$link"; fi
+    done
+    # Keep source, old payloads, screenshots and config for recovery; no broad rm.
+    if [[ -L $app/current ]]; then rm -- "$app/current"; fi
+    echo 'Managed launchers removed. Backups, payloads and user configuration retained.'
+    echo 'The screenshot bindings are inactive while ~/.local/bin/omasnap is absent.'
+    exit 0
+fi
+if [[ $action == check ]]; then
+    [[ -L $app/current && -x $binary ]] || { echo 'Managed Omasnap missing.' >&2; exit 1; }
+    QT_QPA_PLATFORM=offscreen "$binary" --version
+    QT_QPA_PLATFORM=offscreen "$binary" --help >/dev/null
+    for cmd in hyprctl wl-copy wl-paste tesseract; do command -v "$cmd" >/dev/null; done
+    exit 0
+fi
+mkdir -p "$app" "$HOME/.local/bin" "$(dirname "$desktop")"
+for link in "$binary" "$desktop"; do
+    case $link in "$binary") target=$app/current/bin/omasnap ;; *) target=$app/current/share/applications/omasnap.desktop ;; esac
+    if [[ -e $link || -L $link ]] && ! owned_link "$link" "$target"; then
+        echo "Unmanaged launcher collision: $link; previous installation retained." >&2; exit 1
+    fi
+done
+if [[ -f $app/current/revision && $(cat "$app/current/revision") == "$revision" ]] &&
+    QT_QPA_PLATFORM=offscreen "$app/current/bin/omasnap" --version >/dev/null 2>&1; then
+    echo "Omasnap $version: reviewed revision already installed."
+else
+    work=$(mktemp -d "$app/.build.XXXXXX")
+    trap 'rm -rf -- "$work"' EXIT
+    git init -q "$work/source"
+    git -C "$work/source" remote add origin https://github.com/omacom/omasnap.git
+    git -C "$work/source" -c core.hooksPath=/dev/null fetch --depth 1 origin "$revision"
+    [[ $(git -C "$work/source" rev-parse FETCH_HEAD) == "$revision" ]] || exit 1
+    git -C "$work/source" -c core.hooksPath=/dev/null checkout --detach FETCH_HEAD
+    # Limit compiler memory use on laptops; users can build again after interruption.
+    cmake -S "$work/source" -B "$work/build" -G Ninja -DCMAKE_BUILD_TYPE=Release \
+        -DCMAKE_INSTALL_PREFIX="$work/prefix" -DBUILD_TESTING=ON
+    cmake --build "$work/build" --parallel 2
+    ctest --test-dir "$work/build" --output-on-failure --timeout 180
+    cmake --install "$work/build"
+    QT_QPA_PLATFORM=offscreen "$work/prefix/bin/omasnap" --version
+    QT_QPA_PLATFORM=offscreen "$work/prefix/bin/omasnap" --help >/dev/null
+    printf '%s\n' "$revision" > "$work/prefix/revision"
+    # Never rewrite a working payload in place; Qt updates may require a rebuild.
+    payload=$revision-$(date +%Y%m%dT%H%M%S)-$$
+    mv -- "$work/prefix" "$app/$payload"
+    ln -s "$payload" "$work/current"
+    mv -T -- "$work/current" "$app/current"
+fi
+for link in "$binary" "$desktop"; do
+    case $link in "$binary") target=$app/current/bin/omasnap ;; *) target=$app/current/share/applications/omasnap.desktop ;; esac
+    if [[ ! -L $link ]]; then ln -s "$target" "$link"; fi
+done
+if command -v update-desktop-database >/dev/null; then update-desktop-database "$(dirname "$desktop")"; fi
+if [[ $action == update ]]; then
+    echo "Omasnap: installed reviewed $version. New upstream revisions require a reviewed installer update; no git pull."
+fi
