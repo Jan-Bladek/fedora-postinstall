@@ -156,7 +156,7 @@ Instalujemy wyłącznie [Omasnap upstream](https://github.com/omacom/omasnap), b
 
 - **Print** otwiera inteligentny wybór obszaru/okna/monitora; wynik jest kopiowany i domyślnie zapisywany w `~/Pictures/Screenshots`.
 - **Super+Shift+S** otwiera wybór obszaru z natychmiastową edycją (`--capture-region --editor overlay`).
-- Edytor upstream zapewnia strzałki, tekst i narzędzie rozmywania. Copy/Save zapisują spłaszczony obraz; schowek używa wl-copy/wl-paste.
+- Edytor upstream zapewnia strzałki, tekst i redakcję: pikselizację lub pełne zakrycie. **Wersja 1.24.0 nie ma klasycznego blur**; nie deklarujemy tej funkcji ani nie dodajemy własnego forka. Copy/Save zapisują spłaszczony obraz; schowek używa wl-copy/wl-paste.
 
 Te dwa skróty mają pierwszeństwo nad dotychczasowym screenshotem DMS/Noctalia lub własnymi przypisaniami. Osobny plik `~/.config/hypr/fedora-postinstall-omasnap.lua` jest wczytywany na końcu głównego Lua; wywołuje `hl.unbind` przed nowym `hl.bind`. Nie przepisujemy pozostałych skrótów ani profili powłok. Przy aktywnej sesji wcześniejsze kolizje trafiają do logu JSON, wykonywany jest reload i kontrola błędów. Kopia głównej konfiguracji: `hyprland-before-omasnap.lua` w katalogu przebiegu. Konfiguracja użytkownika `~/.config/omasnap/omasnap.conf` pozostaje nietknięta. Nie wykluczamy warstwy Omasnap z screen sharingu — upstream ostrzega, że psuje to przechwytywanie przewijanej zawartości.
 
@@ -169,7 +169,7 @@ validate-omasnap
 validate-omasnap --capture-smoke
 ```
 
-Kontrola CLI/parsera i testy offscreen nie zastępują interaktywnego testu zaznaczania, strzałek, tekstu, blur i Copy/Save na danym GPU. Obsługa Plasma nie jest deklarowana — preset Plasma nie instaluje Omasnap. Integracja powłok dotyczy wspólnych skrótów Hyprlanda; przyciski screenshotów wewnątrz DMS/Noctalia pozostają zarządzane przez te projekty. Powiadomienia Omarchy są opcjonalne w upstream; nie instalujemy ich zamiennika.
+Kontrola CLI/parsera i testy offscreen nie zastępują interaktywnego testu zaznaczania, strzałek, tekstu, redakcji i Copy/Save na danym GPU. Obsługa Plasma nie jest deklarowana — preset Plasma nie instaluje Omasnap. Integracja powłok dotyczy wspólnych skrótów Hyprlanda; przyciski screenshotów wewnątrz DMS/Noctalia pozostają zarządzane przez te projekty. Powiadomienia Omarchy są opcjonalne w upstream; nie instalujemy ich zamiennika.
 
 Zarządzanie buildem:
 

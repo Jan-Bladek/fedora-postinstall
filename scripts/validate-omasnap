@@ -31,4 +31,4 @@ while sys.stdin.buffer.read(65536):
 print(f"Wayland capture and PNG clipboard passed: {w}x{h}")
 '
 fi
-echo 'Interactive region selection, arrow/text/blur editing and save/copy still require a GUI check.'
+echo 'Interactive region selection, arrow/text/redaction editing and save/copy still require a GUI check.'

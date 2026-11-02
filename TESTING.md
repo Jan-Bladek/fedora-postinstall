@@ -7,23 +7,70 @@ and a short OBS recording. Graphical suspend/resume failed in its TCG/VirGL setu
 on both tested kernels. Positive Plasma removal is untested.
 
 
-## v0.5.0 — simplified choices and Omasnap (validation in progress)
+## v0.5.0 — simplified choices, expanded debloat and Omasnap
 
-Local Bash syntax/ShellCheck and **35 regressions** passed after the new desktop →
-debloat yes/no → IDE profile flow. Regression coverage includes preserving arbitrary
-Lua while adding exactly one last-loaded module, unbinding only the two screenshot
-keys, no JetBrains/Arduino download in the code profile, preservation of btop settings,
-and retaining the old working payload when a source fetch fails.
+- Local Bash syntax/ShellCheck and **38 regressions** passed. Tests cover desktop →
+  debloat yes/no → IDE choices without checklists, default-no cleanup in curses,
+  native full IDE selection, code-only avoiding vendor downloads, preserving btop
+  settings with one background key, last-loaded screenshot bindings, refusal of
+  duplicate runtime keys and keeping a working payload after source-fetch failure.
+- [Native run 41504229086](https://github.com/Jan-Bladek/fedora-postinstall/actions/runs/41504229086)
+  passed all **five** jobs: static checks, native language compilation, DMS RPMs,
+  repeated Kitty/fonts/btop/VS Code/Nautilus/LazyVim setup and centralized updates,
+  plus compilation of Omasnap v1.24.0 with its real upstream CTest suite. The Omasnap
+  fixture retained a custom imported Lua file and unrelated app binding and kept
+  exactly one loader block after repeat installation.
+- [Expanded cleanup run 41504230137](https://github.com/Jan-Bladek/fedora-postinstall/actions/runs/41504230137)
+  passed real package seeding, exact-recovery-RPM download, removal, repeat,
+  retained Plasma/Qt/uwsm/kmenuedit/Dolphin/Okular/KWrite versions, user data and
+  dependency checks. Both required launcher entries were hidden through user
+  overrides. No kernel thread or shared system service was disabled.
 
-The official Omasnap v1.24.0 revision was built in the existing Fedora 44 KVM guest.
-Its CTest smoke suite passed (40 seconds). An initial post-build `--version` check
-without a display aborted in Qt platform initialization: the guest journal reported
-`could not connect to display`, and the core backtrace reached
-`QGuiApplicationPrivate::createPlatformIntegration`. This was a headless installer
-probe, not a capture test. The manager now uses `QT_QPA_PLATFORM=offscreen` solely
-for `--version`/`--help` probes; interactive captures keep Wayland. Subsequent build,
-interactive capture/edit/clipboard tests and native CI results are recorded below
-when available. No v0.5 complete fresh-media installation is established here.
+An earlier cleanup run refused **before erasure** because the new apps had reverse
+requirements from gwenview-libs/krdc-libs/krfb-libs and kdepim-addons. These specific
+app subpackages were added to the allowlist. Crucially, **plasma-desktop requires
+kmenuedit** on this Fedora: the menu editor is hidden rather than force-removed.
+The updated native test includes kmenuedit in its before/after protected inventory.
+
+The official Omasnap v1.24.0 revision was also built in the existing Fedora 44 KVM
+VirGL guest (kernel 7.2.14). Its offscreen CTest suite passed. An initial post-build
+`--version` check without a display aborted in Qt platform initialization: the
+journal reported `could not connect to display`, and the core backtrace reached
+`QGuiApplicationPrivate::createPlatformIntegration`. CLI probes now use
+`QT_QPA_PLATFORM=offscreen` only; interactive capture keeps Wayland. The corrected
+installation, repeated installation without rebuilding the same payload, config
+parser and dependency checks passed in the VM. A runtime checker initially assumed
+hyprctl would expose the exec command; actual Lua dispatchers expose numeric IDs.
+It now checks unique bindings and explicit descriptions, with a regression covering
+those IDs and duplicate-key rejection.
+
+In the running **Noctalia** session:
+
+1. Physical Print opened the smart selection overlay; pressing it again dismissed it.
+2. Super+Shift+S opened region selection and the immediate annotation editor.
+3. A dragged region was edited with an arrow, text and pixelated redaction.
+4. Enter copied and saved a PNG. The saved file and independent wl-paste export
+   had identical SHA256 `efb06f0e95cadd027a3bab6733f65bef9bccd1037f098c2abb83f83ab594e32f`.
+5. `validate-omasnap --capture-smoke` independently exported a 1280×800 PNG through
+   the real Wayland clipboard. Nautilus's MIME default and btop's background value
+   were verified from the installed VM, not from the template alone.
+
+![Actual Noctalia capture editor with arrow, text and pixelation](tests/vm/evidence/fedora44-v0.5-omasnap-noctalia.png)
+
+The same guest then ran **DMS 2.0.0** in place of Noctalia. DMS IPC answered,
+`validate-session --check-only` passed, both screenshot bindings were unique,
+1280×800 clipboard capture passed again, and Super+Shift+S opened the region editor
+using actual keyboard/pointer input. This KVM run did not add HYPRLAND_NO_RT to the
+session. It does not erase the earlier TCG suspend/RT-related failures below.
+
+![Actual Omasnap region editor over DMS](tests/vm/evidence/fedora44-v0.5-omasnap-dms.png)
+
+**Classic blur is unavailable in upstream v1.24.0.** Its redaction tool offers
+randomized pixelation and solid cover; pixelation was exercised above. We do not
+claim to have implemented Gaussian blur or patched a new editor into upstream.
+These screenshots are actual VM framebuffer captures, converted from PPM to PNG;
+annotations were made inside Omasnap. No v0.5 complete fresh-media installation or
+physical GPU/laptop test is established by these tests.
 
 ## v0.4.0 — guided install, app cleanup and developer experience
 

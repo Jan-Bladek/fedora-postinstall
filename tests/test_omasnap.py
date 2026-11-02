@@ -1,4 +1,5 @@
 import os
+import json
 from pathlib import Path
 import runpy
 import shutil
@@ -100,3 +101,28 @@ module_development
                                         text=True, capture_output=True, check=True)
                 self.assertIn('CODE', result.stdout)
                 self.assertEqual('VENDOR' in result.stdout, profile == 'full')
+
+    def test_runtime_bind_check_accepts_lua_dispatcher_ids_and_rejects_duplicates(self):
+        with tempfile.TemporaryDirectory() as temp:
+            work = Path(temp)
+            manager = work/'.local/share/fedora-postinstall/scripts/omasnap-manager'
+            manager.parent.mkdir(parents=True)
+            manager.write_text('#!/bin/sh\nexit 0\n')
+            manager.chmod(0o755)
+            shim = work/'bin'
+            shim.mkdir()
+            hyprctl = shim/'hyprctl'
+            hyprctl.write_text('#!/bin/sh\ncat "$BINDS_FIXTURE"\n')
+            hyprctl.chmod(0o755)
+            fixture = work/'binds.json'
+            binds = [dict(key='PRINT', modmask=0, submap='', dispatcher='HL.Dispatcher(exec_cmd)',
+                          arg='36', description='Omasnap: capture'),
+                     dict(key='s', modmask=65, submap='', dispatcher='HL.Dispatcher(exec_cmd)',
+                          arg='37', description='Omasnap: edit region')]
+            env = dict(os.environ, HOME=temp, PATH=str(shim)+':'+os.environ['PATH'],
+                       HYPRLAND_INSTANCE_SIGNATURE='test', WAYLAND_DISPLAY='test', BINDS_FIXTURE=str(fixture))
+            for duplicate in (False, True):
+                fixture.write_text(json.dumps(binds+[binds[0]] if duplicate else binds))
+                result = subprocess.run([str(ROOT/'scripts/validate-omasnap')], env=env,
+                                        text=True, capture_output=True)
+                self.assertEqual(result.returncode, 1 if duplicate else 0, result.stdout+result.stderr)
