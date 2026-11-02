@@ -39,11 +39,13 @@ if [[ -f $state/managed/lazyvim ]]; then
         echo 'LazyVim config moved or changed ownership; review before updating.' >&2; exit 1;
     }
     if [[ -f $nvim_config/lazy-lock.json ]]; then cp -- "$nvim_config/lazy-lock.json" "$run/lazy-lock-before.json"; fi
-    nvim --headless '+Lazy! check' +qa
-    if ! nvim --headless '+Lazy! update' '+lua assert(require("lazyvim.config"))' +qa; then
+    timeout 600 nvim --headless '+Lazy! check' +qa
+    if ! timeout 600 nvim --headless '+Lazy! update' '+lua local ok, err = pcall(require, "lazyvim.config"); if not ok then vim.api.nvim_err_writeln(err); vim.cmd("cquit 1") end' +qa; then
         if [[ -f $run/lazy-lock-before.json ]]; then
             cp -- "$run/lazy-lock-before.json" "$nvim_config/lazy-lock.json"
-            nvim --headless '+Lazy! restore' +qa
+            if ! timeout 600 nvim --headless '+Lazy! restore' '+lua local ok = pcall(require, "lazyvim.config"); if not ok then vim.cmd("cquit 1") end' +qa; then
+                echo 'LazyVim restore also failed; the saved lockfile remains in the update log directory.' >&2; exit 1
+            fi
         fi
         echo 'LazyVim update failed; previous lockfile restored when available.' >&2; exit 1
     fi

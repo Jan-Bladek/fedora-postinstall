@@ -2,7 +2,7 @@
 module_lazyvim() {
     local revision destination=$CONFIG/nvim work=$RUN/lazyvim-starter
     packages neovim git ripgrep fd-find tree-sitter-cli gcc make unzip
-    run nvim --headless -u NONE '+lua assert(vim.fn.has("nvim-0.11.2") == 1, "LazyVim requires Neovim >=0.11.2")' +qa
+    run nvim --headless -u NONE '+lua if vim.fn.has("nvim-0.11.2") ~= 1 then vim.api.nvim_err_writeln("LazyVim requires Neovim >=0.11.2"); vim.cmd("cquit 1") end' +qa
     if [[ -e $destination || -L $destination ]]; then
         if [[ ! -f $destination/.fedora-postinstall-lazyvim ]]; then
             local stamp backup original
@@ -26,7 +26,7 @@ module_lazyvim() {
         printf '%s\n' "$revision" > "$destination/.fedora-postinstall-lazyvim"
     fi
     if declare -F ui_status >/dev/null; then ui_status "LazyVim — instalowanie i sprawdzanie wtyczek"; fi
-    run nvim --headless '+Lazy! sync' '+lua assert(require("lazyvim.config"))' +qa
+    run timeout 600 nvim --headless '+Lazy! sync' '+lua local ok, err = pcall(require, "lazyvim.config"); if not ok then vim.api.nvim_err_writeln(err); vim.cmd("cquit 1") end' +qa
     mkdir -p "$STATE/managed"
     printf '%s\n' "$destination" > "$STATE/managed/lazyvim"
     log 'LazyVim installed through its official starter and lazy.nvim. Run :LazyHealth for optional providers.'
