@@ -1,0 +1,17 @@
+name: Fedora application cleanup
+on: workflow_dispatch
+permissions:
+  contents: read
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    container: fedora:44
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Seed real Plasma/apps, clean twice and retain the desktop
+        env:
+          FEDORA_POSTINSTALL_TEST_TARGET: disposable
+        run: bash tests/cleanup-packages.sh

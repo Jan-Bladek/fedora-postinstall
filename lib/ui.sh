@@ -81,3 +81,23 @@ ui_finish() {
         unset UI_PID
     fi
 }
+
+ui_module_label() {
+    case $1 in
+        snapshots) echo 'Kopie konfiguracji i Snapper' ;;
+        dependencies) echo 'Aktualizacja Fedory i narzędzia podstawowe' ;;
+        hyprland) echo 'Hyprland + profil Omarchy (kopia poprzedniego configu)' ;;
+        noctalia) echo 'Powłoka Noctalia' ;;
+        dms) echo 'Powłoka DankMaterialShell / Dux Shell' ;;
+        terminal) echo 'Kitty, Bash, JetBrains Mono i ikony fontów' ;;
+        lazyvim) echo 'LazyVim + wtyczki (kopia starego Neovim)' ;;
+        development) echo 'VS Code, Rust, Python, C++, JetBrains, Arduino' ;;
+        browsers) echo 'Brave (domyślna) + LibreWolf' ;;
+        multimedia) echo 'OBS, Vesktop i Steam' ;;
+        utilities) echo 'Obsidian, LocalSend i Tailscale' ;;
+        defaults) echo 'Aplikacje domyślne' ;;
+        optimization) echo 'Diagnostyka i zachowanie zabezpieczeń Fedory' ;;
+        updates) echo 'Scentralizowane fedora-update' ;;
+        *) printf '%s\n' "$1" ;;
+    esac
+}

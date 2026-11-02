@@ -24,6 +24,7 @@ module_lazyvim() {
         (cd "$work" && tar --exclude=.git -cf - .) | tar -C "$destination" -xf -
         printf '%s\n' "$revision" > "$destination/.fedora-postinstall-lazyvim"
     fi
+    if declare -F ui_status >/dev/null; then ui_status "LazyVim — instalowanie i sprawdzanie wtyczek"; fi
     run nvim --headless '+Lazy! sync' '+lua assert(require("lazyvim.config"))' +qa
     mkdir -p "$STATE/managed"
     printf '%s\n' "$destination" > "$STATE/managed/lazyvim"

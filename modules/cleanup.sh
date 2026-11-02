@@ -19,6 +19,7 @@ module_cleanup() {
                 if [[ $path == /usr/lib/systemd/user/*.service ]]; then units+=("${path##*/}"); fi
             done < <(rpm -ql "$p")
         done
+        if declare -F ui_status >/dev/null; then ui_status "Kopia odzyskiwania ${#targets[@]} pakietów przed usunięciem"; fi
         run dnf5 download --destdir "$RUN/cleanup-rpms" "${nevras[@]}"
         run sudo rpm -e --test "${targets[@]}"
         rpm -qa --qf '%{NAME}\n' | sort -u > "$RUN/cleanup-retained-before"
@@ -31,6 +32,7 @@ module_cleanup() {
         if printf '%s\n' "${targets[@]}" | grep -Fxq kdeconnectd && pgrep -u "$(id -u)" -x kdeconnectd >/dev/null; then
             run pkill -TERM -u "$(id -u)" -x kdeconnectd
         fi
+        if declare -F ui_status >/dev/null; then ui_status "Usuwanie ${#targets[@]} wybranych pakietów aplikacji"; fi
         run sudo rpm -e "${targets[@]}"
         rpm -qa --qf '%{NAME}\n' | sort -u > "$RUN/cleanup-retained-after"
         printf '%s\n' "${targets[@]}" | sort -u > "$RUN/cleanup-removed"

@@ -26,16 +26,16 @@ while (($#)); do
         --cleanup-apps) shift; CLEANUP_APPS=${1:?Missing application selection} ;;
         --desktop) shift; DESKTOP=${1:?Missing desktop choice} ;;
         --modules) shift; MODULES=${1:?Missing module list}; EXPLICIT_MODULES=1 ;;
-        --help) echo 'install.sh [--dry-run] [--yes] [--no-progress] [--cleanup-apps "all|id id"] [--desktop noctalia|dms|plasma] [--modules "snapshots dependencies hyprland noctalia dms terminal lazyvim vscode development browsers multimedia utilities defaults optimization updates cleanup kde-removal"]'; exit 0 ;;
+        --help) echo 'install.sh [--dry-run] [--yes] [--no-progress] [--keep-hypr-config] [--cleanup-apps "all|id id"] [--desktop noctalia|dms|plasma] [--modules "snapshots dependencies hyprland noctalia dms terminal lazyvim vscode development browsers multimedia utilities defaults optimization updates cleanup kde-removal"]'; exit 0 ;;
         *) die "Unknown option: $1" ;;
     esac
     shift
 done
 if [[ -z $DESKTOP && -t 0 && $DRY_RUN == 0 && $EXPLICIT_MODULES == 0 && $INSTALL_APPROVED == 0 ]]; then
     if command -v whiptail >/dev/null; then
-        DESKTOP=$(whiptail --title 'Fedora Post-Install' --radiolist 'Choose desktop (Plasma is retained unless removal is explicitly selected)' 18 78 3 \
+        DESKTOP=$(whiptail --title 'Fedora Post-Install' --radiolist 'Wybierz pulpit. Plasma pozostanie zainstalowana; czyszczenie aplikacji wybierzesz osobno.' 18 78 3 \
             noctalia 'Hyprland + Noctalia' ON dms 'Hyprland + DankMaterialShell / Dux Shell' OFF \
-            plasma 'Keep KDE Plasma; install applications only' OFF 3>&1 1>&2 2>&3) || exit 0
+            plasma 'Zachowaj KDE Plasma; zainstaluj aplikacje' OFF 3>&1 1>&2 2>&3) || exit 0
     else
         echo 'Desktop: noctalia (Hyprland), dms (Hyprland), plasma (keep KDE).'
         read -r -p 'Choose desktop [noctalia], or EXIT: ' DESKTOP
@@ -52,9 +52,8 @@ export DESKTOP
 if [[ -t 0 && $DRY_RUN == 0 && $EXPLICIT_MODULES == 0 && $INSTALL_APPROVED == 0 ]]; then
     if command -v whiptail >/dev/null; then
         items=()
-        for module in $MODULES; do items+=("$module" "$module" ON); done
-        if [[ $DESKTOP != plasma ]]; then items+=(kde-removal 'Remove Plasma AFTER session validation' OFF); fi
-        MODULES=$(whiptail --title "Fedora · $DESKTOP" --separate-output --checklist 'Choose modules' 24 78 15 "${items[@]}" 3>&1 1>&2 2>&3) || exit 0
+        for module in $MODULES; do items+=("$module" "$(ui_module_label "$module")" ON); done
+        MODULES=$(whiptail --title "Fedora · $DESKTOP" --separate-output --checklist 'Wybierz moduły (Spacja zaznacza, Enter dalej)' 24 78 15 "${items[@]}" 3>&1 1>&2 2>&3) || exit 0
     else
         printf 'Fedora Post-Install · %s\nAvailable default modules:\n%s\n' "$DESKTOP" "$MODULES"
         if [[ $DESKTOP != plasma ]]; then echo 'Optional: kde-removal (requires a validated Hyprland session and separate confirmation).'; fi

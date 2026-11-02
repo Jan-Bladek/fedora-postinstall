@@ -24,7 +24,7 @@ def parse(args):
     return kind, prompt, items
 
 
-def paint(screen, title, prompt, lines, footer, cursor=-1, percent=None):
+def paint(screen, title, prompt, lines, footer, cursor=-1, percent=None, prompt_offset=0, summary=False):
     screen.erase()
     height, width = screen.getmaxyx()
     if height < 10 or width < 45:
@@ -36,7 +36,10 @@ def paint(screen, title, prompt, lines, footer, cursor=-1, percent=None):
     screen.addnstr(2, 3, title, width-6)
     screen.attroff(curses.color_pair(1))
     row = 4
-    for line in textwrap.wrap(prompt, width-8)[:max(1, height//3)]:
+    wrapped = [line for paragraph in prompt.splitlines() for line in (textwrap.wrap(paragraph, width-8) or [''])]
+    limit = max(1, height-10) if summary else max(1, height//3)
+    prompt_offset = min(prompt_offset, max(0, len(wrapped)-limit))
+    for line in wrapped[prompt_offset:prompt_offset+limit]:
         screen.addnstr(row, 4, line, width-8)
         row += 1
     row += 1
@@ -63,6 +66,7 @@ def dialog(screen, args, incoming):
     yes = option(args, '--yes-button', 'Dalej')
     no = option(args, '--no-button', 'Anuluj')
     cursor = 0
+    prompt_offset = 0
     selected = {key for key, _, on in items if on}
     if kind == '--gauge':
         buffer, block, percent, message = '', None, 0, prompt
@@ -95,11 +99,16 @@ def dialog(screen, args, incoming):
         else:
             lines = [('(*) ' if key in selected else '( ) ') + label if kind == '--radiolist'
                      else ('[x] ' if key in selected else '[ ] ') + label for key, label, _ in items]
-        paint(screen, title, prompt, lines, '↑/↓ wybór · Spacja zaznacza · Enter dalej · Esc anuluje', cursor)
+        paint(screen, title, prompt, lines, '↑/↓ wybór · Spacja zaznacza · Enter dalej · Esc anuluje · PgUp/PgDn opis', cursor,
+              prompt_offset=prompt_offset, summary=kind == '--yesno')
         key = screen.getch()
         if key in (27, ord('q')):
             return 1, ''
-        if key in (curses.KEY_UP, ord('k')):
+        if key == curses.KEY_NPAGE:
+            prompt_offset += max(1, screen.getmaxyx()[0]-12)
+        elif key == curses.KEY_PPAGE:
+            prompt_offset = max(0, prompt_offset-max(1, screen.getmaxyx()[0]-12))
+        elif key in (curses.KEY_UP, ord('k')):
             cursor = max(0, cursor-1)
         elif key in (curses.KEY_DOWN, ord('j')):
             cursor = min(len(lines)-1, cursor+1)
