@@ -6,7 +6,7 @@ source /etc/os-release
 [[ $ID == fedora && $VERSION_ID == 44 ]] || exit 1
 ROOT=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
 if ((EUID == 0)); then
-    dnf5 -y install sudo python3 git curl shadow-utils
+    dnf5 -y install sudo python3 git curl shadow-utils diffutils tar util-linux
     useradd -m experience-tester
     printf 'experience-tester ALL=(ALL) NOPASSWD: ALL\n' > /etc/sudoers.d/experience-test
     chmod 440 /etc/sudoers.d/experience-test

@@ -5,6 +5,9 @@ export ROOT
 source "$ROOT/lib/core.sh"
 source "$ROOT/lib/desktop.sh"
 source "$ROOT/lib/ui.sh"
+if [[ -t 0 ]] && ! command -v whiptail >/dev/null && python3 -c 'import curses' 2>/dev/null; then
+    whiptail() { python3 "$ROOT/scripts/tui.py" "$@"; }
+fi
 INSTALL_APPROVED=0
 USE_PROGRESS=0
 CLEANUP_APPS=''
