@@ -11,7 +11,7 @@ welcome	Powitalnia KDE	plasma-welcome plasma-welcome-fedora
 nwg-panel	Panel i ustawienia nwg-panel	nwg-panel
 libreoffice	Cały LibreOffice	@libreoffice
 kamoso	Kamoso	kamoso
-kdeconnect	KDE Connect + SMS + wskaźnik + daemon	kde-connect kdeconnectd kde-connect-libs
+kdeconnect	KDE Connect + SMS + wskaźnik + daemon	kde-connect kdeconnectd kde-connect-libs kde-connect-nautilus
 kmail	KMail + KTnef + pomocnik konta	kmail kmail-account-wizard kmail-libs
 contact-themes	Wygląd kontaktów / drukowanych / nagłówków	grantlee-editor grantlee-editor-libs
 kdebugsettings	KDebugSettings	kdebugsettings
