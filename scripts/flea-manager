@@ -53,6 +53,7 @@ if [[ $action == update ]]; then
 fi
 if [[ -f $app/current/revisions && $(cat "$app/current/revisions") == "$revision $components" ]] && "$app/current/bin/flea" --version >/dev/null; then
     echo "Flea $version: reviewed payload already installed."
+    python3 "$script_dir/flea-launchers.py" --repair "$app/current" "$app/current"
     python3 "$script_dir/validate-flea.py" "$app/current"
 else
     work=$(mktemp -d "$app/.build.XXXXXX")

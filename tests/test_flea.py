@@ -109,3 +109,43 @@ module_files
         redirected = HTTPRedirectHandler().redirect_request(captured[0], None, 302, 'Found', {},
                                                              'https://github.com/owner/repo')
         self.assertIsNone(redirected.get_header('Authorization'))
+
+    def test_legacy_launcher_repair_keeps_custom_fields_and_wrapper(self):
+        with tempfile.TemporaryDirectory(prefix='flea repair ') as temporary:
+            prefix = Path(temporary)
+            (prefix/'bin').mkdir()
+            (prefix/'share/applications').mkdir(parents=True)
+            generator = ROOT/'scripts/flea-launchers.py'
+            subprocess.run(['python3', str(generator), str(prefix), str(prefix)], check=True)
+            entry = prefix/'share/applications/com.thisisgm.flea.desktop'
+            entry.write_text(entry.read_text().replace('Exec=/usr/bin/env ', 'Exec=').replace('Name=Flea\n', 'Name=My Flea\n'))
+            wrapper = (prefix/'bin/flea').read_bytes()
+            for _ in range(2):
+                subprocess.run(['python3', str(generator), '--repair', str(prefix), str(prefix)], check=True)
+            self.assertIn('Name=My Flea\n', entry.read_text())
+            self.assertIn('Exec=/usr/bin/env ', entry.read_text())
+            self.assertEqual((prefix/'bin/flea').read_bytes(), wrapper)
+
+    def test_real_generic_xdg_mime_reads_the_flea_default_with_spaces_in_home(self):
+        import shutil
+        if not shutil.which('xdg-mime'):
+            self.skipTest('xdg-mime is unavailable')
+        with tempfile.TemporaryDirectory(prefix='flea home ') as temporary:
+            home = Path(temporary)
+            prefix = home/'payload'
+            (prefix/'bin').mkdir(parents=True)
+            (prefix/'share/applications').mkdir(parents=True)
+            applications = home/'.local/share/applications'
+            applications.mkdir(parents=True)
+            subprocess.run(['python3', str(ROOT/'scripts/flea-launchers.py'), str(prefix), str(prefix)], check=True)
+            (applications/'com.thisisgm.flea.desktop').symlink_to(prefix/'share/applications/com.thisisgm.flea.desktop')
+            env = dict(os.environ, HOME=temporary, XDG_CONFIG_HOME=str(home/'.config'),
+                       XDG_DATA_HOME=str(home/'.local/share'), XDG_DATA_DIRS='/usr/local/share:/usr/share',
+                       XDG_CURRENT_DESKTOP='', DESKTOP_SESSION='', XDG_SESSION_TYPE='tty', DE='generic')
+            for key in ('DISPLAY', 'WAYLAND_DISPLAY', 'DBUS_SESSION_BUS_ADDRESS', 'KDE_FULL_SESSION', 'GNOME_DESKTOP_SESSION_ID'):
+                env.pop(key, None)
+            subprocess.run(['xdg-mime', 'default', 'com.thisisgm.flea.desktop', 'inode/directory'],
+                           env=env, capture_output=True, text=True, check=True)
+            result = subprocess.run(['xdg-mime', 'query', 'default', 'inode/directory'],
+                                    env=env, capture_output=True, text=True, check=True)
+            self.assertEqual(result.stdout.strip(), 'com.thisisgm.flea.desktop', result.stderr)
