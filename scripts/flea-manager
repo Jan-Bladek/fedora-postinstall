@@ -74,7 +74,9 @@ else
     (
         cd "$work/source"
         CARGO_BUILD_JOBS=2 cargo build --release --locked --offline
-        CARGO_BUILD_JOBS=2 cargo test --release --locked --offline -- --test-threads=2
+        # Keep unit-test compilation practical on laptops; validate the optimized
+        # installed binary separately through the actual QML/backend ready IPC.
+        CARGO_BUILD_JOBS=2 cargo test --locked --offline -- --test-threads=2
     )
     prefix=$work/prefix
     mkdir -p "$prefix/bin" "$prefix/libexec" "$prefix/shared" "$prefix/share/applications" "$prefix/licenses"

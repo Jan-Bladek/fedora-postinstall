@@ -37,7 +37,7 @@ module_files() {
         qt6-qtdeclarative qt6-qtmultimedia qt6-qtpdf qt6-qtsvg qt6-qtwayland \
         kf6-kimageformats libheif fontconfig hicolor-icon-theme shared-mime-info \
         bat jq bubblewrap expect udisks2 gvfs gvfs-afc gvfs-gphoto2 gvfs-mtp gvfs-nfs gvfs-smb \
-        usbmuxd util-linux wl-clipboard xdg-terminal-exec libarchive
+        usbmuxd util-linux wl-clipboard xdg-terminal-exec libarchive bsdtar gzip xz bzip2 unzip zip 7zip
     if ! command -v cargo >/dev/null; then packages rust cargo; fi
     mkdir -p "$dest/scripts" "$dest/data" "$HOME/.local/bin"
     install -m 644 "$ROOT/data/flea-release" "$dest/data/flea-release"
