@@ -45,3 +45,8 @@ jobs:
           result=${PIPESTATUS[1]}
           exit "$result"
         shell: bash
+
+      - name: Run centralized updater with real user Flatpaks and vendor RPMs
+        env:
+          FEDORA_POSTINSTALL_TEST_TARGET: disposable
+        run: runuser -u tester -- dbus-run-session bash tests/update-stack.sh
