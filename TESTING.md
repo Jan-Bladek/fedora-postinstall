@@ -7,15 +7,81 @@ and a short OBS recording. Graphical suspend/resume failed in its TCG/VirGL setu
 on both tested kernels. Positive Plasma removal is untested.
 
 
-## v0.6.0 — Flea migration (validation in progress)
+## v0.6.0 — Flea replaces Nautilus
 
-Local Bash syntax/ShellCheck and **42 regressions** passed. New cases verify that
-launcher paths containing spaces preserve folder arguments, failed source fetches
-keep the old payload/default, a failed Flea install cannot reach Nautilus removal,
-and updating an unselected Flea does not fetch or create files. Flea v0.3.12 and its
-private Omarchy Commons/Ui libraries are pinned independently; no Omarchy shell,
-services or package manager is installed. Native build/UI and migration results
-will be recorded after the disposable Fedora checks complete.
+The final runtime commit `793b480` passed [all five CI jobs in run 41514377954](https://github.com/Jan-Bladek/fedora-postinstall/actions/runs/41514377954). Documentation and evidence were added afterward without changing runtime code.
+
+- Local Bash syntax/ShellCheck and **46 regressions** passed. Added coverage includes
+  quoted paths and folder arguments, generic `xdg-mime` readback with spaces in HOME,
+  preserving custom launcher fields during repair, retaining payload/defaults on fetch
+  failure, preventing Nautilus removal after a failed Flea install, preserving the
+  sandbox boundary while changing the Fedora library path, and keeping the optional
+  read-only CI API token off download requests and redirect headers.
+- [Native Fedora run 41513684114](https://github.com/Jan-Bladek/fedora-postinstall/actions/runs/41513684114)
+  passed all five jobs, including the expanded experience fixture: seed Nautilus,
+  compile Flea, run its Rust tests, load the real QML through offscreen IPC, migrate
+  the directory handler, remove only Nautilus with exact recovery RPMs, repeat the
+  installation, and run centralized updates. DMS, Omasnap and native compiler jobs
+  also passed. Container namespaces can restrict sandbox tests; the real VM check
+  below is separate evidence for those paths.
+
+Flea v0.3.12 is pinned to `f21789e56cc4b0877caa3156fff7bce52a8dd9c2`.
+Only Omarchy's Commons/Ui component libraries are used from pinned revision
+`a69b19f64efa78143155f2f46c85e7e05a09e05f`. No Omarchy shell, package manager,
+services or global library path was installed. `cargo build --release --locked
+--offline` builds the installed binary; `cargo test --locked --offline` runs the
+upstream Rust suite without duplicating the expensive release LTO for the test
+harness. This is a Fedora adaptation, not upstream's supported installation route.
+
+The existing Fedora 44 KVM/VirGL guest completed the file-manager migration and a
+repeat. Flea became `com.thisisgm.flea.desktop` for `inode/directory`, Nautilus was
+removed after its exact RPM was downloaded, and all other installed RPMs were
+retained by the erase-inventory check. The user FileManager1 registration activated
+Flea for an actual D-Bus `ShowItems` call: its window opened the requested directory
+and selected the fixture file. Physical Super+Shift+F opened Flea after closing that
+window. Hyprland parser/runtime checks and the two Omasnap bindings still passed.
+
+![Actual Flea window on the test Fedora guest](tests/vm/evidence/fedora44-v0.6-flea.png)
+
+Fedora-specific corrections verified during this work:
+
+- Fedora packages `bsdtar` separately from `libarchive`; the missing tool initially
+  stopped the upstream suite before installing a payload or removing Nautilus.
+- A valid quoted absolute desktop Exec was accepted by GLib but rejected by generic
+  `xdg-mime`. The launcher now uses `/usr/bin/env` followed by the quoted absolute
+  program path. Both handlers read back Flea; the desktop file also passed
+  `desktop-file-validate`. Only the known old Exec is repaired on an existing
+  payload, preserving unrelated custom fields.
+- Upstream maps `/lib64` to `usr/lib`, matching Arch. On Fedora this prevented
+  sandboxed executables from finding their ELF loader. The reviewed adaptation maps
+  it to `usr/lib64`, keeping unshare/read-only mounts and resource caps intact.
+  The patch refuses an unknown source shape; its digest is in the payload receipt.
+- Two real sandbox-limit tests used `/etc/hostname`, which this Fedora guest lacks.
+  Their input is now `/etc/passwd`, another existing regular file already under the
+  read-only `/etc` mount. Their assertions are unchanged. An independent production-
+  shaped bubblewrap/prlimit invocation returned both address-space limits as
+  `2147483648` bytes. No hostname file or security setting was created/changed.
+- A shared CI address hit GitHub's anonymous metadata rate limit while fetching
+  Nerd Fonts. The experience job uses its temporary read-only token for API requests
+  only; unredirected headers prevent it from following asset redirects.
+- Installing Nautilus alongside KDE Connect adds `kde-connect-nautilus`. The exact
+  plugin was added to KDE Connect's cleanup group; [cleanup run 41511310576](https://github.com/Jan-Bladek/fedora-postinstall/actions/runs/41511310576)
+  passed after that correction with the retained Plasma/Qt/app inventory unchanged.
+
+Flea's Omarchy-only default/picker commands were not invoked. Existing GTK/Hyprland
+portal routing stays in place. Omarchy shelf integration and QuickJS-NG-dependent
+math/diagram previews are outside this adaptation. Remote devices, ISO flashing,
+physical GPUs and Plasma's graphical Flea session have not been exercised here.
+This is an upgrade/migration of the existing guest, not a complete fresh-ISO v0.6
+installation. The final patched KVM run passed **2954 Rust tests, 0 failed, 2 ignored**, with no
+sandbox-unavailable SKIP messages. The two ignored cases are upstream's manual
+local-copy benchmark and 200k-entry tag timing test. The real decoder/archive
+sandbox limits were exercised, not skipped. An actual PNG Quick Look preview
+opened with Space in the patched Flea window (shown above), and its thumbnail
+rendered in the list. The image is the earlier Omasnap test export, viewed inside
+Flea; the framebuffer was only converted from PPM to PNG. SELinux remained
+Enforcing; Plasma/Qt/Dolphin/Okular/KWrite remained installed. The selected Flea
+payload was retained through a further update/repeat check.
 
 ## v0.5.0 — simplified choices, expanded debloat and Omasnap
 
