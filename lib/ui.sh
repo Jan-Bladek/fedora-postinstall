@@ -64,13 +64,14 @@ ui_start() {
                 "$(cat "$RUN/progress-percent")" "$DESKTOP" "$(cat "$FEDORA_PROGRESS_STATUS")" "$RUN"
             sleep 1
         done
-        printf '100\n'
+        if [[ ! -f $RUN/progress-exit || $(cat "$RUN/progress-exit") == 0 ]]; then printf '100\n'; fi
     ) | whiptail --title 'Fedora · Instalacja' --gauge 'Przygotowanie' 13 86 0 >&7 2>&7 &
     UI_PID=$!
 }
 ui_finish() {
     local rc=${1:-0}
     if [[ -n ${UI_PID:-} ]]; then
+        printf '%s\n' "$rc" > "$RUN/progress-exit"
         touch "$RUN/progress-done"
         if ! wait "$UI_PID"; then printf 'Progress view closed.\n' >&7; fi
         if ((rc)); then

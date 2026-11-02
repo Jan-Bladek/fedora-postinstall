@@ -49,7 +49,7 @@ def paint(screen, title, prompt, lines, footer, cursor=-1, percent=None, prompt_
         style = curses.A_REVERSE if index == cursor else curses.A_NORMAL
         screen.addnstr(row+index-top, 4, line, width-8, style)
     if percent is not None:
-        count = width-10
+        count = width-18
         filled = count*max(0, min(100, percent))//100
         bar = '['+'#'*filled+' '*(count-filled)+f'] {percent}%'
         screen.addnstr(height-4, 4, bar, width-8, curses.color_pair(1))

@@ -2,6 +2,7 @@
 module_lazyvim() {
     local revision destination=$CONFIG/nvim work=$RUN/lazyvim-starter
     packages neovim git ripgrep fd-find tree-sitter-cli gcc make unzip
+    run nvim --headless -u NONE '+lua assert(vim.fn.has("nvim-0.11.2") == 1, "LazyVim requires Neovim >=0.11.2")' +qa
     if [[ -e $destination || -L $destination ]]; then
         if [[ ! -f $destination/.fedora-postinstall-lazyvim ]]; then
             local stamp backup original
