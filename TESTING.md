@@ -7,6 +7,16 @@ and a short OBS recording. Graphical suspend/resume failed in its TCG/VirGL setu
 on both tested kernels. Positive Plasma removal is untested.
 
 
+## v0.6.0 — Flea migration (validation in progress)
+
+Local Bash syntax/ShellCheck and **42 regressions** passed. New cases verify that
+launcher paths containing spaces preserve folder arguments, failed source fetches
+keep the old payload/default, a failed Flea install cannot reach Nautilus removal,
+and updating an unselected Flea does not fetch or create files. Flea v0.3.12 and its
+private Omarchy Commons/Ui libraries are pinned independently; no Omarchy shell,
+services or package manager is installed. Native build/UI and migration results
+will be recorded after the disposable Fedora checks complete.
+
 ## v0.5.0 — simplified choices, expanded debloat and Omasnap
 
 - Local Bash syntax/ShellCheck and **38 regressions** passed. Tests cover desktop →

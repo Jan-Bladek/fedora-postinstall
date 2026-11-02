@@ -5,12 +5,14 @@ from pathlib import Path
 import sys
 
 
-def merge(text, module):
-    begin = '-- BEGIN FEDORA-POSTINSTALL OMASNAP'
-    end = '-- END FEDORA-POSTINSTALL OMASNAP'
+def merge(text, module, name='OMASNAP'):
+    if name not in {'OMASNAP', 'FLEA'}:
+        raise ValueError('Unsupported managed Lua loader')
+    begin = '-- BEGIN FEDORA-POSTINSTALL '+name
+    end = '-- END FEDORA-POSTINSTALL '+name
     if begin in text or end in text:
         if text.count(begin) != 1 or text.count(end) != 1 or text.index(begin) > text.index(end):
-            raise ValueError('Ambiguous Omasnap block: previous configuration retained')
+            raise ValueError(f'Ambiguous {name} block: previous configuration retained')
         start, stop = text.index(begin), text.index(end)+len(end)
         text = text[:start]+text[stop:].lstrip('\n')
     # ensure_ascii=False avoids JSON \u escapes, which Lua does not accept.
@@ -19,5 +21,5 @@ def merge(text, module):
 
 
 if __name__ == '__main__':
-    source, module, destination = map(Path, sys.argv[1:])
-    destination.write_text(merge(source.read_text(), module))
+    source, module, destination = map(Path, sys.argv[1:4])
+    destination.write_text(merge(source.read_text(), module, sys.argv[4] if len(sys.argv) > 4 else 'OMASNAP'))

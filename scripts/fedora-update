@@ -21,18 +21,18 @@ sudo -v
 (exec 9>&-; while sleep 45; do sudo -n -v || exit; done) &
 keepalive=$!
 trap 'if kill -0 "$keepalive" 2>/dev/null; then kill "$keepalive"; fi' EXIT
-printf '\n[1/9] Fedora, COPR, repozytoria dostawców\n'
+printf '\n[1/10] Fedora, COPR, repozytoria dostawców\n'
 sudo dnf5 --assumeyes upgrade --refresh
-printf '\n[2/9] Flatpak\n'
+printf '\n[2/10] Flatpak\n'
 if command -v flatpak >/dev/null; then
     flatpak update --user --assumeyes --noninteractive
     sudo flatpak update --system --assumeyes --noninteractive
 fi
-printf '\n[3/9] Zarządzane archiwa JetBrains i Arduino AppImage\n'
+printf '\n[3/10] Zarządzane archiwa JetBrains i Arduino AppImage\n'
 python3 "$HOME/.local/share/fedora-postinstall/scripts/vendor-apps.py" update
-printf '\n[4/9] Rustup (jeżeli używany)\n'
+printf '\n[4/10] Rustup (jeżeli używany)\n'
 if command -v rustup >/dev/null 2>&1; then rustup update; fi
-printf '\n[5/9] LazyVim — oficjalny lazy.nvim, bez git pull konfiguracji\n'
+printf '\n[5/10] LazyVim — oficjalny lazy.nvim, bez git pull konfiguracji\n'
 if [[ -f $state/managed/lazyvim ]]; then
     IFS= read -r nvim_config < "$state/managed/lazyvim"
     [[ $nvim_config == "${XDG_CONFIG_HOME:-$HOME/.config}/nvim" && -f $nvim_config/.fedora-postinstall-lazyvim ]] || {
@@ -50,14 +50,18 @@ if [[ -f $state/managed/lazyvim ]]; then
         echo 'LazyVim update failed; previous lockfile restored when available.' >&2; exit 1
     fi
 fi
-printf '\n[6/9] Rozszerzenia VS Code\n'
+printf '\n[6/10] Rozszerzenia VS Code\n'
 if command -v code >/dev/null; then code --update-extensions; fi
-printf '\n[7/9] Czcionki symboli Nerd Fonts\n'
+printf '\n[7/10] Czcionki symboli Nerd Fonts\n'
 python3 "$HOME/.local/share/fedora-postinstall/scripts/symbols-fonts.py" update
-printf '\n[8/9] Omasnap — sprawdzona rewizja, bez pobierania Git HEAD\n'
+printf '\n[8/10] Omasnap — sprawdzona rewizja, bez pobierania Git HEAD\n'
 python_helper=$HOME/.local/share/fedora-postinstall/scripts/omasnap-manager
 if [[ -x $python_helper ]]; then "$python_helper" update; fi
-printf '\n[9/9] Kontrola zależności\n'
+printf '\n[9/10] Flea — sprawdzona adaptacja dla Fedory\n'
+if [[ -x $HOME/.local/share/fedora-postinstall/scripts/flea-manager ]]; then
+    "$HOME/.local/share/fedora-postinstall/scripts/flea-manager" update
+fi
+printf '\n[10/10] Kontrola zależności\n'
 sudo dnf5 check
 echo "Aktualizacja zakończona. Log: $run/update.log"
 echo 'DNF obejmuje RPM Noctalia/DMS i aktywne COPR. Własne pliki konfiguracji pozostają zachowane.'

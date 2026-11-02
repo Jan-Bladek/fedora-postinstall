@@ -11,6 +11,7 @@ Usuwanie aplikacji: ${CLEANUP_APPS:-nie}
 Zostaną wykonane kopie konfiguracji. Zatwierdzasz instalację wybranych aplikacji,
 aktualizację RPM i klucze oficjalnych dostawców / wskazanych COPR:
 Fedora, Microsoft, Brave, LibreWolf, Tailscale, lionheartp/Hyprland, duxlabs/DMS.
+Flea i Omasnap: przypięte źródła; Flea używa prywatnych bibliotek QML Omarchy.
 
 Wybrany moduł Hyprland stosuje profil Omarchy i zapisuje kopię poprzedniej konfiguracji.
 --keep-hypr-config zachowuje własny plik. Kitty zmienia tylko wskazane ustawienia. Usuwanie aplikacji odbywa się

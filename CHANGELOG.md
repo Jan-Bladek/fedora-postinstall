@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.6.0 — 2026-11-02
+
+- Flea zastępuje Nautilusa jako domyślny menedżer plików i cel Super+Shift+F.
+- Adaptacja Fedory: przypięty build Rust upstream i prywatne, przypięte biblioteki QML Commons/Ui; bez instalacji pulpitu Omarchy.
+- Rzeczywista kontrola ładowania GUI przez IPC offscreen przed przełączeniem payloadu/defaultu i usunięciem Nautilusa.
+- Rejestracja XDG oraz FileManager1, scentralizowane aktualizacje i odinstalowanie z zachowaniem danych.
+
 ## 0.5.0 — 2026-11-02
 
 - Uproszczone TUI: pulpit, debloat tak/nie, zestaw VS Code albo VS Code + JetBrains + Arduino; brak checklist aplikacji/modułów w zwykłym przebiegu.

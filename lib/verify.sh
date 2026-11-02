@@ -15,8 +15,8 @@ verify() {
         run "$HOME/.local/share/fedora-postinstall/scripts/omasnap-manager" check
     fi
     if [[ $MODULES =~ (^|[[:space:]])defaults($|[[:space:]]) ]]; then
-        if command -v nautilus >/dev/null; then
-            [[ $(xdg-mime query default inode/directory) == org.gnome.Nautilus.desktop ]] || die 'Nautilus default verification failed.'
+        if [[ -x $HOME/.local/bin/flea ]]; then
+            [[ $(xdg-mime query default inode/directory) == com.thisisgm.flea.desktop ]] || die 'Flea default verification failed.'
         fi
         if command -v brave-browser >/dev/null; then
             for type in x-scheme-handler/http x-scheme-handler/https text/html application/xhtml+xml; do

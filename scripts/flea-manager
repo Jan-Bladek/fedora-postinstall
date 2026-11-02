@@ -1,0 +1,111 @@
+#!/usr/bin/env bash
+# Fedora adaptation: upstream Rust/UI plus private, pinned QML component libraries.
+set -Eeuo pipefail
+((EUID != 0)) || { echo 'Run as desktop user.' >&2; exit 1; }
+action=${1:-check}
+case $action in install|update|check|uninstall) ;; *) echo 'Usage: flea-manager install|update|check|uninstall' >&2; exit 2 ;; esac
+script_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
+read -r version revision components < "$script_dir/../data/flea-release"
+[[ $version =~ ^[0-9]+\.[0-9]+\.[0-9]+$ && $revision =~ ^[0-9a-f]{40}$ && $components =~ ^[0-9a-f]{40}$ ]] || exit 1
+app=$HOME/.local/share/fedora-postinstall/apps/flea
+binary=$HOME/.local/bin/flea
+desktop=$HOME/.local/share/applications/com.thisisgm.flea.desktop
+if [[ $action == check ]]; then
+    [[ -L $app/current && -x $binary && -f $desktop ]] || { echo 'Managed Flea missing.' >&2; exit 1; }
+    "$binary" --version
+    [[ -f $app/current/ui/boot/Commons/Style.qml && -f $app/current/ui/boot/Ui/BorderSurface.qml ]]
+    exit
+fi
+if [[ $action == update && ! -L $app/current ]]; then exit 0; fi
+mkdir -p "$app" "$HOME/.local/bin" "$(dirname "$desktop")"
+exec 8>"$app/lock"
+flock -n 8 || { echo 'Another Flea build is running.' >&2; exit 1; }
+if [[ $action == uninstall ]]; then
+    if [[ $(xdg-mime query default inode/directory) == com.thisisgm.flea.desktop ]]; then
+        echo 'Choose another inode/directory handler before uninstalling Flea.' >&2; exit 1
+    fi
+    for name in flea flea-filemanager1; do
+        link=$HOME/.local/bin/$name
+        if [[ -L $link && $(readlink "$link") == "$app/current/bin/$name" ]]; then rm -- "$link"; fi
+    done
+    if [[ -L $desktop && $(readlink "$desktop") == "$app/current/share/applications/com.thisisgm.flea.desktop" ]]; then rm -- "$desktop"; fi
+    service=$HOME/.local/share/dbus-1/services/org.freedesktop.FileManager1.service
+    if [[ -f $service ]] && cmp -s "$service" "$app/current/share/dbus-1/services/org.freedesktop.FileManager1.service"; then rm -- "$service"; fi
+    if [[ -L $app/current ]]; then rm -- "$app/current"; fi
+    echo 'Managed launchers removed. Payloads, configuration and user files retained.'
+    exit 0
+fi
+for name in flea flea-filemanager1; do
+    link=$HOME/.local/bin/$name
+    if [[ -e $link || -L $link ]] && [[ ! -L $link || $(readlink "$link") != "$app/current/bin/$name" ]]; then
+        echo "Unmanaged executable collision: $link" >&2; exit 1
+    fi
+done
+if [[ -e $desktop || -L $desktop ]] && [[ ! -L $desktop || $(readlink "$desktop") != "$app/current/share/applications/com.thisisgm.flea.desktop" ]]; then
+    echo "Unmanaged desktop entry: $desktop" >&2; exit 1
+fi
+if [[ $action == update ]]; then
+    tags=$(timeout 90 git ls-remote --tags https://github.com/thisisgm/flea.git 'refs/tags/v*')
+    latest=$(printf '%s\n' "$tags" | sed -nE 's@.*refs/tags/v([0-9]+\.[0-9]+\.[0-9]+)$@\1@p' | sort -V | tail -n 1)
+    if [[ -n $latest && $latest != "$version" ]]; then
+        echo "Flea upstream: $latest; reviewed Fedora adaptation: $version. Update the installer for a reviewed revision."
+    fi
+fi
+if [[ -f $app/current/revisions && $(cat "$app/current/revisions") == "$revision $components" ]] && "$app/current/bin/flea" --version >/dev/null; then
+    echo "Flea $version: reviewed payload already installed."
+    python3 "$script_dir/validate-flea.py" "$app/current"
+else
+    work=$(mktemp -d "$app/.build.XXXXXX")
+    trap 'rm -rf -- "$work"' EXIT
+    git init -q "$work/source"
+    git -C "$work/source" remote add origin https://github.com/thisisgm/flea.git
+    git -C "$work/source" -c core.hooksPath=/dev/null fetch --depth 1 origin "$revision"
+    [[ $(git -C "$work/source" rev-parse FETCH_HEAD) == "$revision" ]] || exit 1
+    git -C "$work/source" -c core.hooksPath=/dev/null checkout --detach FETCH_HEAD
+    git init -q "$work/components"
+    git -C "$work/components" remote add origin https://github.com/omacom/omarchy.git
+    git -C "$work/components" config remote.origin.promisor true
+    git -C "$work/components" config remote.origin.partialclonefilter blob:none
+    git -C "$work/components" -c core.hooksPath=/dev/null fetch --filter=blob:none --depth 1 origin "$components"
+    [[ $(git -C "$work/components" rev-parse FETCH_HEAD) == "$components" ]] || exit 1
+    git -C "$work/components" sparse-checkout init --cone
+    git -C "$work/components" sparse-checkout set shell/Commons shell/Ui
+    git -C "$work/components" -c core.hooksPath=/dev/null checkout --detach FETCH_HEAD
+    (
+        cd "$work/source"
+        CARGO_BUILD_JOBS=2 cargo build --release --locked --offline
+        CARGO_BUILD_JOBS=2 cargo test --release --locked --offline -- --test-threads=2
+    )
+    prefix=$work/prefix
+    mkdir -p "$prefix/bin" "$prefix/libexec" "$prefix/shared" "$prefix/share/applications" "$prefix/licenses"
+    install -m 755 "$work/source/target/release/flea" "$prefix/libexec/flea"
+    cp -a "$work/source/ui" "$prefix/ui"
+    cp -a "$work/components/shell/Commons" "$work/components/shell/Ui" "$prefix/shared/"
+    cp -- "$work/source/LICENSE" "$prefix/licenses/Flea-MIT.txt"
+    cp -- "$work/components/LICENSE" "$prefix/licenses/Omarchy-MIT.txt"
+    for directory in ui ui/boot; do
+        for module in Commons Ui; do
+            # Replace only the packaged source symlinks, never a user's QML files.
+            rm -f -- "$prefix/$directory/$module"
+            if [[ $directory == ui ]]; then relative=../shared; else relative=../../shared; fi
+            ln -s "$relative/$module" "$prefix/$directory/$module"
+        done
+    done
+    for helper in flea-filemanager1 flea-portal flea-gio-auth flea-udisks flea-mpris; do
+        install -m 755 "$work/source/tools/$helper" "$prefix/libexec/$helper"
+    done
+    cp -- "$work/source/packaging/com.thisisgm.flea.svg" "$prefix/share/applications/flea.svg"
+    python3 "$script_dir/flea-launchers.py" "$prefix" "$app/current"
+    printf '%s %s\n' "$revision" "$components" > "$prefix/revisions"
+    "$prefix/bin/flea" --version
+    python3 "$script_dir/validate-flea.py" "$prefix"
+    payload=$revision-$(date +%Y%m%dT%H%M%S)-$$
+    mv -- "$prefix" "$app/$payload"
+    ln -s "$payload" "$work/current"
+    mv -T -- "$work/current" "$app/current"
+fi
+for name in flea flea-filemanager1; do
+    if [[ ! -L $HOME/.local/bin/$name ]]; then ln -s "$app/current/bin/$name" "$HOME/.local/bin/$name"; fi
+done
+if [[ ! -L $desktop ]]; then ln -s "$app/current/share/applications/com.thisisgm.flea.desktop" "$desktop"; fi
+if command -v update-desktop-database >/dev/null; then update-desktop-database "$(dirname "$desktop")"; fi

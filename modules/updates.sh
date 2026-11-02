@@ -7,5 +7,9 @@ module_updates() {
     install -m 644 "$ROOT/data/omasnap-release" "$dest/data/omasnap-release"
     install -m 755 "$ROOT/scripts/omasnap-manager" "$dest/scripts/omasnap-manager"
     install -m 755 "$ROOT/scripts/fedora-update" "$HOME/.local/bin/fedora-update"
+    install -m 644 "$ROOT/data/flea-release" "$dest/data/flea-release"
+    for helper in flea-manager flea-launchers.py validate-flea.py; do
+        install -m 755 "$ROOT/scripts/$helper" "$dest/scripts/$helper"
+    done
     log 'fedora-update installed into ~/.local/bin (add this directory to PATH if necessary).'
 }

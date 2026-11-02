@@ -23,6 +23,7 @@ RUN=$(mktemp -d)
 CONFIG=$HOME/.config
 STATE=$HOME/.local/state/fedora-postinstall
 DESKTOP=dms
+source /etc/os-release
 export INSTALL_APPROVED=1
 mkdir -p "$CONFIG/btop" "$CONFIG/kitty" "$CONFIG/Code/User" "$STATE"
 printf '# my terminal preference\nscrollback_lines 5555\n' > "$CONFIG/kitty/kitty.conf"
@@ -33,9 +34,11 @@ module_terminal
 grep -Fxq 'theme_background = False' "$CONFIG/btop/btop.conf"
 grep -Fxq 'update_ms = 1500' "$CONFIG/btop/btop.conf"
 [[ $(grep -c '^theme_background =' "$CONFIG/btop/btop.conf") == 1 ]]
+sudo dnf5 -y install nautilus
 module_files
 module_files
-[[ $(xdg-mime query default inode/directory) == org.gnome.Nautilus.desktop ]]
+if rpm -q nautilus >/dev/null 2>&1; then exit 1; fi
+[[ $(xdg-mime query default inode/directory) == com.thisisgm.flea.desktop ]]
 grep -q '^scrollback_lines 5555$' "$CONFIG/kitty/kitty.conf"
 grep -q '^confirm_os_window_close 0$' "$CONFIG/kitty/kitty.conf"
 [[ $(grep -c '^# BEGIN FEDORA-POSTINSTALL KITTY$' "$CONFIG/kitty/kitty.conf") == 1 ]]

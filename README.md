@@ -80,7 +80,7 @@ Selektor `~/.config/fedora-postinstall/shell` steruje autostartem i skrótami. D
 | terminal | Kitty, Bash, JetBrains Mono, symbole Nerd Fonts, konfiguracja fontów i terminala; btop z przezroczystym tłem |
 | lazyvim | Neovim, oficjalny starter LazyVim, lazy.nvim, ripgrep, fd, tree-sitter-cli i narzędzia kompilacji |
 | development | Rust/Cargo, Python/venv/pip, GCC/C++, CMake/Ninja/GDB i VS Code; JetBrains/Arduino tylko dla `--dev-profile full` |
-| files | Nautilus RPM, domyślny menedżer plików (`inode/directory`) |
+| files | Flea: przypięta kompilacja Rust i prywatne moduły QML, domyślny menedżer plików; bezpieczne usunięcie Nautilusa |
 | omasnap | Przypięty build upstream Omasnap, testy, skróty, zarządzane aktualizacje/odinstalowanie; tylko Hyprland |
 | vscode | Sam VS Code z oficjalnego repozytorium Microsoftu i wyłączoną telemetrią |
 | browsers | Brave jako domyślny, LibreWolf jako dodatkowy |
@@ -128,7 +128,7 @@ Lista i dane aplikacji Flatpak pozostają oddzielne; ich ponowna instalacja wyma
 
 ## Hyprland, Kitty i font
 
-Profil przenosi do Fedory układ Omarchy: gaps 5/10, border 2, brak zaokrągleń/cieni/blur, gradient aktywnego obramowania, animacje okien, dwindle i scratchpad. Używa Kitty, Brave, Nautilusa, VS Code i wybranej powłoki; nie zależy od poleceń `omarchy-*` ani narzędzi Arch. Atrybucja: [Omarchy MIT](licenses/Omarchy-MIT.txt).
+Profil przenosi do Fedory układ Omarchy: gaps 5/10, border 2, brak zaokrągleń/cieni/blur, gradient aktywnego obramowania, animacje okien, dwindle i scratchpad. Używa Kitty, Brave, Flea, VS Code i wybranej powłoki; nie zależy od poleceń `omarchy-*` ani narzędzi Arch. Atrybucja: [Omarchy MIT](licenses/Omarchy-MIT.txt).
 
 Moduł Hyprland stosuje żądany profil z kopią głównego pliku do katalogu przebiegu. Użyj `--keep-hypr-config`, aby zachować własną konfigurację i otrzymać propozycję zmian. Monitor domyślnie używa trybu i skali automatycznej. W DMS istniejące pliki monitorów/wyglądu z `~/.config/hypr/dms/*.lua` są wczytywane tylko przy wybranym DMS; jego zestaw skrótów nie zastępuje wybranych aplikacji.
 
@@ -142,13 +142,32 @@ Moduł Hyprland stosuje żądany profil z kopią głównego pliku do katalogu pr
 | Super+S / Alt+S | Scratchpad / przeniesienie do scratchpada |
 | Super+Ctrl+S | Panel powłoki (wcześniej Super+S) |
 | Super+Shift+Enter lub B | Brave |
-| Super+Shift+F / N | Nautilus / VS Code |
+| Super+Shift+F / N | Flea / VS Code |
 
 JetBrains Mono jest instalowany z Fedory, z aliasami fontconfig i ustawieniem fontu Qt/DMS. Symbole Nerd Fonts są dodatkowym fontem z oficjalnego wydania, z digest SHA256; Kitty używa ich jako fallback dla ikon.
 
 btop ma `theme_background = False`, więc używa tła terminala (w Kitty z jego przezroczystością). Pozostałe ustawienia btop są zachowywane; stara wartość i duplikaty tylko tego klucza są zastępowane.
 
 Kitty: `confirm_os_window_close 0`, `background_opacity 0.90`, JetBrains Mono. Inne własne ustawienia są zachowane; aktualizowany jest tylko oznaczony blok żądanych kluczy. VS Code: `TelemetryLevel=off` w `/etc/vscode/policy.json` i ustawienia użytkownika. JSONC jest scalany z zachowaniem wartości innych kluczy; oryginał z komentarzami znajduje się w kopii. Telemetria niezależnych rozszerzeń wymaga ich własnych ustawień; nie deklarujemy blokowania całego ruchu sieciowego.
+
+## Flea — domyślny menedżer plików
+
+Moduł `files` zastępuje Nautilusa przez [Flea](https://github.com/thisisgm/flea). Upstream oficjalnie wymaga Omarchy. To **adaptacja dla Fedory utrzymywana w tym projekcie**, a nie deklarowane przez autora wsparcie Fedory. Instalator buduje wersję `0.3.12` z przypiętej rewizji (`data/flea-release`), używa `cargo --locked --offline` i uruchamia testy Rust upstream. Nie używa pakietów Arch ani pacmana.
+
+GUI wymaga Quickshell >=0.3.1. Fedora 44 ma starszy pakiet, więc gdy nie ma odpowiedniego RPM, dodawany jest opisany wcześniej COPR `lionheartp/Hyprland`. Z Omarchy pobierane są tylko przypięte biblioteki komponentów `shell/Commons` i `shell/Ui`, umieszczane prywatnie obok Flea z licencją MIT. Nie instalujemy pakietu Omarchy, jego poleceń, panelu ani usług. Flea korzysta z własnej palety awaryjnej, gdy nie ma motywu Omarchy.
+
+Przed przełączeniem aktywnego payloadu instalator ładuje prawdziwe QML w odizolowanej sesji offscreen i czeka na `flea ready` przez IPC. Dopiero po sukcesie ustawia `com.thisisgm.flea.desktop` dla `inode/directory`, zapisuje aktywację D-Bus `org.freedesktop.FileManager1` i usuwa RPM `nautilus` przez test zależności oraz pobranie dokładnej kopii do odzyskiwania. Nie usuwa zależności przez autoremove, rozszerzeń na ślepo ani Dolphin/Qt. Wcześniejsza rejestracja FileManager1 jest kopiowana do katalogu przebiegu; już działający inny menedżer może zachować nazwę D-Bus do wylogowania.
+
+Nie uruchamiamy `flea --default` ani `--picker`, które zakładają konfigurację Omarchy. Portale otwierania/zapisywania plików i udostępniania ekranu pozostają skonfigurowane jak dotychczas. Funkcje powiązane z paskiem/poleceniami Omarchy oraz podgląd diagramów/matematyki wymagający QuickJS-NG nie są objęte tą integracją. Pozostałe zależności dostarcza DNF, w tym GVfs, UDisks, schowek, multimedia Qt i QtPdf. Nie instalujemy LibreOffice wyłącznie do opcjonalnych podglądów.
+
+```bash
+# Migracja istniejącej instalacji bez zmiany głównego configu Hyprland:
+bash install.sh --yes --modules "files defaults updates"
+~/.local/bin/flea --gui
+~/.local/share/fedora-postinstall/scripts/flea-manager check
+```
+
+Preset Hyprland otwiera Flea przez `Super+Shift+F`. W istniejącym głównym Lua instalator dodaje tylko oznaczony loader na końcu i nadpisuje ten jeden skrót przez unbind/bind; pozostałe ustawienia zachowuje, a poprzedni plik kopiuje do katalogu przebiegu. Scentralizowane `fedora-update` sprawdza nowe tagi Flea i obsługuje wyłącznie sprawdzoną parę rewizji Flea/bibliotek QML; nowe źródła wymagają aktualizacji manifestu projektu. Aktualizacja nie wykonuje `git pull` konfiguracji. `flea-manager uninstall` odmawia usunięcia, dopóki Flea jest domyślnym handlerem katalogów; po wybraniu innego usuwa tylko zarządzane launchery i własną rejestrację D-Bus. Dane, ustawienia i starsze payloady pozostają.
 
 ## Omasnap: screenshoty i edycja
 
@@ -195,7 +214,7 @@ fedora-update
 fedora-update --yes
 ```
 
-Obejmuje DNF i aktywne COPR/repozytoria dostawców, Flatpak user/system, zarządzane archiwa JetBrains i Arduino AppImage, Rustup jeśli używany, zarządzany LazyVim, symbole Nerd Fonts i zainstalowane rozszerzenia VS Code. Noctalia i DMS aktualizują się przez RPM. Osobny etap Omasnap sprawdza tagi i obsługuje przypiętą, sprawdzoną rewizję bez modyfikacji konfiguracji. Niezainstalowane aplikacje producentów nie są pobierane.
+Obejmuje DNF i aktywne COPR/repozytoria dostawców, Flatpak user/system, zarządzane archiwa JetBrains i Arduino AppImage, Rustup jeśli używany, zarządzany LazyVim, symbole Nerd Fonts i zainstalowane rozszerzenia VS Code. Noctalia i DMS aktualizują się przez RPM. Osobne etapy Omasnap i Flea sprawdzają tagi oraz obsługują przypięte, sprawdzone rewizje bez modyfikacji konfiguracji. Flea sprawdza także ładowanie QML po aktualizacji bibliotek. Niezainstalowane aplikacje producentów nie są pobierane.
 
 LazyVim używa `Lazy check/update`, bez `git pull` konfiguracji; kopia lockfile pozwala na próbę `Lazy restore` po błędzie. Nie obiecujemy zgodności każdej zewnętrznej wtyczki. Narzędzie nie aktualizuje arbitralnych plików w `/usr/local/bin`, nie dotyka cudzych checkoutów Git, środowisk pip ani projektów npm. Aktualizacje RPM pokrywają systemowe Python/C++/Rust. Logi: `~/.local/state/fedora-postinstall/updates/`.
 
