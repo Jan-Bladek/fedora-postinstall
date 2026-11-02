@@ -50,6 +50,15 @@ SELinux stayed Enforcing and NetworkManager/display-manager were active.
 [Reviewed result JSON](tests/vm/evidence/fedora44-v0.4-cleanup.json) records the actual
 app list and retained versions. Configuration/data directories were not purged.
 
+A subsequent cold boot of this same disposable guest used KVM (available for this
+follow-up) and kernel `7.2.14-200.fc44.x86_64`. Hyprland and Noctalia started,
+`validate-session --check-only` passed, `dnf5 check` passed, SELinux remained
+Enforcing and NetworkManager/display-manager were active. This establishes a
+reboot of the upgraded guest, not a fresh v0.4 media installation. The failed-unit
+check reported `mcelog.service`: its journal explicitly rejected the exposed AMD
+family 23 CPU as unsupported and suggested `edac_mce_amd`. No service or kernel
+thread was disabled to conceal this VM diagnostic limitation.
+
 An earlier limited guest attempt deliberately stopped before erasure because its
 old kde-connect NEVRA was no longer downloadable. After the standard base-upgrade
 step, current recovery RPMs were available and cleanup completed. This refusal
