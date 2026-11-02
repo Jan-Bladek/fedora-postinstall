@@ -23,7 +23,7 @@ Uruchamiaj jako zwykły użytkownik. Instalator pokazuje kolejno:
 4. Jedno podsumowanie zgody na zmiany, źródła pakietów i klucze dostawców.
 5. Ekran postępu z bieżącym etapem/aplikacją. Pełne wyjście poleceń trafia do logu.
 
-TUI korzysta z whiptail, a gdy go brakuje — z Python curses. Nie wymaga pobrania skryptu interfejsu z internetu. W małym terminalu powiększ okno; zalecane 100×32. W podsumowaniu curses PgUp/PgDn przewija opis. Esc anuluje wybór.
+TUI korzysta z whiptail, a gdy go brakuje — z Python curses. Nie wymaga pobrania skryptu interfejsu z internetu. TUI jest sprawdzane w terminalu 80×24; większe okno ułatwia czytanie. W podsumowaniu PgUp/PgDn przewija opis. W whiptail klawisz Tab przechodzi z opisu do przycisków; Enter zatwierdza. Esc anuluje wybór.
 
 Po zatwierdzeniu nie trzeba wpisywać kolejnych T/YES przy DNF, Flatpak, źródłach i archiwach. Hasło sudo może być potrzebne raz; uprawnienia są odnawiane tylko podczas działania instalatora. Nie zmieniamy sudoers. Jeżeli nie ma terminala, wymagane jest jawne `--yes`.
 

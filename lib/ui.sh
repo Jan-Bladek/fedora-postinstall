@@ -17,7 +17,7 @@ wyłącznie z listy po teście zależności; bez autoremove i usuwania Plasma.
 LazyVim przenosi istniejącą konfigurację i dane Neovim do kopii .pre-fedora-postinstall.
 Zamknij Neovim i aplikacje wybrane do usunięcia. Licencje IDE aktywujesz samodzielnie. Dane osobiste aplikacji pozostają na dysku."
     if command -v whiptail >/dev/null; then
-        whiptail --title 'Fedora · Podsumowanie' --yes-button 'Instaluj' --no-button 'Anuluj' --yesno "$summary" 24 86
+        whiptail --title 'Fedora · Podsumowanie' --yes-button 'Instaluj' --no-button 'Anuluj' --scrolltext --yesno "$summary" 22 78
     else
         printf '%s\n' "$summary"
         local answer
@@ -33,7 +33,7 @@ ui_cleanup_choice() {
             --yesno 'Czy chcesz usunąć wskazane zbędne aplikacje KDE/Fedory? Sam pulpit Plasma, biblioteki Qt i dane użytkownika zostaną zachowane.' 12 78; then return; fi
         while IFS=$'\t' read -r key label; do items+=("$key" "$label" ON); done < <(python3 "$ROOT/scripts/cleanup-plan.py" --catalog)
         CLEANUP_APPS=$(whiptail --title 'Usuwanie aplikacji — Spacja zaznacza' --separate-output --checklist \
-            'Odznacz aplikacje, które chcesz zachować. Zależności mogą zablokować usunięcie.' 25 90 15 "${items[@]}" 3>&1 1>&2 2>&3) || return
+            'Odznacz aplikacje, które chcesz zachować. Zależności mogą zablokować usunięcie.' 22 78 10 "${items[@]}" 3>&1 1>&2 2>&3) || return
         CLEANUP_APPS=${CLEANUP_APPS//$'\n'/ }
     else
         read -r -p 'Usunąć opcjonalne aplikacje z listy cleanup? [t/N]: ' answer
@@ -65,7 +65,7 @@ ui_start() {
             sleep 1
         done
         if [[ ! -f $RUN/progress-exit || $(cat "$RUN/progress-exit") == 0 ]]; then printf '100\n'; fi
-    ) | whiptail --title 'Fedora · Instalacja' --gauge 'Przygotowanie' 13 86 0 >&7 2>&7 &
+    ) | whiptail --title 'Fedora · Instalacja' --gauge 'Przygotowanie' 13 78 0 >&7 2>&7 &
     UI_PID=$!
 }
 ui_finish() {

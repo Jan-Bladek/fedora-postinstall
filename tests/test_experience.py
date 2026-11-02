@@ -5,6 +5,7 @@ from pathlib import Path
 import pty
 import runpy
 import select
+import shutil
 import subprocess
 import tempfile
 import termios
@@ -152,9 +153,9 @@ consent 'Enable selected vendor repo?' </dev/null
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn('EXEC dnf5 --assumeyes install kitty', result.stdout)
 
-    def run_terminal(self, command, keys=b''):
+    def run_terminal(self, command, keys=b'', rows=32, columns=100, ready=b'FEDORA POST-INSTALL'):
         master, slave = pty.openpty()
-        fcntl.ioctl(slave, termios.TIOCSWINSZ, __import__('struct').pack('HHHH', 32, 100, 0, 0))
+        fcntl.ioctl(slave, termios.TIOCSWINSZ, __import__('struct').pack('HHHH', rows, columns, 0, 0))
         def prepare():
             os.setsid()
             fcntl.ioctl(0, termios.TIOCSCTTY, 0)
@@ -162,7 +163,8 @@ consent 'Enable selected vendor repo?' </dev/null
                                 env=dict(os.environ, TERM='xterm-256color'))
         os.close(slave)
         output = bytearray()
-        sent = False
+        actions = list(zip(ready, keys)) if isinstance(ready, list) else [(ready, keys)]
+        action_start = 0
         deadline = time.monotonic()+12
         try:
             while time.monotonic() < deadline:
@@ -171,9 +173,10 @@ consent 'Enable selected vendor repo?' </dev/null
                         output.extend(os.read(master, 65536))
                     except OSError:
                         break
-                if not sent and b'FEDORA POST-INSTALL' in output:
-                    os.write(master, keys)
-                    sent = True
+                if actions and actions[0][0] in output[action_start:]:
+                    _, action_keys = actions.pop(0)
+                    os.write(master, action_keys)
+                    action_start = len(output)
                 if proc.poll() is not None:
                     break
             if proc.poll() is None:
@@ -187,7 +190,7 @@ consent 'Enable selected vendor repo?' </dev/null
         status, output = self.run_terminal(['python3', str(ROOT/'scripts/tui.py'), '--title', 'Desktop',
                                             '--radiolist', 'Choose', '20', '80', '3',
                                             'noctalia', 'Noctalia', 'ON', 'dms', 'DMS', 'OFF',
-                                            'plasma', 'Plasma', 'OFF'], b'j\n')
+                                            'plasma', 'Plasma', 'OFF'], b'j\n', rows=24, columns=80)
         self.assertEqual(status, 0, output)
         self.assertIn('dms', output)
 
@@ -208,3 +211,35 @@ ui_finish 42
             status, output = self.run_terminal(['bash', '-eu', '-c', script, 'test', str(ROOT), temp])
             self.assertEqual(status, 0, output)
             self.assertIn('kod 42', output)
+
+    @unittest.skipUnless(shutil.which('whiptail'), 'native whiptail is unavailable')
+    def test_native_summary_accepts_consent_in_an_80_by_24_terminal(self):
+        script = r'''source "$1/lib/ui.sh"
+DESKTOP=noctalia
+MODULES='snapshots dependencies hyprland noctalia terminal development browsers multimedia utilities defaults optimization updates'
+CLEANUP_APPS=all
+ui_confirm_plan
+'''
+        status, output = self.run_terminal(['bash', '-eu', '-c', script, 'test', str(ROOT)],
+                                           [b'\x1b[6~', b'\t\r'], rows=24, columns=80,
+                                           ready=[b'Instaluj', b'Zamknij'])
+        self.assertEqual(status, 0, output)
+        self.assertIn('┌', output)
+        self.assertIn('Instaluj', output)
+        self.assertIn('Zamknij Neovim', output)
+
+    @unittest.skipUnless(shutil.which('whiptail'), 'native whiptail is unavailable')
+    def test_native_cleanup_checklist_in_an_80_by_24_terminal(self):
+        script = r'''source "$1/lib/ui.sh"
+ROOT=$1
+MODULES=dependencies
+ui_cleanup_choice
+printf '\nSELECTED:%s\n' "$CLEANUP_APPS"
+'''
+        status, output = self.run_terminal(['bash', '-eu', '-c', script, 'test', str(ROOT)],
+                                           [b'\r', b'\r'], rows=24, columns=80,
+                                           ready=[b'Wybierz aplikacje', b'firefox'])
+        self.assertEqual(status, 0, output)
+        self.assertIn('┌', output)
+        self.assertIn('SELECTED:', output)
+        self.assertIn('firefox', output)

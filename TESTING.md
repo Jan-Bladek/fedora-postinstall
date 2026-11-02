@@ -31,11 +31,16 @@ Fedora 44 containers and the existing verified-ISO Fedora KDE VM.
   User document data remained intact. Exact recovery RPMs were downloaded before
   erasure and `dnf5 check` passed. [Run 41494710969](https://github.com/Jan-Bladek/fedora-postinstall/actions/runs/41494710969)
   also passed the real Hyprland parser with the Omarchy-style profile before cleanup.
-- Local Bash syntax/ShellCheck and **28 regression tests** passed, including actual
+- Local Bash syntax/ShellCheck and **30 regression tests** passed, including actual
   curses selection/progress in PTYs, dependency-failure refusal before erasure or
   service stops, exact app allowlisting, JSONC string/comment handling, JetBrains
   launcher repair, custom launcher preservation, atomic-write failure preservation,
   and explicit preset replacement with backup.
+
+Native whiptail consent and the full cleanup checklist also passed real PTY tests
+at **80×24**, as did the curses desktop selector. Oversized native windows were
+reduced to fit; the consent text scrolls and Tab focuses its action buttons. CI now
+installs whiptail so these native dialog tests cannot silently skip there.
 
 The local existing KDE VM completed `dependencies hyprland vscode terminal lazyvim
 defaults cleanup updates` without prompt input using `--yes`. It **removed 63 selected

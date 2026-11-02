@@ -53,7 +53,7 @@ if [[ -t 0 && $DRY_RUN == 0 && $EXPLICIT_MODULES == 0 && $INSTALL_APPROVED == 0 
     if command -v whiptail >/dev/null; then
         items=()
         for module in $MODULES; do items+=("$module" "$(ui_module_label "$module")" ON); done
-        MODULES=$(whiptail --title "Fedora · $DESKTOP" --separate-output --checklist 'Wybierz moduły (Spacja zaznacza, Enter dalej)' 24 78 15 "${items[@]}" 3>&1 1>&2 2>&3) || exit 0
+        MODULES=$(whiptail --title "Fedora · $DESKTOP" --separate-output --checklist 'Wybierz moduły (Spacja zaznacza, Enter dalej)' 22 78 12 "${items[@]}" 3>&1 1>&2 2>&3) || exit 0
     else
         printf 'Fedora Post-Install · %s\nAvailable default modules:\n%s\n' "$DESKTOP" "$MODULES"
         if [[ $DESKTOP != plasma ]]; then echo 'Optional: kde-removal (requires a validated Hyprland session and separate confirmation).'; fi
