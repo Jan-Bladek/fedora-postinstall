@@ -109,6 +109,25 @@ module_cleanup
             self.assertIn('Name=My custom IDE', current.read_text())
             self.assertTrue(current.with_name(current.name+'.fedora-postinstall-new').exists())
 
+    def test_requested_hypr_preset_keeps_a_copy_of_custom_configuration(self):
+        with tempfile.TemporaryDirectory() as temp:
+            script = r''' 
+source "$1/lib/core.sh"
+source "$1/modules/hyprland.sh"
+ROOT=$1
+RUN=$2/run
+CONFIG=$2/config
+mkdir -p "$RUN" "$CONFIG/hypr"
+printf '%s\n' '-- personal config' > "$CONFIG/hypr/hyprland.lua"
+cp "$ROOT/config/hyprland/hyprland.lua" "$RUN/hyprland.lua"
+APPLY_HYPR_PRESET=1
+write_hyprland_config
+cmp "$RUN/hyprland.lua" "$CONFIG/hypr/hyprland.lua"
+grep -Fxq -- '-- personal config' "$RUN/hyprland-before-requested-preset.lua"
+'''
+            subprocess.run(['bash', '-eu', '-c', script, 'test', str(ROOT), temp],
+                           check=True, capture_output=True, text=True)
+
     def test_one_consent_adds_dnf_yes_without_bypassing_destructive_confirmation(self):
         script = r'''
 source "$1/lib/core.sh"
