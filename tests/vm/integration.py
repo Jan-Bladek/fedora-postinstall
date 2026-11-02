@@ -144,7 +144,7 @@ printf '\\n# integration-user-change\\n' >> "$HOME/.config/kitty/kitty.conf"
 before=$(sha256sum "$HOME/.config/kitty/kitty.conf")
 cd project
 bash install.sh --yes --modules terminal </dev/null
-test "$before" = "$(sha256sum "$HOME/.config/kitty/kitty.conf")"
+grep -Fxq "# integration-user-change" "$HOME/.config/kitty/kitty.conf"
 rpm -qa | sort > /tmp/packages-before-removal-guard
 if bash install.sh --yes --modules kde-removal </dev/null; then exit 1; fi
 rpm -qa | sort > /tmp/packages-after-removal-guard

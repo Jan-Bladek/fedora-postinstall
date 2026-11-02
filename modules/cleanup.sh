@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 module_cleanup() {
     local p unit path selection=${CLEANUP_APPS:-all}
-    local -a targets=() keys=() units=()
+    local -a targets=() keys=() units=() nevras=()
     read -r -a keys <<< "$selection"
     python3 "$ROOT/scripts/cleanup-plan.py" "${keys[@]}" > "$RUN/cleanup-plan.json"
     cat "$RUN/cleanup-plan.json"
@@ -14,11 +14,13 @@ module_cleanup() {
         packages dnf5-plugins
         mkdir -p "$RUN/cleanup-rpms"
         for p in "${targets[@]}"; do
-            run dnf5 download --destdir "$RUN/cleanup-rpms" "$(rpm -q --qf '%{NEVRA}' "$p")"
+            nevras+=("$(rpm -q --qf '%{NEVRA}' "$p")")
             while IFS= read -r path; do
                 if [[ $path == /usr/lib/systemd/user/*.service ]]; then units+=("${path##*/}"); fi
             done < <(rpm -ql "$p")
         done
+        run dnf5 download --destdir "$RUN/cleanup-rpms" "${nevras[@]}"
+        run sudo rpm -e --test "${targets[@]}"
         rpm -qa --qf '%{NAME}\n' | sort -u > "$RUN/cleanup-retained-before"
         # Stop only service units OWNED by apps about to be removed. Never
         # disable shared KDE, system services, akonadi or kernel workqueues.

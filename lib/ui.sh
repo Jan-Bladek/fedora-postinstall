@@ -11,7 +11,8 @@ Zostaną wykonane kopie konfiguracji. Zatwierdzasz instalację wybranych aplikac
 aktualizację RPM i klucze oficjalnych dostawców / wskazanych COPR:
 Fedora, Microsoft, Brave, LibreWolf, Tailscale, lionheartp/Hyprland, duxlabs/DMS.
 
-Pliki zmodyfikowane przez użytkownika zachowujemy. Usuwanie aplikacji odbywa się
+Wybrany moduł Hyprland stosuje profil Omarchy i zapisuje kopię poprzedniej konfiguracji.
+--keep-hypr-config zachowuje własny plik. Kitty zmienia tylko wskazane ustawienia. Usuwanie aplikacji odbywa się
 wyłącznie z listy po teście zależności; bez autoremove i usuwania Plasma.
 LazyVim przenosi istniejącą konfigurację i dane Neovim do kopii .pre-fedora-postinstall.
 Zamknij aplikacje wybrane do usunięcia. Licencje IDE aktywujesz samodzielnie. Dane osobiste aplikacji pozostają na dysku."

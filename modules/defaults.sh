@@ -1,11 +1,14 @@
 #!/usr/bin/env bash
 code_desktop_id() {
-    local path=/usr/share/applications/code.desktop
-    if [[ -f $path ]] && [[ $(rpm -qf --qf '%{NAME}' "$path" 2>/dev/null) == code ]]; then
-        printf '%s\n' code.desktop
-    else
-        return 1
-    fi
+    local candidate path
+    for candidate in com.microsoft.VSCode.desktop code.desktop; do
+        path=/usr/share/applications/$candidate
+        if [[ -f $path ]] && [[ $(rpm -qf --qf '%{NAME}' "$path" 2>/dev/null) == code ]]; then
+            printf '%s\n' "$candidate"
+            return
+        fi
+    done
+    return 1
 }
 
 module_defaults() {
@@ -17,7 +20,7 @@ module_defaults() {
     if command -v code >/dev/null; then
         desktop=$(code_desktop_id) || die 'No supported desktop entry owned by the code RPM was found.'
         run xdg-mime default "$desktop" text/plain
-        for handler in code-url-handler.desktop "${desktop%.desktop}-url-handler.desktop"; do
+        for handler in "${desktop%.desktop}.UrlHandler.desktop" code-url-handler.desktop; do
             path=/usr/share/applications/$handler
             if [[ -f $path ]] && [[ $(rpm -qf --qf '%{NAME}' "$path" 2>/dev/null) == code ]] &&
                 grep -q '^MimeType=.*x-scheme-handler/vscode' "$path"; then

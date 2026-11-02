@@ -45,7 +45,7 @@ assert s['files.autoSave'] == 'onFocusChange'
 assert s['telemetry.telemetryLevel'] == 'off'
 PY
 module_defaults
-[[ $(xdg-mime query default text/plain) == code.desktop ]]
+[[ $(xdg-mime query default text/plain) == "$(code_desktop_id)" ]]
 module_lazyvim
 module_lazyvim
 module_updates

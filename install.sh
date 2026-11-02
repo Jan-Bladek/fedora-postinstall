@@ -11,6 +11,7 @@ fi
 INSTALL_APPROVED=0
 USE_PROGRESS=0
 CLEANUP_APPS=''
+APPLY_HYPR_PRESET=1
 DRY_RUN=0
 EXPLICIT_MODULES=0
 DESKTOP=''
@@ -20,6 +21,7 @@ while (($#)); do
         --version) cat "$ROOT/VERSION"; exit 0 ;;
         --dry-run) DRY_RUN=1 ;;
         --yes) INSTALL_APPROVED=1 ;;
+        --keep-hypr-config) APPLY_HYPR_PRESET=0 ;;
         --no-progress) USE_PROGRESS=-1 ;;
         --cleanup-apps) shift; CLEANUP_APPS=${1:?Missing application selection} ;;
         --desktop) shift; DESKTOP=${1:?Missing desktop choice} ;;
@@ -95,7 +97,7 @@ if [[ $INSTALL_APPROVED == 0 ]]; then
     else die 'Noninteractive installation requires --yes after reviewing --dry-run.'; fi
 fi
 INSTALL_APPROVED=1
-export INSTALL_APPROVED CLEANUP_APPS
+export INSTALL_APPROVED CLEANUP_APPS APPLY_HYPR_PRESET
 if [[ -t 0 && $USE_PROGRESS != -1 ]] && command -v whiptail >/dev/null &&
     [[ ! " $MODULES " =~ [[:space:]]kde-removal[[:space:]] ]]; then USE_PROGRESS=1; else USE_PROGRESS=0; fi
 init_state

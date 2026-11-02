@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 module_terminal() {
     packages kitty bash shadow-utils jetbrains-mono-fonts fontconfig
-    config_file "$ROOT/config/kitty/kitty.conf" "$CONFIG/kitty/kitty.conf"
+    if [[ ! -e $CONFIG/kitty/kitty.conf && ! -L $CONFIG/kitty/kitty.conf ]]; then
+        config_file "$ROOT/config/kitty/kitty.conf" "$CONFIG/kitty/kitty.conf"
+    fi
     local kitty_config=$CONFIG/kitty/kitty.conf env_config=$CONFIG/environment.d/60-fedora-postinstall.conf
     cp -- "$kitty_config" "$RUN/kitty-before-requested-settings.conf"
     python3 "$ROOT/scripts/merge-config-block.py" "$kitty_config" "$ROOT/config/kitty/managed.conf" "$RUN/kitty-merged.conf" KITTY
@@ -17,7 +19,7 @@ module_terminal() {
         run kwriteconfig6 --file kdeglobals --group General --key fixed 'JetBrains Mono,11,-1,5,50,0,0,0,0,0'
     fi
     if [[ ${DESKTOP:-} == dms ]]; then
-        printf '%s\n' '{"fontFamily":"JetBrains Mono","monoFontFamily":"JetBrains Mono"}' > "$RUN/dms-font.json"
+        printf '%s\n' '{"fontFamily":"JetBrains Mono","monoFontFamily":"JetBrains Mono","hyprlandLayoutGapsOverride":5,"hyprlandLayoutGapsOutOverride":10,"hyprlandLayoutBorderSize":2,"hyprlandLayoutRadiusOverride":0}' > "$RUN/dms-font.json"
         python3 "$ROOT/scripts/merge-json.py" "$CONFIG/dms/settings.json" "$RUN/dms-font.json" "$RUN/dms-settings.json"
         mkdir -p "$CONFIG/dms"
         install -m 600 "$RUN/dms-settings.json" "$CONFIG/dms/settings.json"

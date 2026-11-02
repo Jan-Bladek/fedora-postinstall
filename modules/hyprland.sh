@@ -15,6 +15,13 @@ LUA
 
 write_hyprland_config() {
     local target=$CONFIG/hypr/hyprland.lua legacy=$RUN/hyprland-legacy.lua
+    if [[ ${APPLY_HYPR_PRESET:-0} == 1 ]]; then
+        mkdir -p "$CONFIG/hypr"
+        if [[ -e $target ]]; then cp -- "$target" "$RUN/hyprland-before-requested-preset.lua"; fi
+        install -m 600 "$RUN/hyprland.lua" "$target"
+        log 'Applied the requested Omarchy-style preset. Previous main config is backed up in this run.'
+        return
+    fi
     cp -- "$ROOT/config/hyprland/legacy-v0.2.lua" "$legacy"
     if grep -Fq 'skip_non_kms_dmabuf_formats = false' "$RUN/hyprland.lua"; then
         sed -n '/^-- Hyprland 0.57.0 VM compatibility/,$p' "$RUN/hyprland.lua" > "$RUN/legacy-quirk"
