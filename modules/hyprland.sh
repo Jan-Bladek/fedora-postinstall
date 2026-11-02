@@ -13,6 +13,20 @@ LUA
     fi
 }
 
+validate_hyprland_config() {
+    # Configuration-only validation must never share the live session's sockets.
+    local config_root=$RUN/hypr-verify-config runtime=$RUN/hypr-verify-runtime
+    mkdir -p "$config_root/fedora-postinstall" "$config_root/hypr" "$runtime"
+    chmod 700 "$runtime"
+    printf '%s\n' "${DESKTOP:-noctalia}" > "$config_root/fedora-postinstall/shell"
+    if [[ -d $CONFIG/hypr/dms ]]; then ln -s "$CONFIG/hypr/dms" "$config_root/hypr/dms"; fi
+    run env -u HYPRLAND_INSTANCE_SIGNATURE -u WAYLAND_DISPLAY XDG_RUNTIME_DIR="$runtime" \
+        XDG_CONFIG_HOME="$config_root" HYPRLAND_NO_RT=1 Hyprland --verify-config --config "$RUN/hyprland.lua" \
+        > "$RUN/hyprland-verify.log" 2>&1
+    cat "$RUN/hyprland-verify.log"
+    grep -Fq 'config ok' "$RUN/hyprland-verify.log" || die 'Hyprland rejected the proposed configuration; previous main config retained.'
+}
+
 write_hyprland_config() {
     local target=$CONFIG/hypr/hyprland.lua legacy=$RUN/hyprland-legacy.lua
     if [[ ${APPLY_HYPR_PRESET:-0} == 1 ]]; then
@@ -82,6 +96,7 @@ module_hyprland() {
     [[ $version =~ 0\.([0-9]+) && ${BASH_REMATCH[1]} -ge 55 ]] || die 'Lua config requires Hyprland >=0.55; no configuration was replaced.'
     install_shell_selector
     prepare_hyprland_config "$version"
+    validate_hyprland_config
     write_hyprland_config
     config_file "$ROOT/config/portals.conf" "$CONFIG/xdg-desktop-portal/hyprland-portals.conf"
     run sudo systemctl enable --now NetworkManager bluetooth

@@ -9,7 +9,7 @@ RUN=$(mktemp -d)
 trap 'rm -rf -- "$RUN"' EXIT
 module_updates
 "$HOME/.local/bin/fedora-update" --yes
-for app in dev.vencord.Vesktop com.valvesoftware.Steam md.obsidian.Obsidian app.localsend.localsend_app; do
+for app in dev.vencord.Vesktop com.valvesoftware.Steam md.obsidian.Obsidian org.localsend.localsend_app; do
     flatpak info --user "$app" >/dev/null
 done
 [[ $(xdg-mime query default text/plain) == "$(code_desktop_id)" ]]
