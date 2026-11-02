@@ -32,7 +32,7 @@ write_hyprland_config() {
     if [[ ${APPLY_HYPR_PRESET:-0} == 1 ]]; then
         mkdir -p "$CONFIG/hypr"
         if [[ -e $target ]]; then cp -- "$target" "$RUN/hyprland-before-requested-preset.lua"; fi
-        install -m 600 "$RUN/hyprland.lua" "$target"
+        atomic_config "$RUN/hyprland.lua" "$target"
         log 'Applied the requested Omarchy-style preset. Previous main config is backed up in this run.'
         return
     fi
@@ -44,14 +44,14 @@ write_hyprland_config() {
     fi
     if [[ ! -L $target && -f $target ]] && cmp -s "$legacy" "$target"; then
         cp -- "$target" "$RUN/hyprland-before-shell-selector.lua"
-        install -m 600 "$RUN/hyprland.lua" "$target"
+        atomic_config "$RUN/hyprland.lua" "$target"
         log 'Migrated the unmodified v0.2 Hyprland template to the shell selector; backup saved in this run.'
     elif [[ ! -L $target && -f $target ]]; then
         cp -- "$ROOT/config/hyprland/legacy-v0.3.lua" "$legacy"
         if [[ -s $RUN/legacy-quirk ]]; then printf '\n' >> "$legacy"; cat "$RUN/legacy-quirk" >> "$legacy"; fi
         if cmp -s "$legacy" "$target"; then
             cp -- "$target" "$RUN/hyprland-before-omarchy-settings.lua"
-            install -m 600 "$RUN/hyprland.lua" "$target"
+            atomic_config "$RUN/hyprland.lua" "$target"
         else
             config_file "$RUN/hyprland.lua" "$target"
         fi

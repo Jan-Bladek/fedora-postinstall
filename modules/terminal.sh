@@ -7,10 +7,10 @@ module_terminal() {
     local kitty_config=$CONFIG/kitty/kitty.conf env_config=$CONFIG/environment.d/60-fedora-postinstall.conf
     cp -- "$kitty_config" "$RUN/kitty-before-requested-settings.conf"
     python3 "$ROOT/scripts/merge-config-block.py" "$kitty_config" "$ROOT/config/kitty/managed.conf" "$RUN/kitty-merged.conf" KITTY
-    install -m 600 "$RUN/kitty-merged.conf" "$kitty_config"
+    atomic_config "$RUN/kitty-merged.conf" "$kitty_config"
     mkdir -p "$CONFIG/environment.d"
     python3 "$ROOT/scripts/merge-config-block.py" "$env_config" "$ROOT/config/environment.conf" "$RUN/environment-merged.conf" DEFAULTS
-    install -m 600 "$RUN/environment-merged.conf" "$env_config"
+    atomic_config "$RUN/environment-merged.conf" "$env_config"
     config_file "$ROOT/config/fontconfig/60-jetbrains-mono.conf" "$CONFIG/fontconfig/conf.d/60-jetbrains-mono.conf"
     run python3 "$ROOT/scripts/symbols-fonts.py" install
     run fc-cache -f
@@ -22,7 +22,7 @@ module_terminal() {
         printf '%s\n' '{"fontFamily":"JetBrains Mono","monoFontFamily":"JetBrains Mono","hyprlandLayoutGapsOverride":5,"hyprlandLayoutGapsOutOverride":10,"hyprlandLayoutBorderSize":2,"hyprlandLayoutRadiusOverride":0}' > "$RUN/dms-font.json"
         python3 "$ROOT/scripts/merge-json.py" "$CONFIG/dms/settings.json" "$RUN/dms-font.json" "$RUN/dms-settings.json"
         mkdir -p "$CONFIG/dms"
-        install -m 600 "$RUN/dms-settings.json" "$CONFIG/dms/settings.json"
+        atomic_config "$RUN/dms-settings.json" "$CONFIG/dms/settings.json"
     fi
     if [[ $(getent passwd "$USER" | cut -d: -f7) != /bin/bash ]]; then run sudo usermod --shell /bin/bash "$USER"; fi
 }

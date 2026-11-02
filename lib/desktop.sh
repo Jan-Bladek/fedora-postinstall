@@ -28,6 +28,6 @@ select_shell() {
     local selection=$CONFIG/fedora-postinstall/shell
     [[ ! -L $selection ]] || die 'Refusing to replace a symlink at the shell selection file.'
     printf '%s\n' "$1" > "$RUN/shell-selection"
-    install -m 600 "$RUN/shell-selection" "$selection"
+    atomic_config "$RUN/shell-selection" "$selection"
     log "Selected $1 for the next Hyprland session. Log out before changing shells."
 }

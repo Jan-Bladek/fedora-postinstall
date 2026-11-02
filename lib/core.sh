@@ -60,6 +60,13 @@ packages() {
     for p in "$@"; do rpm -q "$p" >/dev/null || die "Requested RPM was not installed: $p"; done
     printf '%s\n' "$@" >> "$RUN/expected-rpm"
 }
+atomic_config() {
+    local source=$1 destination=$2 temporary
+    mkdir -p "$(dirname "$destination")"
+    temporary=$(mktemp "$(dirname "$destination")/.fedora-postinstall.XXXXXX") || return
+    if ! install -m 600 "$source" "$temporary"; then rm -f -- "$temporary"; return 1; fi
+    if ! mv -T -- "$temporary" "$destination"; then rm -f -- "$temporary"; return 1; fi
+}
 config_file() {
     local src=$1 dst=$2
     mkdir -p "$(dirname "$dst")"
@@ -68,7 +75,7 @@ config_file() {
             cp -- "$src" "$dst.fedora-postinstall-new"
             log "Preserved $dst; proposed configuration: $dst.fedora-postinstall-new"
         fi
-    else install -m 600 "$src" "$dst"; fi
+    else atomic_config "$src" "$dst"; fi
 }
 flatpak_app() {
     local id=$1

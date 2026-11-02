@@ -15,7 +15,7 @@ Wybrany moduł Hyprland stosuje profil Omarchy i zapisuje kopię poprzedniej kon
 --keep-hypr-config zachowuje własny plik. Kitty zmienia tylko wskazane ustawienia. Usuwanie aplikacji odbywa się
 wyłącznie z listy po teście zależności; bez autoremove i usuwania Plasma.
 LazyVim przenosi istniejącą konfigurację i dane Neovim do kopii .pre-fedora-postinstall.
-Zamknij aplikacje wybrane do usunięcia. Licencje IDE aktywujesz samodzielnie. Dane osobiste aplikacji pozostają na dysku."
+Zamknij Neovim i aplikacje wybrane do usunięcia. Licencje IDE aktywujesz samodzielnie. Dane osobiste aplikacji pozostają na dysku."
     if command -v whiptail >/dev/null; then
         whiptail --title 'Fedora · Podsumowanie' --yes-button 'Instaluj' --no-button 'Anuluj' --yesno "$summary" 24 86
     else

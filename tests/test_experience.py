@@ -128,6 +128,17 @@ grep -Fxq -- '-- personal config' "$RUN/hyprland-before-requested-preset.lua"
             subprocess.run(['bash', '-eu', '-c', script, 'test', str(ROOT), temp],
                            check=True, capture_output=True, text=True)
 
+    def test_failed_atomic_config_write_keeps_the_previous_file(self):
+        with tempfile.TemporaryDirectory() as temp:
+            work = Path(temp)
+            (work/'current').write_text('keep-me')
+            result = subprocess.run(['bash', '-eu', '-c',
+                                     'source "$1/lib/core.sh"; atomic_config "$2/missing" "$2/current"',
+                                     'test', str(ROOT), temp], capture_output=True, text=True)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertEqual((work/'current').read_text(), 'keep-me')
+            self.assertEqual(list(work.glob('.fedora-postinstall.*')), [])
+
     def test_one_consent_adds_dnf_yes_without_bypassing_destructive_confirmation(self):
         script = r'''
 source "$1/lib/core.sh"
