@@ -31,4 +31,6 @@ module_terminal() {
     atomic_config "$RUN/btop-merged.conf" "$CONFIG/btop/btop.conf"
     source "$ROOT/modules/zsh.sh"
     module_zsh
+    source "$ROOT/modules/terminal-theme.sh"
+    module_terminal_theme
 }

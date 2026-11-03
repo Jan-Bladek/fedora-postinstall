@@ -26,4 +26,6 @@ module_dms() {
     fi
     log 'DMS starts only through Hyprland, not a global user service. Existing DMS profiles are retained.'
     log 'DMS provides its own Polkit agent; the Hyprland selector does not start polkit-kde for DMS.'
+    source "$ROOT/modules/terminal-theme.sh"
+    module_terminal_theme
 }

@@ -7,6 +7,35 @@ and a short OBS recording. Graphical suspend/resume failed in its TCG/VirGL setu
 on both tested kernels. Positive Plasma removal is untested.
 
 
+## Terminal system palettes — 2026-11-03
+
+Bash syntax, ShellCheck and **59 local regressions passed**. New tests cover
+Noctalia TOML/comment preservation and existing template selections, idempotent
+merges, DMS settings retention, provider-specific Kitty includes, recoverable
+handling of automatic theme files, config paths with spaces/percent signs, and
+leaving Plasma color configuration alone. The check environment needs tomlkit
+(`python3-tomlkit`); CI now installs it.
+
+In the existing Fedora 44 VM, the native Noctalia Kitty template was enabled.
+Changing the real Noctalia wallpaper source from a solid blue PNG (`#205abb`) to
+orange (`#d65e27`) changed colors in the **same running Kitty instance**, without
+closing or relaunching it: foreground `#e2e2e9 → #f1dfd9`, ANSI cyan
+`#bfc6dc → #e7beae`, plus cursor/background and other ANSI slots. The dedicated
+systemd path unit was active. Applying the Noctalia module twice retained identical
+Kitty and Noctalia settings bytes.
+
+The DMS integration was then selected in that same VM. The native
+`dms matugen generate` pipeline rendered both images with dank16; the open Kitty
+changed foreground `#e2e2e9 → #f1dfd9` and ANSI cyan `#afc6ff → #ffb598`.
+This tests DMS's real generator and the installed file watcher, not a DMS GUI
+wallpaper click. Remote color inspection was enabled only for the disposable
+probe instance; the installed configuration does not enable remote control.
+
+[Captured foreground/background/cursor and all 16 ANSI colors](tests/vm/evidence/fedora44-terminal-palettes.json)
+come from Kitty's runtime `get-colors` output. The temporary probes were stopped
+and the original Noctalia wallpaper/source restored. SELinux remained Enforcing.
+This was a focused upgrade of the existing guest, not a complete fresh install.
+
 ## Zsh, Lua and clipboard — 2026-11-02
 
 - Local Bash syntax, ShellCheck and **56 regressions passed**, including real fzf

@@ -1,0 +1,8 @@
+[Unit]
+Description=Refresh Kitty after a system palette change
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/pkill --signal USR1 --euid %U --exact kitty
+# No open Kitty windows is a normal state.
+SuccessExitStatus=1

@@ -30,7 +30,7 @@ while (($#)); do
         --dev-profile) shift; DEV_PROFILE=${1:?Missing development profile} ;;
         --desktop) shift; DESKTOP=${1:?Missing desktop choice} ;;
         --modules) shift; MODULES=${1:?Missing module list}; EXPLICIT_MODULES=1 ;;
-        --help) echo 'install.sh [--dry-run] [--yes] [--no-progress] [--keep-hypr-config] [--cleanup-apps "all|id id"] [--desktop noctalia|dms|plasma] [--dev-profile code|full] [--dev-apps "code rustrover intellij-idea webstorm clion arduino-ide|none"] [--modules "snapshots dependencies hyprland noctalia dms terminal zsh clipboard lazyvim vscode development libreoffice hyprmod files omasnap browsers multimedia utilities defaults optimization updates cleanup kde-removal"]'; exit 0 ;;
+        --help) echo 'install.sh [--dry-run] [--yes] [--no-progress] [--keep-hypr-config] [--cleanup-apps "all|id id"] [--desktop noctalia|dms|plasma] [--dev-profile code|full] [--dev-apps "code rustrover intellij-idea webstorm clion arduino-ide|none"] [--modules "snapshots dependencies hyprland noctalia dms terminal terminal-theme zsh clipboard lazyvim vscode development libreoffice hyprmod files omasnap browsers multimedia utilities defaults optimization updates cleanup kde-removal"]'; exit 0 ;;
         *) die "Unknown option: $1" ;;
     esac
     shift

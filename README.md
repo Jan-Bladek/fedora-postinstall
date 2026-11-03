@@ -79,6 +79,7 @@ Selektor `~/.config/fedora-postinstall/shell` steruje autostartem i skrótami. D
 | hyprland | Hyprland, XWayland, portale Hyprland/GTK, PipeWire, WirePlumber, Polkit, NetworkManager, Bluetooth, Mesa |
 | noctalia / dms | Jedna wybrana powłoka, bez Waybar, dunst i dodatkowego launchera |
 | terminal | Kitty, Zsh + Oh My Zsh, prompt Starship w stylu Omarchy, Lua 5.4 z DNF, JetBrains Mono, symbole Nerd Fonts, konfiguracja fontów i terminala; btop z przezroczystym tłem |
+| terminal-theme | Tekst i paleta ANSI Kitty zgodne z motywem DMS/Noctalia; odświeżanie otwartych okien |
 | zsh | Sam Zsh + Oh My Zsh i przypięte wtyczki, z kopią i scaleniem `.zshrc` |
 | clipboard | Historia schowka pod Win+Shift+V: cliphist + fzf w Kitty, Tab/strzałki/Enter/Esc; tylko Hyprland |
 | lazyvim | Neovim, oficjalny starter LazyVim, lazy.nvim, ripgrep, fd, tree-sitter-cli i narzędzia kompilacji |
@@ -303,3 +304,19 @@ bash install.sh --yes --desktop noctalia --modules "terminal clipboard updates"
 ```
 
 Moduł `clipboard` dopisuje tylko własny blok do konfiguracji Hyprland, z kopią i sprawdzeniem parserem. Win+V w Kitty pozostaje skrótem wklejania.
+
+## Kolory terminala z motywu systemu
+
+Kitty korzysta z palety wybranej powłoki: w Noctalii włączany jest oficjalny szablon `kitty`, a w DMS — generowanie Matugen dla Kitty. Gdy system używa kolorów tapety, zmiana tapety zmienia też zwykły tekst, 16 kolorów ANSI (w tym prompt Zsh), kursor, zaznaczenie i tło terminala. Nie trzeba zamykać otwartych okien.
+
+Moduł `terminal` konfiguruje to automatycznie. Osobny `terminal-theme` pozwala zaktualizować istniejącą instalację bez ponownego instalowania Zsh:
+
+```bash
+bash install.sh --dry-run --desktop dms --modules terminal-theme
+bash install.sh --yes --desktop dms --modules terminal-theme
+# Dla Noctalii zamień dms na noctalia.
+```
+
+Usługa użytkownika `fedora-kitty-theme.path` obserwuje plik palety wybranej powłoki i przeładowuje wyłącznie procesy Kitty bieżącego użytkownika przez SIGUSR1. Nie wymaga otwierania zdalnego sterowania terminalem i nie odpytuje plików w pętli. Pozostałe ustawienia i szablony są zachowywane. Noctalia wymaga pakietu `python3-tomlkit` z DNF do bezpiecznego scalania TOML z komentarzami. Zapisane przez Kitty pliki `dark-theme.auto.conf`, `light-theme.auto.conf` i `no-preference-theme.auto.conf` są przenoszone do kopii w katalogu przebiegu, ponieważ mogłyby zasłaniać kolory systemowe.
+
+Programy, które samodzielnie ustawiają kolory RGB, nadal używają własnego motywu. Wariant Plasma zachowuje dotychczasową konfigurację kolorów. Wybór źródła palety (tapeta albo motyw stały) pozostaje w ustawieniach DMS/Noctalii.
