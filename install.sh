@@ -102,6 +102,8 @@ ui_start
 # A recovery record is mandatory even when snapshot creation is deselected.
 source "$ROOT/modules/snapshots.sh"
 backup_state
+RECOVERY_POINT=$(python3 "$ROOT/scripts/recovery.py" create "Before installer: $MODULES" --source-run "$RUN")
+log "Recovery checkpoint: $RECOVERY_POINT"
 module_index=0
 read -r -a module_array <<< "$MODULES"
 module_total=${#module_array[@]}

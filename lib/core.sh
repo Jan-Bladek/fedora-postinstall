@@ -7,7 +7,13 @@ run() {
         if [[ $1 == sudo && ${2:-} == dnf5 ]]; then shift 2; set -- sudo dnf5 --assumeyes "$@"
         elif [[ $1 == dnf5 ]]; then shift; set -- dnf5 --assumeyes "$@"; fi
     fi
-    "$@"
+    if [[ $1 == dnf5 || ( $1 == sudo && ${2:-} == dnf5 ) ]]; then
+        # DNF rewrites system metadata; a private backup umask would make it
+        # unreadable by the desktop user's check-upgrade.
+        (umask 022; "$@")
+    else
+        "$@"
+    fi
 }
 confirm() { local reply; read -r -p "$1 [type YES]: " reply; [[ $reply == YES ]]; }
 preflight() {
@@ -38,17 +44,33 @@ init_state() {
     if [[ ${USE_PROGRESS:-0} == 1 ]]; then
         exec > "$RUN/install.log" 2>&1
     else
-        exec > >(tee -a "$RUN/install.log") 2>&1
+        exec > >(exec 9>&-; tee -a "$RUN/install.log") 2>&1
     fi
     # shellcheck disable=SC2154
     trap 'rc=$?; echo "Interrupted/failed (exit $rc). Recovery: see README and $RUN" >&2; exit "$rc"' ERR
     trap 'exit 130' INT
-    trap 'rc=$?; if declare -F ui_finish >/dev/null; then ui_finish "$rc"; fi; if [[ -n ${SUDO_KEEPALIVE_PID:-} ]]; then if kill -0 "$SUDO_KEEPALIVE_PID" 2>/dev/null; then kill "$SUDO_KEEPALIVE_PID"; fi; fi' EXIT
+    trap 'finish_state $?' EXIT
     sudo -v
     if [[ ${INSTALL_APPROVED:-0} == 1 ]]; then
         (exec 9>&-; while sleep 45; do sudo -n -v || exit; done) &
         SUDO_KEEPALIVE_PID=$!
     fi
+}
+finish_state() {
+    local rc=$1 status=failed
+    [[ $rc == 0 ]] && status=complete
+    if [[ -n ${RECOVERY_POINT:-} ]]; then
+        if ! python3 "$ROOT/scripts/recovery.py" finish "$RECOVERY_POINT" --status "$status"; then
+            echo "Failed to finalize recovery checkpoint: $RECOVERY_POINT" >&2
+            rc=1
+        fi
+    fi
+    if declare -F ui_finish >/dev/null; then ui_finish "$rc"; fi
+    if [[ -n ${SUDO_KEEPALIVE_PID:-} ]] && kill -0 "$SUDO_KEEPALIVE_PID" 2>/dev/null; then
+        kill "$SUDO_KEEPALIVE_PID" || true
+    fi
+    trap - EXIT
+    exit "$rc"
 }
 rpm_requirement_installed() {
     # DNF accepts both exact RPM names and virtual Provides (e.g. nodejs22

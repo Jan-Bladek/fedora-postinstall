@@ -216,6 +216,8 @@ Dodaj `~/.local/bin` do PATH. Jedno polecenie:
 
 ```bash
 fedora-update
+# Podgląd bez sudo i instalowania aktualizacji:
+fedora-update --check
 # Bez pytania o rozpoczęcie:
 fedora-update --yes
 ```
@@ -224,9 +226,29 @@ Obejmuje DNF i aktywne COPR/repozytoria dostawców, Flatpak user/system, zarząd
 
 LazyVim używa `Lazy check/update`, bez `git pull` konfiguracji; kopia lockfile pozwala na próbę `Lazy restore` po błędzie. Nie obiecujemy zgodności każdej zewnętrznej wtyczki. Narzędzie nie aktualizuje arbitralnych plików w `/usr/local/bin`, nie dotyka cudzych checkoutów Git, środowisk pip ani projektów npm. Aktualizacje RPM pokrywają systemowe Python/C++/Rust. Logi: `~/.local/state/fedora-postinstall/updates/`.
 
+Przed pierwszą aktualizacją tworzony jest punkt konfiguracji; jeśli Btrfs ma już konfigurację Snapper `root`, także migawka systemu. Błąd skonfigurowanej migawki przerywa aktualizację. Bez niej kopia plików nadal powstaje, ale nie zapewnia cofania pakietów systemowych. Po sukcesie, błędzie i przerwaniu aktualizator zapisuje `report.json`: wynik etapów, zmienione wersje RPM, ścieżki zmienionych plików, ID kopii/migawki i zalecenie restartu z `dnf5 needs-restarting`. Brak tego polecenia daje wynik „nie ustalono”. Pierwszy nieudany etap zatrzymuje kolejne; nie uruchamiamy automatycznego rollbacku.
+
+`--check` sprawdza RPM/COPR, Flatpak user/system (repozytoria z zainstalowanymi referencjami) i Rustup. Jeżeli serwer lub systemowe repozytorium OCI odmawia dostępu bez autoryzacji, podgląd zgłasza błąd danego kanału zamiast deklarować jego aktualność. Odświeża metadane repozytoriów, ale nie tworzy punktu kopii i nie uruchamia konfiguracji Neovim. Kod `100` z DNF oznacza dostępne aktualizacje, a nie błąd. Pozostałe kanały są jawnie oznaczone jako niesprawdzone; brak aktualizacji RPM nie oznacza aktualności wszystkich źródeł.
+
 ## Kopie, usuwanie Plasma i odzyskiwanie
 
 Każdy przebieg ma log i kopie w `~/.local/state/fedora-postinstall/runs/`. Na Btrfs moduł snapshots używa istniejącej konfiguracji Snapper lub — po zgodzie w podsumowaniu — tworzy konfigurację root. Nie dodaje bootloadera ani nie zakłada, że snapshot można uruchomić. Osobne subwolumeny, szczególnie `/home`, mogą nie być objęte snapshotem. Kopie konfiguracji nie zastępują backupu danych osobistych. Nie ma automatycznego przywracania całego systemu.
+
+Moduł `updates` instaluje również `fedora-restore`. Każda nowa instalacja i aktualizacja zapisuje stan plików przed i po wykonaniu. Dostępne grupy: `hyprland`, `kitty`, `zsh`, `defaults`, `desktop`, `services`, `applications`, `lazyvim`, `packages`.
+
+```bash
+fedora-restore list
+# Sam plan, bez zmieniania plików:
+fedora-restore ID_KOPII --components kitty,defaults
+# Wykonanie planu:
+fedora-restore ID_KOPII --components kitty,defaults --apply
+# Import starszego archiwum user-config.tar.gz z runs/ID_PRZEBIEGU:
+fedora-restore import ID_PRZEBIEGU
+```
+
+Przywracanie odmawia nadpisania plików zmienionych po zapisaniu końcowego stanu. `--force` jawnie dopuszcza nadpisanie takich edycji; `--yes` jedynie pomija pytanie. Stare importowane kopie nie zawierają stanu końcowego, więc różniące się pliki wymagają `--force`. Przed przywracaniem powstaje kolejny punkt pozwalający cofnąć tę operację. Program weryfikuje sumy kopii, nie przechodzi przez podmienione dowiązania katalogów i nie usuwa rekurencyjnie katalogów z dodatkowymi plikami użytkownika. Po zmianie konfiguracji uruchom ponownie aplikację lub sesję.
+
+`applications` przywraca zarządzane launchery i dowiązania `current` do zachowanych wersji aplikacji; payloady muszą nadal istnieć. `packages` instaluje wyłącznie zachowane `cleanup-rpms`/`plasma-rpms` z danego przebiegu, po kontroli sum i zaufanych podpisów RPM. Nie usuwa później doinstalowanych pakietów. `zsh` obejmuje konfigurację, nie zmienia powłoki logowania. Przywrócenie konfiguracji LazyVim nie cofa automatycznie pobranych wtyczek — użyj potem `:Lazy restore`. Narzędzie nie cofa wersji Flatpak, Rustup, rozszerzeń VS Code ani całego `/etc`. Migawka Snappera jest wskazywana do osobnego przywracania zgodnego z układem subwolumenów i sposobem startowania systemu.
 
 Całkowite usuwanie środowiska Plasma pozostaje **oddzielnym etapem**, dopiero po zalogowaniu do Hyprland i ręcznych testach:
 

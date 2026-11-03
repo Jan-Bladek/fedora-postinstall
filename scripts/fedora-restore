@@ -1,0 +1,78 @@
+#!/usr/bin/env python3
+"""Preview and selectively restore installer/update checkpoints."""
+import argparse
+import json
+import os
+from pathlib import Path
+import sys
+
+helper = Path(__file__).resolve().parent
+if not (helper/'recovery.py').is_file():
+    helper = Path.home()/'.local/share/fedora-postinstall/scripts'
+sys.path.insert(0, str(helper))
+import recovery  # noqa: E402
+
+
+def main():
+    parser = argparse.ArgumentParser(description='Przywracanie wybranych elementów. Domyślnie tylko podgląd.')
+    parser.add_argument('point', nargs='?', help='ID kopii lub list/import')
+    parser.add_argument('run', nargs='?', help='ID starego przebiegu przy import')
+    parser.add_argument('--components', default='hyprland,kitty,zsh,defaults',
+                        help=','.join((*recovery.GROUPS, 'packages')))
+    parser.add_argument('--apply', action='store_true', help='Wykonaj pokazany plan')
+    parser.add_argument('--yes', action='store_true', help='Bez pytania; nie pomija konfliktów')
+    parser.add_argument('--force', action='store_true', help='Zezwól na nadpisanie późniejszych edycji')
+    parser.add_argument('--json', action='store_true')
+    args = parser.parse_args()
+    if os.geteuid() == 0:
+        parser.error('Uruchom jako użytkownik pulpitu.')
+    if args.point in (None, 'list'):
+        points = recovery.list_points()
+        if args.json:
+            print(json.dumps(points, indent=2, ensure_ascii=False))
+        else:
+            for point in points:
+                print(f"{point['id']}  {point['status']}  {point['label']}")
+            if not points:
+                print('Brak kopii. Starsze kopie: fedora-restore import ID_PRZEBIEGU')
+        return
+    with recovery.Lock():
+        if args.point == 'import':
+            if not args.run:
+                parser.error('Podaj ID z katalogu state/fedora-postinstall/runs.')
+            print(recovery.import_run(args.run)); return
+        if args.run:
+            parser.error('Nadmiarowy argument')
+        groups = tuple(filter(None, args.components.split(',')))
+        plan = recovery.plan(args.point, groups, args.force)
+        if args.json:
+            print(json.dumps(plan, indent=2, ensure_ascii=False))
+        else:
+            for row in plan['files']:
+                status = 'KONFLIKT' if not row['apply'] else row['action']
+                print(f"{status}: {row['path']}")
+            for rpm in plan['rpms']:
+                print('RPM install: '+rpm)
+            if plan['snapshot']:
+                print('Migawka systemu (przywracana osobno przez Snapper): '+str(plan['snapshot']))
+            print(f"Pliki: {len(plan['files'])}, RPM: {len(plan['rpms'])}.")
+            if not args.apply:
+                print("Podgląd: bez --apply nic nie zmieniono.")
+        if not args.apply:
+            return
+        if not plan['files'] and not plan['rpms']:
+            print('Brak zmian do przywrócenia.'); return
+        if not args.yes and input('Przywrócić pokazany stan? [wpisz YES]: ') != 'YES':
+            return
+        reverse, _ = recovery.apply(args.point, groups, args.force)
+        print('Przywrócono. Kopia stanu sprzed przywracania: '+reverse)
+        print('Uruchom ponownie zmienione aplikacje lub sesję, aby wczytały konfigurację.')
+
+
+if __name__ == '__main__':
+    try:
+        main()
+    except (OSError, ValueError, RuntimeError, KeyError) as error:
+        print('ERROR: '+str(error), file=sys.stderr); sys.exit(1)
+    except (KeyboardInterrupt, EOFError):
+        sys.exit(130)

@@ -15,5 +15,9 @@ module_updates() {
     install -m 755 "$ROOT/scripts/zsh-manager.py" "$dest/scripts/zsh-manager.py"
     install -m 644 "$ROOT/data/zsh-sources.json" "$dest/data/zsh-sources.json"
     install -m 644 "$ROOT/config/zsh/init.zsh" "$dest/data/zsh-init.zsh"
+    for helper in recovery.py update-manager.py update-actions.sh; do
+        install -m 755 "$ROOT/scripts/$helper" "$dest/scripts/$helper"
+    done
+    install -m 755 "$ROOT/scripts/fedora-restore" "$HOME/.local/bin/fedora-restore"
     log 'fedora-update installed into ~/.local/bin (add this directory to PATH if necessary).'
 }
