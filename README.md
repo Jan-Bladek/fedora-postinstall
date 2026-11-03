@@ -326,3 +326,18 @@ Programy, które samodzielnie ustawiają kolory RGB, nadal używają własnego m
 Fedora 44 może dostarczać `nodejs` i `npm` przez pakiety `nodejs22` oraz `nodejs22-npm`. Instalator sprawdza teraz także RPM `Provides`, zgodnie ze sposobem rozwiązywania nazw przez DNF, zarówno przed instalacją, jak i w końcowej weryfikacji. Dodatkowo sprawdza działanie `node --version` i `npm --version`.
 
 Po błędzie `Requested RPM was not installed: nodejs` zaktualizuj projekt (`git pull`) i ponów instalację z tymi samymi opcjami. Nie trzeba usuwać ani ponownie instalować działającego Node.js.
+
+### Powiadomienia FUMonitor o jednostkach w stanie failed
+
+Start DMS/Noctalii przekazuje teraz synchronicznie środowisko Hyprland/Wayland do D-Bus i menedżera systemd użytkownika, zanim powłoka uruchomi aplikacje autostartu. Obejmuje to `XDG_SESSION_TYPE=wayland`, `XDG_SESSION_DESKTOP=Hyprland` i aktualny `DISPLAY`, jeśli jest dostępny. Po aktualizacji konfiguracji uruchom ponownie sesję graficzną.
+
+Debloat zatrzymuje także należące do usuwanych aplikacji timery, gniazda i jednostki path, a nie tylko usługi. Po usunięciu RPM czyści stan błędu wyłącznie wskazanych usuniętych jednostek. Nie maskuje KSplash/imsettings, nie wyłącza monitora błędów i nie wykonuje globalnego `reset-failed`.
+
+Samo powiadomienie nie podaje przyczyny. Aby zebrać szczegóły dla zgłoszonych jednostek:
+
+```bash
+journalctl --user -b --no-pager -n 150 | rg -i 'drkonqi|imsettings|ksplash'
+systemctl --user --failed --no-pager
+```
+
+Jeśli błąd pozostaje po aktualizacji i nowym logowaniu, zachowaj te logi przed czyszczeniem stanu jednostek. Stan failed może opisywać wcześniejsze, zakończone uruchomienie.

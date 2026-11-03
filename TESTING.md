@@ -7,6 +7,34 @@ and a short OBS recording. Graphical suspend/resume failed in its TCG/VirGL setu
 on both tested kernels. Positive Plasma removal is untested.
 
 
+## Session startup and removed app units — 2026-11-03
+
+Bash syntax, ShellCheck and **65 regressions passed**. New coverage verifies
+stopping owned service/timer/socket/path activation units before erasing their
+RPM, deduplicating vendor wants-links, excluding system units and bare templates
+from runtime operations, and clearing failure state only for removed owned units.
+Startup tests seed KDE/X11 environment values, verify synchronous D-Bus/systemd
+import of Hyprland/Wayland before DMS execution, and confirm that a failed import
+prevents launching the shell.
+
+In the existing Fedora 44 VM, plasma-drkonqi 6.8.2 was installed temporarily and
+its actual cleanup timer started. The corrected cleanup stopped the active timer
+before removing the package, passed exact package inventory and DNF checks, and
+left no failed cleanup timer. The bare launcher template is not a runtime unit;
+its activation socket is stopped instead. No global reset-failed was used.
+
+The updated shell selector was launched with deliberately stale KDE/X11 variables
+in that same graphical guest. The user manager then reported
+`XDG_CURRENT_DESKTOP=Hyprland`, `XDG_SESSION_DESKTOP=Hyprland` and
+`XDG_SESSION_TYPE=wayland`; Noctalia IPC health passed and SELinux stayed Enforcing.
+
+The user's screenshot does not include unit exit reasons. The guest's imsettings
+autostart completed successfully, and its timer also started before the removal
+test. These fixes address confirmed installer defects; they do **not** establish
+why the user's imsettings or D-Bus KSplash activation failed. User journal output
+is still required for those diagnoses. No input-method or KSplash service was
+masked or removed to suppress notifications.
+
 ## Versioned Node.js RPM providers — 2026-11-03
 
 ShellCheck/Bash syntax and **63 local regressions passed**. Four new regressions

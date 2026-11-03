@@ -5,6 +5,16 @@ selection=${XDG_CONFIG_HOME:-$HOME/.config}/fedora-postinstall/shell
 shell=noctalia
 if [[ -e $selection ]]; then IFS= read -r shell < "$selection"; fi
 case $shell in noctalia|dms) ;; *) echo "Invalid shell selection: $shell" >&2; exit 1 ;; esac
+prepare_session_environment() {
+    [[ -n ${HYPRLAND_INSTANCE_SIGNATURE:-} && -n ${WAYLAND_DISPLAY:-} ]] || {
+        echo 'Start the selected shell from a running Hyprland session.' >&2; return 1;
+    }
+    export XDG_CURRENT_DESKTOP=Hyprland XDG_SESSION_DESKTOP=Hyprland XDG_SESSION_TYPE=wayland
+    local -a variables=(WAYLAND_DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_DESKTOP XDG_SESSION_TYPE HYPRLAND_INSTANCE_SIGNATURE)
+    if [[ -n ${DISPLAY:-} ]]; then variables+=(DISPLAY); fi
+    # Import synchronously before a shell can launch XDG autostart applications.
+    dbus-update-activation-environment --systemd "${variables[@]}"
+}
 case ${1:-} in
     name) printf '%s\n' "$shell" ;;
     start)
@@ -12,11 +22,13 @@ case ${1:-} in
             if pgrep -u "$(id -u)" -x noctalia >/dev/null; then
                 echo 'Noctalia is already running. Log out before switching shells.' >&2; exit 1
             fi
+            prepare_session_environment
             exec dms run
         fi
         if command -v dms >/dev/null && timeout 3 dms ipc call lock isLocked >/dev/null 2>&1; then
             echo 'DMS is already running. Log out before switching shells.' >&2; exit 1
         fi
+        prepare_session_environment
         /usr/libexec/kf6/polkit-kde-authentication-agent-1 &
         exec noctalia
         ;;

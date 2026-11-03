@@ -11,7 +11,6 @@ hl.config({
     input = { kb_layout = "pl", touchpad = { natural_scroll = true } },
 })
 hl.on("hyprland.start", function()
-    hl.exec_cmd("dbus-update-activation-environment --systemd WAYLAND_DISPLAY XDG_CURRENT_DESKTOP HYPRLAND_INSTANCE_SIGNATURE")
     hl.exec_cmd("$HOME/.local/share/fedora-postinstall/scripts/desktop-shell start")
 end)
 hl.bind("SUPER+Return", hl.dsp.exec_cmd("kitty"))

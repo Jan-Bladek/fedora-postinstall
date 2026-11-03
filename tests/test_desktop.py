@@ -171,3 +171,38 @@ fi
                 with self.subTest(kind=kind, virtual=virtual), tempfile.TemporaryDirectory() as temp:
                     subprocess.run(['bash', '-eu', '-c', script, 'test', str(ROOT), temp, kind],
                                    env=dict(os.environ, VIRT_STATUS=virtual), text=True, capture_output=True, check=True)
+
+    def test_shell_start_imports_wayland_environment_before_launching_dms(self):
+        with tempfile.TemporaryDirectory() as temp:
+            work = Path(temp)
+            (work/'config/fedora-postinstall').mkdir(parents=True)
+            (work/'config/fedora-postinstall/shell').write_text('dms\n')
+            shim = work/'bin'
+            shim.mkdir()
+            for name, content in {
+                'pgrep': '#!/bin/sh\nexit 1\n',
+                'dbus-update-activation-environment': '#!/bin/sh\nprintf "IMPORT %s %s %s\\n" "$XDG_CURRENT_DESKTOP" "$XDG_SESSION_DESKTOP" "$XDG_SESSION_TYPE" >> "$TRACE"\nprintf "%s\\n" "$*" >> "$TRACE"\nexit "${IMPORT_STATUS:-0}"\n',
+                'dms': '#!/bin/sh\nprintf "SHELL %s %s %s\\n" "$XDG_CURRENT_DESKTOP" "$XDG_SESSION_DESKTOP" "$XDG_SESSION_TYPE" >> "$TRACE"\n',
+            }.items():
+                file = shim/name
+                file.write_text(content)
+                file.chmod(0o755)
+            for status in (0, 44):
+                with self.subTest(status=status):
+                    trace = work/('trace-'+str(status))
+                    result = subprocess.run([str(ROOT/'scripts/desktop-shell'), 'start'],
+                                            env=dict(os.environ, PATH=str(shim)+':'+os.environ['PATH'],
+                                                     XDG_CONFIG_HOME=str(work/'config'), TRACE=str(trace),
+                                                     HYPRLAND_INSTANCE_SIGNATURE='test', WAYLAND_DISPLAY='wayland-test',
+                                                     DISPLAY=':99', XDG_CURRENT_DESKTOP='KDE', XDG_SESSION_DESKTOP='KDE',
+                                                     XDG_SESSION_TYPE='x11', IMPORT_STATUS=str(status)),
+                                            capture_output=True, text=True)
+                    self.assertEqual(result.returncode, status, result.stderr)
+                    lines = trace.read_text().splitlines()
+                    self.assertEqual(lines[0], 'IMPORT Hyprland Hyprland wayland')
+                    self.assertIn('XDG_SESSION_TYPE', lines[1])
+                    self.assertIn('DISPLAY', lines[1])
+                    if status == 0:
+                        self.assertEqual(lines[2], 'SHELL Hyprland Hyprland wayland')
+                    else:
+                        self.assertFalse(any(line.startswith('SHELL') for line in lines))

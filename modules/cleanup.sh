@@ -30,7 +30,10 @@ module_cleanup() {
         for p in "${targets[@]}"; do
             nevras+=("$(rpm -q --qf '%{NEVRA}' "$p")")
             while IFS= read -r path; do
-                if [[ $path == /usr/lib/systemd/user/*.service ]]; then units+=("${path##*/}"); fi
+                case $path in
+                    /usr/lib/systemd/user/*.service|/usr/lib/systemd/user/*.timer|/usr/lib/systemd/user/*.socket|/usr/lib/systemd/user/*.path)
+                        units+=("${path##*/}") ;;
+                esac
             done < <(rpm -ql "$p")
         done
         if declare -F ui_status >/dev/null; then ui_status "Kopia odzyskiwania ${#targets[@]} pakietów przed usunięciem"; fi
@@ -39,7 +42,13 @@ module_cleanup() {
         rpm -qa --qf '%{NAME}\n' | sort -u > "$RUN/cleanup-retained-before"
         # Stop only service units OWNED by apps about to be removed. Never
         # disable shared KDE, system services, akonadi or kernel workqueues.
+        if ((${#units[@]})); then
+            mapfile -t units < <(printf '%s\n' "${units[@]}" | sort -u)
+        fi
+        printf '%s\n' "${units[@]}" > "$RUN/cleanup-owned-user-units"
         for unit in "${units[@]}"; do
+            # Templates are not runtime unit instances. Stop their activation socket/path instead.
+            [[ $unit != *@.* ]] || continue
             if systemctl --user is-enabled --quiet "$unit"; then run systemctl --user disable "$unit"; fi
             if systemctl --user is-active --quiet "$unit"; then run systemctl --user stop "$unit"; fi
         done
@@ -53,7 +62,13 @@ module_cleanup() {
         comm -23 "$RUN/cleanup-retained-before" "$RUN/cleanup-retained-after" > "$RUN/cleanup-actually-removed"
         cmp "$RUN/cleanup-removed" "$RUN/cleanup-actually-removed" || die 'Cleanup package inventory mismatch.'
         run sudo dnf5 check
-        if systemctl --user show-environment >/dev/null 2>&1; then run systemctl --user daemon-reload; fi
+        if systemctl --user show-environment >/dev/null 2>&1; then
+            run systemctl --user daemon-reload
+            for unit in "${units[@]}"; do
+                [[ $unit != *@.* ]] || continue
+                if systemctl --user is-failed --quiet "$unit"; then run systemctl --user reset-failed "$unit"; fi
+            done
+        fi
     fi
     if python3 -c 'import json,sys; sys.exit(not json.load(open(sys.argv[1]))["hide_uuctl"])' "$RUN/cleanup-plan.json"; then
         python3 "$ROOT/scripts/hide-launcher.py" uuctl.desktop
