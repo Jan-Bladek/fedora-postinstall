@@ -1,0 +1,8 @@
+[Unit]
+Description=KDE splash activation outside Hyprland
+
+[Service]
+Type=exec
+# ExecCondition uses the current activation environment after a desktop switch.
+ExecCondition=/usr/bin/test "${XDG_CURRENT_DESKTOP}" != Hyprland
+ExecStart=/usr/bin/plasma_waitforname org.kde.KSplash

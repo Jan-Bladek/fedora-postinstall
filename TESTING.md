@@ -7,6 +7,38 @@ and a short OBS recording. Graphical suspend/resume failed in its TCG/VirGL setu
 on both tested kernels. Positive Plasma removal is untested.
 
 
+## KSplash activation guard — 2026-11-03
+
+User-provided logs identified `/usr/bin/plasma_waitforname org.kde.KSplash`
+exiting after its service-name timeout while no Plasma units were loaded.
+The Fedora 44 D-Bus activation entry delegates to that helper without a session
+condition. A user-level D-Bus override now routes that same Exec through a unit
+whose ExecCondition skips it under Hyprland. The vendor RPM files stay intact.
+
+Bash syntax, ShellCheck and **68 regressions passed**. New tests cover the guarded
+entry, preserving custom user activation, leaving the Plasma profile and different
+upstream activation mechanisms alone, and archiving/resetting only old KSplash
+failures rather than unrelated failed units.
+
+Native Fedora 44 checks:
+
+- An actual D-Bus request to absent KSplash in Hyprland returned in **0.009 s**,
+  with no failed unit, rather than launching the waiting helper. The request still
+  reports the unavailable service; no fake splash service/name is registered.
+- A synthetic old KSplash failure was retired after the guard was installed. A
+  deliberately unrelated synthetic failed service remained failed, proving the
+  reset is targeted. That test-only control was removed afterward.
+- With `XDG_CURRENT_DESKTOP=KDE` and a test owner for `org.kde.KSplash`, the exact
+  original helper ran and exited successfully. A temporary RemainAfterExit
+  observation drop-in retained its state for inspection and was removed afterward.
+  This checks the KDE branch; it is not a full Plasma graphical-login test.
+- Repeated setup and the final `install.sh --desktop dms --modules session-services`
+  passed. The guest ended with **0 failed user units** and passed `dnf5 check`.
+
+ExecCondition reads the current activation environment; no persistent system-wide
+mask or D-Bus restart is used. The earlier imsettings failure was not reproduced
+in this guest and is outside this KSplash-specific correction.
+
 ## Session startup and removed app units — 2026-11-03
 
 Bash syntax, ShellCheck and **65 regressions passed**. New coverage verifies

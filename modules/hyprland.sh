@@ -77,6 +77,8 @@ configure_session_services() {
             log 'User manager is not available; session service configuration applies at next login.'
         fi
     fi
+    source "$ROOT/modules/session-services.sh"
+    configure_ksplash_activation
 }
 
 module_hyprland() {

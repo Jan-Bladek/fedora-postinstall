@@ -1,0 +1,5 @@
+# Managed by Fedora Post-Install: KSplash
+[D-BUS Service]
+Name=org.kde.KSplash
+Exec=/usr/bin/plasma_waitforname org.kde.KSplash
+SystemdService=fedora-ksplash-activation.service

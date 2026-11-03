@@ -341,3 +341,17 @@ systemctl --user --failed --no-pager
 ```
 
 Jeśli błąd pozostaje po aktualizacji i nowym logowaniu, zachowaj te logi przed czyszczeniem stanu jednostek. Stan failed może opisywać wcześniejsze, zakończone uruchomienie.
+
+### KSplash: `WaitForName: Service was not registered within timeout`
+
+`plasma_waitforname org.kde.KSplash` czeka na ekran powitalny Plasma, którego nie ma w sesji Hyprland. Moduł `session-services` dodaje lokalną aktywację D-Bus z jednostką `fedora-ksplash-activation.service`. Jej `ExecCondition` pomija uruchomienie w Hyprlandzie. Przy środowisku KDE pozostaje oryginalny helper Fedory — pliki RPM i działanie ekranu powitalnego Plasma nie są zastępowane.
+
+```bash
+git pull
+bash install.sh --yes --desktop dms --modules session-services
+# Dla profilu Noctalia: --desktop noctalia.
+```
+
+Poprawka działa od razu w uruchomionej sesji Hyprland: przeładowuje konfigurację D-Bus/systemd, zapisuje logi starych błędów KSplash w prywatnym katalogu przebiegu i czyści tylko ich stan failed. Pozostałe błędy usług pozostają. Własne zmienione pliki aktywacji są zachowywane z propozycją `.fedora-postinstall-new`; w takim przypadku trzeba przejrzeć propozycję. Nowa instalacja Hyprland konfiguruje tę integrację automatycznie.
+
+Guard dotyczy zweryfikowanego wpisu Fedory używającego `/usr/bin/plasma_waitforname org.kde.KSplash`. Odmienny mechanizm upstream jest pozostawiany do przeglądu. Samo wywołanie nieobecnego KSplash przez aplikację nadal zwraca błąd D-Bus, lecz nie uruchamia minutowego oczekiwania ani jednostki kończącej się awarią. Nie jest tworzony fikcyjny serwer KSplash.
