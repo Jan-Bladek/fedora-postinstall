@@ -15,7 +15,11 @@ install_language_tools() {
         packages gcc gcc-c++ make cmake ninja-build gdb pkgconf-pkg-config
         run g++ --version
     fi
-    if dev_selected webstorm; then packages nodejs npm; fi
+    if dev_selected webstorm; then
+        packages nodejs npm
+        run node --version
+        run npm --version
+    fi
     # IntelliJ bundles its runtime; additional project SDKs are user choices.
     return 0
 }

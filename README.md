@@ -320,3 +320,9 @@ bash install.sh --yes --desktop dms --modules terminal-theme
 Usługa użytkownika `fedora-kitty-theme.path` obserwuje plik palety wybranej powłoki i przeładowuje wyłącznie procesy Kitty bieżącego użytkownika przez SIGUSR1. Nie wymaga otwierania zdalnego sterowania terminalem i nie odpytuje plików w pętli. Pozostałe ustawienia i szablony są zachowywane. Noctalia wymaga pakietu `python3-tomlkit` z DNF do bezpiecznego scalania TOML z komentarzami. Zapisane przez Kitty pliki `dark-theme.auto.conf`, `light-theme.auto.conf` i `no-preference-theme.auto.conf` są przenoszone do kopii w katalogu przebiegu, ponieważ mogłyby zasłaniać kolory systemowe.
 
 Programy, które samodzielnie ustawiają kolory RGB, nadal używają własnego motywu. Wariant Plasma zachowuje dotychczasową konfigurację kolorów. Wybór źródła palety (tapeta albo motyw stały) pozostaje w ustawieniach DMS/Noctalii.
+
+### DNF instaluje Node.js, ale starszy instalator zgłasza brak `nodejs`
+
+Fedora 44 może dostarczać `nodejs` i `npm` przez pakiety `nodejs22` oraz `nodejs22-npm`. Instalator sprawdza teraz także RPM `Provides`, zgodnie ze sposobem rozwiązywania nazw przez DNF, zarówno przed instalacją, jak i w końcowej weryfikacji. Dodatkowo sprawdza działanie `node --version` i `npm --version`.
+
+Po błędzie `Requested RPM was not installed: nodejs` zaktualizuj projekt (`git pull`) i ponów instalację z tymi samymi opcjami. Nie trzeba usuwać ani ponownie instalować działającego Node.js.

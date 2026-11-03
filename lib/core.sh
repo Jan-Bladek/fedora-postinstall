@@ -50,14 +50,19 @@ init_state() {
         SUDO_KEEPALIVE_PID=$!
     fi
 }
+rpm_requirement_installed() {
+    # DNF accepts both exact RPM names and virtual Provides (e.g. nodejs22
+    # provides nodejs, and nodejs22-npm provides npm on Fedora 44).
+    rpm -q "$1" >/dev/null 2>&1 || rpm -q --whatprovides "$1" >/dev/null 2>&1
+}
 packages() {
     local p; local missing=()
     for p in "$@"; do
-        if ! rpm -q "$p" >/dev/null 2>&1; then missing+=("$p"); fi
+        if ! rpm_requirement_installed "$p"; then missing+=("$p"); fi
     done
     if declare -F ui_status >/dev/null; then ui_status "Instalowanie: ${missing[*]:-pakiety już obecne}"; fi
     if ((${#missing[@]})); then run sudo dnf5 install "${missing[@]}" || return; fi
-    for p in "$@"; do rpm -q "$p" >/dev/null || die "Requested RPM was not installed: $p"; done
+    for p in "$@"; do rpm_requirement_installed "$p" || die "Requested RPM was not installed: $p"; done
     printf '%s\n' "$@" >> "$RUN/expected-rpm"
 }
 atomic_config() {

@@ -5,7 +5,7 @@ verify() {
         rpm -q plasma-desktop plasma-workspace >/dev/null || die 'KDE Plasma preservation check failed.'
     fi
     if [[ -f $RUN/expected-rpm ]]; then
-        while IFS= read -r p; do rpm -q "$p" >/dev/null || die "Missing RPM: $p"; done < "$RUN/expected-rpm"
+        while IFS= read -r p; do rpm_requirement_installed "$p" || die "Missing RPM requirement: $p"; done < "$RUN/expected-rpm"
     fi
     if [[ -f $RUN/expected-flatpak ]]; then
         while IFS= read -r p; do flatpak info --user "$p" >/dev/null || die "Missing Flatpak: $p"; done < "$RUN/expected-flatpak"

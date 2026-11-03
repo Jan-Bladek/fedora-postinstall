@@ -7,6 +7,22 @@ and a short OBS recording. Graphical suspend/resume failed in its TCG/VirGL setu
 on both tested kernels. Positive Plasma removal is untested.
 
 
+## Versioned Node.js RPM providers — 2026-11-03
+
+ShellCheck/Bash syntax and **63 local regressions passed**. Four new regressions
+cover already installed virtual providers (no redundant DNF install), a missing
+requirement satisfied by the transaction, a successful transaction that still
+fails to provide the requirement, and a provider removed before final validation.
+The native Fedora package CI fixture now exercises the production `packages()`
+helper and final verifier instead of substituting a DNF-only helper.
+
+The existing Fedora 44 VM reproduced the reported state: `rpm -q nodejs npm`
+reported both names absent, while `rpm -q --whatprovides nodejs npm` returned
+`nodejs22-22.23.1-2.fc44` and `nodejs22-npm-10.9.8-1.22.23.1.2.fc44`.
+The corrected WebStorm SDK setup passed twice without a DNF install, ran Node
+`v22.23.1` and npm `10.9.8`, and passed the final requirement/dependency checks.
+This is a focused verification of the failing path, not a fresh full IDE install.
+
 ## Terminal system palettes — 2026-11-03
 
 Bash syntax, ShellCheck and **59 local regressions passed**. New tests cover
