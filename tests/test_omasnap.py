@@ -81,11 +81,32 @@ assert(events[1] == "unbind:PRINT" and events[2] == "unbind:SUPER + SHIFT + S")
                 'if sys.argv[1] == "init": pathlib.Path(sys.argv[-1]).mkdir(parents=True)\n'
                 f'if "rev-parse" in sys.argv: print({revision!r})\n')
             (shim/'cmake').write_text('#!/bin/sh\nexit 0\n')
-            (shim/'ctest').write_text('#!/bin/sh\necho "fixture: pin cleanup failed" >&2\nexit 8\n')
+            # Inherited settings/session flags must not affect a build's smoke test.
+            personal = work/'personal-config'
+            personal.mkdir()
+            (personal/'keep').write_text('user configuration')
+            (shim/'ctest').write_text('''#!/usr/bin/env python3
+import os
+from pathlib import Path
+assert Path(os.environ['XDG_CONFIG_HOME']) != Path(os.environ['PERSONAL_CONFIG'])
+for key in ('XDG_CONFIG_HOME', 'XDG_CACHE_HOME', 'XDG_DATA_HOME', 'XDG_STATE_HOME',
+            'XDG_RUNTIME_DIR', 'OMASNAP_SCREENSHOT_DIR'):
+    directory = Path(os.environ[key])
+    assert directory.is_dir()
+    (directory/'fixture').write_text('isolated')
+for key in ('WAYLAND_DISPLAY', 'DISPLAY', 'HYPRLAND_INSTANCE_SIGNATURE',
+            'OMASNAP_SMOKE_OUTPUT', 'OMASNAP_SMOKE_COPY', 'OMASNAP_TEST_CAPTURE'):
+    assert key not in os.environ, key
+print('fixture: pin cleanup failed')
+raise SystemExit(8)
+''')
             for path in shim.iterdir():
                 path.chmod(0o755)
             result = subprocess.run([str(ROOT/'scripts/omasnap-manager'), 'install'],
-                                    env=dict(os.environ, HOME=temp, PATH=str(shim)+':'+os.environ['PATH']),
+                                    env=dict(os.environ, HOME=temp, PATH=str(shim)+':'+os.environ['PATH'],
+                                             XDG_CONFIG_HOME=str(personal), PERSONAL_CONFIG=str(personal),
+                                             WAYLAND_DISPLAY='test', DISPLAY=':99', HYPRLAND_INSTANCE_SIGNATURE='test',
+                                             OMASNAP_SMOKE_OUTPUT='test', OMASNAP_SMOKE_COPY='1', OMASNAP_TEST_CAPTURE='test'),
                                     capture_output=True, text=True)
             self.assertEqual(result.returncode, 8, result.stdout+result.stderr)
             self.assertEqual(os.readlink(app/'current'), 'old')
@@ -94,6 +115,30 @@ assert(events[1] == "unbind:PRINT" and events[2] == "unbind:SUPER + SHIFT + S")
             self.assertIn('fixture: pin cleanup failed', logs[0].read_text())
             self.assertIn(str(logs[0]), result.stderr)
             self.assertEqual(list(app.glob('.build.*')), [])
+            self.assertEqual(list(personal.iterdir()), [personal/'keep'])
+            self.assertEqual((personal/'keep').read_text(), 'user configuration')
+
+    def test_cli_probe_timeout_stops_check_and_keeps_installed_payload(self):
+        with tempfile.TemporaryDirectory() as temp:
+            work = Path(temp)
+            app = work/'.local/share/fedora-postinstall/apps/omasnap'
+            (app/'old/bin').mkdir(parents=True)
+            binary = app/'old/bin/omasnap'
+            binary.write_text('#!/bin/sh\nexit 0\n')
+            binary.chmod(0o755)
+            (app/'current').symlink_to('old')
+            launcher = work/'.local/bin/omasnap'
+            launcher.parent.mkdir(parents=True)
+            launcher.symlink_to(app/'current/bin/omasnap')
+            shim = work/'shim'
+            shim.mkdir()
+            (shim/'timeout').write_text('#!/bin/sh\n[ "$1" = 15 ] || exit 99\nexit 124\n')
+            (shim/'timeout').chmod(0o755)
+            result = subprocess.run([str(ROOT/'scripts/omasnap-manager'), 'check'],
+                                    env=dict(os.environ, HOME=temp, PATH=str(shim)+':'+os.environ['PATH']),
+                                    capture_output=True, text=True)
+            self.assertEqual(result.returncode, 124, result.stdout+result.stderr)
+            self.assertEqual(os.readlink(app/'current'), 'old')
 
     def test_btop_deduplicates_only_the_requested_setting(self):
         with tempfile.TemporaryDirectory() as temp:
