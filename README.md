@@ -78,7 +78,7 @@ Selektor `~/.config/fedora-postinstall/shell` steruje autostartem i skrótami. D
 | Moduł | Zakres |
 |---|---|
 | snapshots | Lista RPM/jednostek, kopia `/etc` i konfiguracji użytkownika; Snapper dla Btrfs |
-| dependencies | Aktualizacja bazowych RPM, Git, curl, wget, archiwizacja, diagnostyka, schowek Wayland |
+| dependencies | Aktualizacja bazowych RPM, Python 3 i pip, Git, curl, wget, archiwizacja, diagnostyka, schowek Wayland |
 | hyprland | Hyprland, XWayland, portale Hyprland/GTK, PipeWire, WirePlumber, Polkit, NetworkManager, Bluetooth, Mesa |
 | noctalia / dms | Jedna wybrana powłoka, bez Waybar, dunst i dodatkowego launchera |
 | terminal | Kitty, Zsh + Oh My Zsh, prompt Starship w stylu Omarchy, Lua 5.4 z DNF, JetBrains Mono, symbole Nerd Fonts, konfiguracja fontów i terminala; btop z przezroczystym tłem |
@@ -102,6 +102,8 @@ Selektor `~/.config/fedora-postinstall/shell` steruje autostartem i skrótami. D
 | kde-removal | Oddzielny, ręcznie potwierdzany etap usuwania całej Plasma z działającej sesji Hyprland |
 
 Jawne `--modules "dependencies hyprland noctalia terminal lazyvim updates"` określa dokładną listę i kolejność; pomija interaktywne wybory zestawu. Bazowa aktualizacja w `dependencies` chroni przed konfliktami starych pakietów z ISO z aktualnymi zależnościami. Po aktualizacji kernela zaplanuj restart.
+
+Podstawowy moduł `dependencies` instaluje `python3` i `python3-pip` z DNF we wszystkich profilach pulpitu, także bez wybranych IDE. Sprawdza systemowy interpreter przez `/usr/bin/python3 --version` oraz pip przez `/usr/bin/python3 -m pip --version`. Możesz używać `python3 -m pip`; pakiety obecne w systemie są zachowywane i sprawdzane.
 
 Priorytetem są RPM Fedory i dostawców. Hyprland, gdy nie jest dostępny natywnie, korzysta z COPR `lionheartp/Hyprland`. DMS używa stabilnego RPM, a w razie potrzeby upstream COPR `duxlabs/dms` wraz z `duxlabs/dux-repo`. COPR to źródła społecznościowe. Nie dodajemy AUR, nie używamy `--allowerasing`, nie wykonujemy `curl | sh`.
 
