@@ -180,7 +180,9 @@ Preset Hyprland otwiera Flea przez `Super+Shift+F`. W istniejącym głównym Lua
 
 ## Omasnap: screenshoty i edycja
 
-Instalujemy wyłącznie [Omasnap upstream](https://github.com/omacom/omasnap), bez Omarchy i bez uruchamiania jego `install-omarchy`. Wersja `1.24.0` i pełna rewizja są przypięte w `data/omasnap-release`. Zależności Fedora RPM: GCC/C++, Git, CMake, Ninja, pkgconf, Qt6 >=6.8 (base-devel/Wayland), layer-shell-qt-devel, wayland-devel/protocols-devel, libdeflate-devel, wl-clipboard, xdg-utils oraz Tesseract z angielskim modelem. Budowanie ma dwa równoległe zadania i wykonuje testy upstream przez CTest przed przełączeniem launchera.
+Instalujemy [Omasnap upstream](https://github.com/omacom/omasnap), bez Omarchy i bez uruchamiania jego `install-omarchy`. Wersja `1.24.0` i pełna rewizja są przypięte w `data/omasnap-release`. Zależności Fedora RPM: GCC/C++, Git, CMake, Ninja, pkgconf, Qt6 >=6.8 (base-devel/Wayland), layer-shell-qt-devel, wayland-devel/protocols-devel, libdeflate-devel, wl-clipboard, xdg-utils oraz Tesseract z angielskim modelem. Budowanie ma dwa równoległe zadania i wykonuje testy upstream przez CTest przed przełączeniem launchera.
+
+Lokalna poprawka `data/omasnap-pin-cleanup-test.patch` dotyczy wyłącznie testu: czeka do 5 sekund na usunięcie plików przypiętego obrazu przez zadania w tle, zamiast sprawdzać ich brak natychmiast po zamknięciu edytora. Zachowuje wszystkie kontrole obrazu źródłowego, historii operacji i usunięcia plików. Kod aplikacji nie jest zmieniany. Skrót poprawki jest częścią identyfikatora kompilacji, więc jej zmiana wymusza ponowne budowanie. Pełne logi CTest pozostają w `~/.local/share/fedora-postinstall/apps/omasnap/test-logs/` również po niepowodzeniu; poprzednia działająca wersja jest zachowywana.
 
 - **Print** otwiera inteligentny wybór obszaru/okna/monitora; wynik jest kopiowany i domyślnie zapisywany w `~/Pictures/Screenshots`.
 - **Super+Shift+S** otwiera wybór obszaru z natychmiastową edycją (`--capture-region --editor overlay`).

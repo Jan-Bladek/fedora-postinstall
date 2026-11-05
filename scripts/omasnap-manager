@@ -6,6 +6,7 @@ action=${1:-check}
 case $action in install|update|check|uninstall) ;; *) echo 'Usage: omasnap-manager install|update|check|uninstall' >&2; exit 2 ;; esac
 script_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 manifest=$script_dir/../data/omasnap-release
+source_patch=$script_dir/../data/omasnap-pin-cleanup-test.patch
 IFS=' ' read -r version revision < "$manifest"
 [[ $version =~ ^[0-9]+\.[0-9]+\.[0-9]+$ && $revision =~ ^[0-9a-f]{40}$ ]] || exit 1
 app=$HOME/.local/share/fedora-postinstall/apps/omasnap
@@ -43,6 +44,8 @@ if [[ $action == check ]]; then
     for cmd in hyprctl wl-copy wl-paste tesseract; do command -v "$cmd" >/dev/null; done
     exit 0
 fi
+patch_digest=$(sha256sum -- "$source_patch")
+build_id=$revision:${patch_digest%% *}
 mkdir -p "$app" "$HOME/.local/bin" "$(dirname "$desktop")"
 for link in "$binary" "$desktop"; do
     case $link in "$binary") target=$app/current/bin/omasnap ;; *) target=$app/current/share/applications/omasnap.desktop ;; esac
@@ -51,6 +54,7 @@ for link in "$binary" "$desktop"; do
     fi
 done
 if [[ -f $app/current/revision && $(cat "$app/current/revision") == "$revision" ]] &&
+    [[ -f $app/current/build-id && $(cat "$app/current/build-id") == "$build_id" ]] &&
     QT_QPA_PLATFORM=offscreen "$app/current/bin/omasnap" --version >/dev/null 2>&1; then
     echo "Omasnap $version: reviewed revision already installed."
 else
@@ -61,11 +65,24 @@ else
     git -C "$work/source" -c core.hooksPath=/dev/null fetch --depth 1 origin "$revision"
     [[ $(git -C "$work/source" rev-parse FETCH_HEAD) == "$revision" ]] || exit 1
     git -C "$work/source" -c core.hooksPath=/dev/null checkout --detach FETCH_HEAD
+    # Keep every file-preservation assertion; wait for asynchronous pin cleanup.
+    git -C "$work/source" apply --check "$source_patch"
+    git -C "$work/source" apply "$source_patch"
     # Limit compiler memory use on laptops; users can build again after interruption.
     cmake -S "$work/source" -B "$work/build" -G Ninja -DCMAKE_BUILD_TYPE=Release \
         -DCMAKE_INSTALL_PREFIX="$work/prefix" -DBUILD_TESTING=ON
     cmake --build "$work/build" --parallel 2
-    ctest --test-dir "$work/build" --output-on-failure --timeout 180
+    mkdir -p "$app/test-logs"
+    test_log=$app/test-logs/$revision-$(date +%Y%m%dT%H%M%S)-$$.log
+    test_status=0
+    QT_FORCE_STDERR_LOGGING=1 QT_LOGGING_TO_CONSOLE=1 QT_QPA_PLATFORMTHEME=generic \
+        ctest --test-dir "$work/build" --output-on-failure --timeout 180 >"$test_log" 2>&1 || test_status=$?
+    if ((test_status)); then
+        tail -n 40 -- "$test_log" >&2
+        echo "Omasnap tests failed; full log retained: $test_log" >&2
+        exit "$test_status"
+    fi
+    tail -n 8 -- "$test_log"
     cmake --install "$work/build"
     QT_QPA_PLATFORM=offscreen "$work/prefix/bin/omasnap" --version
     QT_QPA_PLATFORM=offscreen "$work/prefix/bin/omasnap" --help >/dev/null
@@ -82,6 +99,7 @@ path.write_text(''.join('Exec="'+binary+'"\n' if line.startswith('Exec=') else l
                         for line in path.read_text().splitlines(keepends=True)))
 PY_DESKTOP
     printf '%s\n' "$revision" > "$work/prefix/revision"
+    printf '%s\n' "$build_id" > "$work/prefix/build-id"
     # Never rewrite a working payload in place; Qt updates may require a rebuild.
     payload=$revision-$(date +%Y%m%dT%H%M%S)-$$
     mv -- "$work/prefix" "$app/$payload"

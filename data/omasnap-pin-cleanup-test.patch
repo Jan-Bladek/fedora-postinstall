@@ -1,0 +1,26 @@
+--- a/tests/editor-smoke.cpp
++++ b/tests/editor-smoke.cpp
+@@ -4457,8 +4457,10 @@
+       }
+     }
+     pin.reset();
+-    if (QFile::exists(documentPath) || QFile::exists(operationLogPath(documentPath)) ||
+-        QFile::exists(previewPath) || QFile::exists(operationLogPath(previewPath))) {
++    if (!settled([&] {
++          return !QFile::exists(documentPath) && !QFile::exists(operationLogPath(documentPath)) &&
++                 !QFile::exists(previewPath) && !QFile::exists(operationLogPath(previewPath));
++        })) {
+       error = QStringLiteral("Closing a pin left its edited document behind");
+       return false;
+     }
+@@ -4497,7 +4499,9 @@
+     }
+   }
+   OperationLog unchanged;
+-  if (QFile::exists(documentPath) || QFile::exists(previewPath) ||
++  // QtConcurrent can report its future finished before the runnable releases
++  // its captured shared_ptr. Allow that last pin holder to remove its files.
++  if (!settled([&] { return !QFile::exists(documentPath) && !QFile::exists(previewPath); }) ||
+       !samePixels(QImage(original), source) ||
+       !loadOperationLog(operationLogPath(original), unchanged, error) ||
+       !unchanged.ops.isEmpty() || unchanged.previewSize != originalLog.previewSize) {

@@ -9,6 +9,7 @@ module_omasnap() {
     local dest=$HOME/.local/share/fedora-postinstall module=$CONFIG/hypr/fedora-postinstall-omasnap.lua
     mkdir -p "$dest/scripts" "$dest/data" "$HOME/.local/bin"
     install -m 644 "$ROOT/data/omasnap-release" "$dest/data/omasnap-release"
+    install -m 644 "$ROOT/data/omasnap-pin-cleanup-test.patch" "$dest/data/omasnap-pin-cleanup-test.patch"
     install -m 755 "$ROOT/scripts/omasnap-manager" "$dest/scripts/omasnap-manager"
     install -m 755 "$ROOT/scripts/validate-omasnap" "$HOME/.local/bin/validate-omasnap"
     if declare -F ui_status >/dev/null; then ui_status "Omasnap: kompilacja i testy upstream (może potrwać kilka minut)"; fi

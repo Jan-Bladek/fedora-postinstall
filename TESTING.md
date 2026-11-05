@@ -694,3 +694,28 @@ hardware, sustained OBS recording/streaming and hardware encoding, physical lock
 positive Plasma removal/reinstallation still require separate validation. Installing
 an application is not proof that all of its features work. Hyprmod remains explicitly
 skipped pending a supported Fedora installation method.
+# 2026-11-05: Omasnap pin-cleanup test race
+
+Omasnap 1.24.0's `runPinEditorReturnChecks` checked for deletion immediately
+after editor destruction. QtConcurrent's runnable can still retain a shared
+pin-file lock after the future reports completion. The installer now applies
+`data/omasnap-pin-cleanup-test.patch`, using the fixture's existing bounded
+five-second `settled` helper before both cleanup assertions. Original pixels,
+operation history, preview size and every checked temporary file remain checked.
+Application sources are unchanged. The patch digest participates in the payload
+build ID, and CTest output survives failed builds under `apps/omasnap/test-logs/`.
+
+Validation on the local host (Qt 6.12.0): the pinned upstream smoke executable
+was compiled. A focused pin-return fixture with a worker deliberately retaining
+the pin lock for one second reproduced the screenshot's exact final error with
+the old immediate check (exit 65); the bounded check passed (exit 0). The
+fixture's original-image and operation-log assertions remained active. Twelve
+focused runs without the injected delay also passed. In these local diagnostic
+runs only, the forwarded-close case was omitted because this sandbox forbids
+Unix socket listeners; the shipped patch does not omit it or any other test.
+The full upstream CTest run is blocked here by that socket restriction and has
+not been confirmed on the user's Fedora guest. Installer regression tests cover
+retaining the previous payload and full diagnostic output on CTest failure.
+The repository check completed 89 tests with 88 passing; its one remaining
+error is the session-health test attempting a Unix socket bind forbidden by
+this sandbox. Shell syntax and ShellCheck passed.

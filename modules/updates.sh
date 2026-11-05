@@ -5,6 +5,7 @@ module_updates() {
     install -m 755 "$ROOT/scripts/vendor-apps.py" "$dest/scripts/vendor-apps.py"
     install -m 755 "$ROOT/scripts/symbols-fonts.py" "$dest/scripts/symbols-fonts.py"
     install -m 644 "$ROOT/data/omasnap-release" "$dest/data/omasnap-release"
+    install -m 644 "$ROOT/data/omasnap-pin-cleanup-test.patch" "$dest/data/omasnap-pin-cleanup-test.patch"
     install -m 755 "$ROOT/scripts/omasnap-manager" "$dest/scripts/omasnap-manager"
     install -m 755 "$ROOT/scripts/fedora-update" "$HOME/.local/bin/fedora-update"
     install -m 644 "$ROOT/data/hyprmod-revision" "$dest/data/hyprmod-revision"

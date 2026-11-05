@@ -66,6 +66,35 @@ assert(events[1] == "unbind:PRINT" and events[2] == "unbind:SUPER + SHIFT + S")
             self.assertTrue((app/'old/bin/omasnap').exists())
             self.assertEqual(list(app.glob('.build.*')), [])
 
+    def test_failed_upstream_tests_keep_payload_and_full_diagnostic_log(self):
+        with tempfile.TemporaryDirectory() as temp:
+            work = Path(temp)
+            app = work/'.local/share/fedora-postinstall/apps/omasnap'
+            (app/'old/bin').mkdir(parents=True)
+            (app/'old/revision').write_text('previous revision\n')
+            (app/'current').symlink_to('old')
+            shim = work/'shim'
+            shim.mkdir()
+            revision = (ROOT/'data/omasnap-release').read_text().split()[1]
+            (shim/'git').write_text(
+                '#!/usr/bin/env python3\nimport pathlib,sys\n'
+                'if sys.argv[1] == "init": pathlib.Path(sys.argv[-1]).mkdir(parents=True)\n'
+                f'if "rev-parse" in sys.argv: print({revision!r})\n')
+            (shim/'cmake').write_text('#!/bin/sh\nexit 0\n')
+            (shim/'ctest').write_text('#!/bin/sh\necho "fixture: pin cleanup failed" >&2\nexit 8\n')
+            for path in shim.iterdir():
+                path.chmod(0o755)
+            result = subprocess.run([str(ROOT/'scripts/omasnap-manager'), 'install'],
+                                    env=dict(os.environ, HOME=temp, PATH=str(shim)+':'+os.environ['PATH']),
+                                    capture_output=True, text=True)
+            self.assertEqual(result.returncode, 8, result.stdout+result.stderr)
+            self.assertEqual(os.readlink(app/'current'), 'old')
+            logs = list((app/'test-logs').glob('*.log'))
+            self.assertEqual(len(logs), 1)
+            self.assertIn('fixture: pin cleanup failed', logs[0].read_text())
+            self.assertIn(str(logs[0]), result.stderr)
+            self.assertEqual(list(app.glob('.build.*')), [])
+
     def test_btop_deduplicates_only_the_requested_setting(self):
         with tempfile.TemporaryDirectory() as temp:
             work = Path(temp)
