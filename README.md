@@ -186,6 +186,8 @@ Lokalna poprawka `data/omasnap-pin-cleanup-test.patch` dotyczy wyłącznie testu
 
 CTest używa oddzielnych katalogów ustawień, danych, cache, stanu, plików runtime i zrzutów wewnątrz katalogu budowania. Nie dziedziczy identyfikatorów aktywnej sesji ani flag testowego przechwytywania ekranu/schowka. Sprawdzenia CLI `--version` i `--help` działają z motywem Qt `generic`, platformą `offscreen` i limitem 15 sekund na polecenie.
 
+Poprawka testowa ustawia także w Qt alias `monospace` na statyczny JetBrains Mono osadzony w zasobach Omasnap. Noto Sans Mono może mieć równe szerokości znaków, ale zwracać w Qt `fixedPitch=false`, przez co test kończy się komunikatem `expected a fixed-pitch family`. Alias jest ustawiany tylko podczas inicjalizacji procesu testowego; konfiguracja użytkownika i kod aplikacji pozostają bez zmian. Test nadal sprawdza rzeczywisty font przez `QFontInfo`.
+
 - **Print** otwiera inteligentny wybór obszaru/okna/monitora; wynik jest kopiowany i domyślnie zapisywany w `~/Pictures/Screenshots`.
 - **Super+Shift+S** otwiera wybór obszaru z natychmiastową edycją (`--capture-region --editor overlay`).
 - Edytor upstream zapewnia strzałki, tekst i redakcję: pikselizację lub pełne zakrycie. **Wersja 1.24.0 nie ma klasycznego blur**; nie deklarujemy tej funkcji ani nie dodajemy własnego forka. Copy/Save zapisują spłaszczony obraz; schowek używa wl-copy/wl-paste.

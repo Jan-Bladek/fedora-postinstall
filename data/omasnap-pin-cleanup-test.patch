@@ -24,3 +24,13 @@
        !samePixels(QImage(original), source) ||
        !loadOperationLog(operationLogPath(original), unchanged, error) ||
        !unchanged.ops.isEmpty() || unchanged.previewSize != originalLog.previewSize) {
+@@ -12390,6 +12394,9 @@
+   }
+   const QString outputRoot =
+       QDir(outputDirectory).absoluteFilePath(QStringLiteral("capture"));
++  // Pin the smoke fixture to the bundled static mono face. Variable Noto
++  // Sans Mono can have equal glyph advances but report fixedPitch=false.
++  QFont::insertSubstitution(QStringLiteral("monospace"), QStringLiteral("JetBrains Mono"));
+   QApplication::setFont(chromeDefaultFont()); // as main() does
+   if (!loadCaptureFonts())
+     return 17;
