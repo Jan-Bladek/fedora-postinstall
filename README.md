@@ -11,8 +11,11 @@ Projekt jest wydaniem testowym. Faktycznie wykonane testy, zrzuty GUI i ogranicz
 ```bash
 git clone https://github.com/Jan-Bladek/fedora-postinstall.git
 cd fedora-postinstall
-bash install.sh --dry-run
 bash install.sh
+
+
+Do testów
+bash install.sh --dry-run
 ```
 
 Uruchamiaj jako zwykły użytkownik. Instalator pokazuje kolejno:
