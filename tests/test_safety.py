@@ -91,6 +91,7 @@ source "$1/lib/core.sh"
 source "$1/lib/verify.sh"
 RUN=$2
 MODULES=$'terminal\tdefaults\nupdates'
+HOME=$2
 command() { [[ $* == '-v code' ]]; }
 code_desktop_id() { echo code.desktop; }
 xdg-mime() { echo another-editor.desktop; }

@@ -1,0 +1,179 @@
+{
+  "recorded_at": "2026-11-06T17:55:09.804161+00:00",
+  "status": "passed_with_documented_limitations",
+  "source_commit": "f1a34f16b6393f0669467ff108d105c91157e961",
+  "runtime_helper_sha256": "ed492c1ef53d1e952b9629b74815af8c3fd36182d25057a43bfe7a5c7454a383",
+  "hypervisor": "KVM / libvirt",
+  "guest": "Fedora KDE 44 x86_64",
+  "selinux": "Enforcing",
+  "kernel_after_reboot": "7.2.15-200.fc44.x86_64",
+  "vcpu": 5,
+  "memory_kib": 8290304,
+  "monitor": {
+    "width": 1280,
+    "height": 800
+  },
+  "command": "bash install.sh --desktop dms --yes --no-progress",
+  "modules": [
+    "snapshots",
+    "dependencies",
+    "hyprland",
+    "dms",
+    "terminal",
+    "clipboard",
+    "files",
+    "hyprmod",
+    "omasnap",
+    "lazyvim",
+    "development",
+    "browsers",
+    "multimedia",
+    "utilities",
+    "defaults",
+    "optimization",
+    "updates"
+  ],
+  "initial_exit_code": 0,
+  "repeat_exit_code": 0,
+  "preservation": {
+    "dms_notepad_font_preserved": true,
+    "vscode_font_size_preserved": true,
+    "kitty_scrollback_preserved": true,
+    "btop_update_interval_preserved": true
+  },
+  "repository_tests": {
+    "passed": 95,
+    "failed": 0,
+    "shellcheck": "passed",
+    "test_only_packages": [
+      "ShellCheck",
+      "python3-tomlkit"
+    ]
+  },
+  "flea_tests": {
+    "passed": 2954,
+    "failed": 0,
+    "ignored": 2,
+    "note": "Some upstream fixtures additionally print explicit SKIP messages; see limitations."
+  },
+  "omasnap_ctest": {
+    "passed": 1,
+    "failed": 0,
+    "seconds": 45.62
+  },
+  "omasnap_region_clipboard": {
+    "width": 883,
+    "height": 469,
+    "annotation_pixels": 1989,
+    "shortcut": "Super+Shift+S"
+  },
+  "post_reboot_session": "passed",
+  "post_reboot_clipboard": "passed",
+  "lazyvim_colorscheme": "dms",
+  "qt6_palettes": {
+    "light": {
+      "Window": "#f3edf5",
+      "WindowText": "#1d1b20",
+      "Base": "#f3edf5",
+      "Text": "#1d1b20",
+      "Button": "#f3edf5",
+      "ButtonText": "#1d1b20",
+      "Highlight": "#6750a4",
+      "style": "fusion",
+      "platform": "wayland",
+      "qt_theme": "gtk3"
+    },
+    "dark": {
+      "Window": "#1f1d22",
+      "WindowText": "#e6e0e9",
+      "Base": "#1f1d22",
+      "Text": "#e6e0e9",
+      "Button": "#1f1d22",
+      "ButtonText": "#e6e0e9",
+      "Highlight": "#d0bcff",
+      "style": "fusion",
+      "platform": "wayland",
+      "qt_theme": "gtk3"
+    }
+  },
+  "packages": [
+    "python3-3.14.10-1.fc44.x86_64",
+    "python3-pip-26.0.1-3.fc44.noarch",
+    "hyprland-0.57.1-1.fc44.x86_64",
+    "dms-2.1.1-1.fc44.x86_64",
+    "code-1.145.2-1793945328.el8.x86_64",
+    "neovim-0.12.6-1.fc44.x86_64",
+    "tailscale-1.104.5-1.x86_64"
+  ],
+  "limitations": [
+    "Lock/unlock, suspend/resume, physical audio and OBS screenshare were not exercised in this run.",
+    "GTK4 changes surfaces/text between modes, but its stock blue control accent remains visible.",
+    "mcelog fails because it does not support this virtual AMD CPU; no failed user services after reboot.",
+    "Upstream Omasnap reports missing omarchy-notification-send on Fedora; capture, annotation and clipboard passed.",
+    "Tailscale daemon is active; no tailnet login or VPN connectivity test was performed."
+  ],
+  "missing_palette_reinitialization": {
+    "exit_code": 0,
+    "generated_in_staging": true
+  },
+  "screenshots": {
+    "after-reboot.png": {
+      "sha256": "a81c97f86b82c8ed0ea1d68295d86fd6cf9b48d1eb6b6930ceab39f92c03f382",
+      "width": 1280,
+      "height": 800
+    },
+    "editors-dark.png": {
+      "sha256": "0403eef8769033aa3e61f14f53e267efeb12ac65bd38edbf0fc47ec93075472d",
+      "width": 1280,
+      "height": 800
+    },
+    "editors-light.png": {
+      "sha256": "3edc337654f428b4a34544e19afdf47cef48c7d93b90c846b3fd9e00ef684262",
+      "width": 1280,
+      "height": 800
+    },
+    "flea.png": {
+      "sha256": "c4856dd7d5f28a0a8bcd4c6935aabdb581a753967ad6f28b058f414f4f9584ba",
+      "width": 1280,
+      "height": 800
+    },
+    "gtk-qt-dark.png": {
+      "sha256": "b5db179588f4fde2a58e03d5f6782b3970e7e5146f0cba48eec53d2fc20ab070",
+      "width": 1280,
+      "height": 800
+    },
+    "gtk-qt-light.png": {
+      "sha256": "d2d1ef108db20f8cf57fd571a5c17ff067e64a31bfb267911fafe433eb9c4d94",
+      "width": 1280,
+      "height": 800
+    },
+    "gtk4-dark.png": {
+      "sha256": "7006c9213c1966b3430d0daf9a7a3f14e3edca53f48c3affb1ea58926745adf5",
+      "width": 1280,
+      "height": 800
+    },
+    "gtk4-light.png": {
+      "sha256": "1ee11c4994f3589d5701c8cc6097ed148a8d2ec49ba31c8a125142e1be381890",
+      "width": 1280,
+      "height": 800
+    },
+    "omasnap-editor.png": {
+      "sha256": "d9b413b4d7689c31e328ac87873b479c1c9a388dc0268facd1882e8b0ddfb7aa",
+      "width": 1280,
+      "height": 800
+    },
+    "omasnap-region-output.png": {
+      "sha256": "2a95a2db36bdb67f9285d7c019eb92e3eb828b997ea00753592bd30615d181cb",
+      "width": 883,
+      "height": 469
+    }
+  },
+  "cleanup": {
+    "temporary_guest_ssh_key_removed": true,
+    "passwordless_sudo_removed": true,
+    "autologin_fixture_removed": true,
+    "sshd_disabled": true,
+    "guest_final_state": "shut off",
+    "pre_test_snapshot_retained": true
+  }
+}

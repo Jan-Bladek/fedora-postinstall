@@ -740,3 +740,21 @@ passed. The repository suite ran 95 tests: 94 passed; the session-health test
 cannot bind its Unix socket in this sandbox. A full visual Fedora/DMS session,
 live Qt repaint and actual VS Code/LazyVim plugin installation have not been
 verified here.
+
+# 2026-11-06: real Fedora KVM validation of the DMS preset
+
+The graphical VM run now supersedes the earlier DMS testing limitation above.
+See the [report, screenshots and machine-readable results](tests/vm/evidence/2026-11-06-dms/README.md).
+The full default DMS installation and its complete repeat both exited 0;
+custom settings in DMS, VS Code, Kitty and btop survived both repetition and
+reboot. ShellCheck and all 95 repository tests passed in Fedora and on the host.
+Omasnap's complete upstream CTest passed (45.62 seconds); live monitor capture,
+region selection, arrow annotation and PNG clipboard output also passed.
+
+The VM exposed and verified fixes for the initial GTK generator output path,
+GTK activation over an existing Breeze setting and upstream GTK's unchanged
+exit status. GTK3/Qt6 and both editors were exercised in light/dark DMS modes.
+The report distinguishes these results from untested lock/suspend/audio/OBS
+flows and records the GTK4 accent, virtual-CPU mcelog and missing upstream
+Omarchy notification-helper limitations. Tailscale was installed without
+logging the VM into a tailnet.
