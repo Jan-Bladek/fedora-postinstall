@@ -90,7 +90,7 @@ Selektor `~/.config/fedora-postinstall/shell` steruje autostartem i skrótami. D
 | development | Tylko wybrane IDE i ich SDK; `full` zawiera też CLion |
 | libreoffice | Opcjonalny Writer, Calc i Impress z polskim pakietem językowym |
 | hyprmod | GTK4/libadwaita HyprMod w narzędziu uv, przypięta rewizja; tylko Hyprland |
-| files | Flea: przypięta kompilacja Rust i prywatne moduły QML, domyślny menedżer plików; bezpieczne usunięcie Nautilusa |
+| files | Wybór Flea lub Nautilus; foldery, skrót i aktywacja D-Bus zgodne z wyborem |
 | omasnap | Przypięty build upstream Omasnap, testy, skróty, zarządzane aktualizacje/odinstalowanie; tylko Hyprland |
 | vscode | Sam VS Code z oficjalnego repozytorium Microsoftu i wyłączoną telemetrią |
 | browsers | Brave jako domyślny, LibreWolf jako dodatkowy |
@@ -124,7 +124,7 @@ Własny zmieniony launcher jest zachowywany, z propozycją `.fedora-postinstall-
 
 Lista jest w [data/cleanup.tsv](data/cleanup.tsv). Stary VSCodium można usunąć przez pozycję `vscodium`; nowa instalacja używa wyłącznie VS Code. Dane wcześniejszego edytora nie są kasowane. Obejmuje wskazane aplikacje PIM/KDE, gry, Firefox, LibreOffice, nwg-panel, Konsole i interfejsy zgłaszania problemów, a także pomocniki importu KMail, Spectacle, Dragon Player, Krfb, Gwenview, KAddressBook, KRDC i edytor menu KDE. Zestaw uwzględnia wspólne pakiety: np. KMail zawiera KTnef, Kleopatra dziennik GnuPG, a grantlee-editor wszystkie trzy edytory wyglądu kontaktów/nagłówków.
 
-Usuwane są tylko zainstalowane pakiety z listy, w tym konkretne podpakiety danej aplikacji. Dolphin i dolphin-plugins są częścią debloat: przed ich usunięciem wymagane są działające Flea i zweryfikowane skojarzenie folderów `inode/directory`. Jeśli wybierzesz moduł `libreoffice`, czyszczenie `all` zachowa LibreOffice. Cały natywny LibreOffice obejmuje rodzinę `libreoffice-*`. Firefox i LibreOffice są również sprawdzane jako Flatpak użytkownika/systemu. Nie usuwamy danych aplikacji ani niewykorzystanych runtime’ów Flatpak.
+Usuwane są tylko zainstalowane pakiety z listy, w tym konkretne podpakiety danej aplikacji. Dolphin i dolphin-plugins są częścią debloat: przed ich usunięciem wymagany jest działający wybrany menedżer plików i zweryfikowane skojarzenie folderów `inode/directory`. Jeśli wybierzesz moduł `libreoffice`, czyszczenie `all` zachowa LibreOffice. Cały natywny LibreOffice obejmuje rodzinę `libreoffice-*`. Firefox i LibreOffice są również sprawdzane jako Flatpak użytkownika/systemu. Nie usuwamy danych aplikacji ani niewykorzystanych runtime’ów Flatpak.
 
 Przed usunięciem: plan JSON i test `rpm -e --test`, pobranie dokładnych wersji RPM do odzyskiwania, ponowny test zależności. Po usunięciu: porównanie inwentarza dowodzące zachowania pozostałych pakietów oraz `dnf5 check`. **Brak dokładnego RPM w repo lub zależność zachowanego programu blokuje czyszczenie.** Standardowy przebieg najpierw aktualizuje pakiety; po częściowym błędzie napraw przyczynę i uruchom ponownie.
 
@@ -154,7 +154,7 @@ Moduł Hyprland stosuje żądany profil z kopią głównego pliku do katalogu pr
 | Super+S / Alt+S | Scratchpad / przeniesienie do scratchpada |
 | Super+Ctrl+S | Panel powłoki (wcześniej Super+S) |
 | Super+Shift+Enter lub B | Brave |
-| Super+Shift+F / N | Flea / VS Code |
+| Super+Shift+F / N | Wybrany menedżer plików / VS Code |
 
 JetBrains Mono jest instalowany z Fedory, z aliasami fontconfig i ustawieniem fontu Qt/DMS. Symbole Nerd Fonts są dodatkowym fontem z oficjalnego wydania, z digest SHA256; Kitty używa ich jako fallback dla ikon.
 
@@ -162,13 +162,31 @@ btop ma `theme_background = False`, więc używa tła terminala (w Kitty z jego 
 
 Kitty: **Win+C / Win+V** kopiują zaznaczenie i wklejają schowek (mapowania `super+c` i `super+v`); Ctrl+C zachowuje przerywanie poleceń. `confirm_os_window_close 0`, `background_opacity 0.90`, JetBrains Mono. Inne własne ustawienia są zachowane; aktualizowany jest tylko oznaczony blok żądanych kluczy. VS Code: `TelemetryLevel=off` w `/etc/vscode/policy.json` i ustawienia użytkownika. JSONC jest scalany z zachowaniem wartości innych kluczy; oryginał z komentarzami znajduje się w kopii. Telemetria niezależnych rozszerzeń wymaga ich własnych ustawień; nie deklarujemy blokowania całego ruchu sieciowego.
 
-## Flea — domyślny menedżer plików
+## Menedżer plików: Flea lub Nautilus
 
-Moduł `files` zastępuje Nautilusa przez [Flea](https://github.com/thisisgm/flea). Upstream oficjalnie wymaga Omarchy. To **adaptacja dla Fedory utrzymywana w tym projekcie**, a nie deklarowane przez autora wsparcie Fedory. Instalator buduje wersję `0.3.12` z przypiętej rewizji (`data/flea-release`), używa `cargo --locked --offline` i uruchamia testy Rust upstream. Nie używa pakietów Arch ani pacmana. Mała poprawka źródeł mapuje `/lib64` na `usr/lib64` wewnątrz sandboxu bubblewrap, zgodnie z układem Fedory; zachowuje wszystkie flagi izolacji. Nieznany układ upstream blokuje patchowanie, a digest poprawki jest częścią zapisu wersji payloadu.
+W instalacji interaktywnej wybierasz **Flea** albo **Nautilus / Pliki GNOME**.
+Opcja CLI: `--file-manager flea|nautilus`. Pierwszy domyślny wybór to Flea;
+kolejne uruchomienia odczytują zapis w `~/.config/fedora-postinstall/file-manager`.
+Jawna opcja CLI ma pierwszeństwo. Aby zmienić wybór w istniejącej instalacji:
+
+```bash
+bash install.sh --desktop dms --file-manager nautilus --yes --modules "files defaults"
+bash install.sh --desktop dms --file-manager flea --yes --modules "files defaults"
+```
+
+Wybór steruje folderami `inode/directory`, skrótem `Super+Shift+F` oraz
+aktywacją `org.freedesktop.FileManager1`. Nautilus pochodzi z RPM Fedory;
+jego wybór nie buduje Flea. Zmiana wyboru zachowuje drugi zainstalowany
+menedżer. Debloat zachowuje Nautilusa, gdy jest wybrany. Wyloguj się, jeśli
+poprzedni proces nadal zajmuje nazwę D-Bus FileManager1.
+
+### Wariant Flea
+
+Wariant `--file-manager flea` instaluje [Flea](https://github.com/thisisgm/flea). Upstream oficjalnie wymaga Omarchy. To **adaptacja dla Fedory utrzymywana w tym projekcie**, a nie deklarowane przez autora wsparcie Fedory. Instalator buduje wersję `0.3.12` z przypiętej rewizji (`data/flea-release`), używa `cargo --locked --offline` i uruchamia testy Rust upstream. Nie używa pakietów Arch ani pacmana. Mała poprawka źródeł mapuje `/lib64` na `usr/lib64` wewnątrz sandboxu bubblewrap, zgodnie z układem Fedory; zachowuje wszystkie flagi izolacji. Nieznany układ upstream blokuje patchowanie, a digest poprawki jest częścią zapisu wersji payloadu.
 
 GUI wymaga Quickshell >=0.3.1. Fedora 44 ma starszy pakiet, więc gdy nie ma odpowiedniego RPM, dodawany jest opisany wcześniej COPR `lionheartp/Hyprland`. Z Omarchy pobierane są tylko przypięte biblioteki komponentów `shell/Commons` i `shell/Ui`, umieszczane prywatnie obok Flea z licencją MIT. Nie instalujemy pakietu Omarchy, jego poleceń, panelu ani usług. Flea korzysta z własnej palety awaryjnej, gdy nie ma motywu Omarchy.
 
-Przed przełączeniem aktywnego payloadu instalator ładuje prawdziwe QML w odizolowanej sesji offscreen i czeka na `flea ready` przez IPC. Dopiero po sukcesie ustawia `com.thisisgm.flea.desktop` dla `inode/directory`, zapisuje aktywację D-Bus `org.freedesktop.FileManager1` i usuwa RPM `nautilus` przez test zależności oraz pobranie dokładnej kopii do odzyskiwania. Nie usuwa zależności przez autoremove, rozszerzeń na ślepo ani Qt. Dolphin jest usuwany dopiero przez wybrany debloat. Wcześniejsza rejestracja FileManager1 jest kopiowana do katalogu przebiegu; już działający inny menedżer może zachować nazwę D-Bus do wylogowania.
+Przed przełączeniem aktywnego payloadu instalator ładuje prawdziwe QML w odizolowanej sesji offscreen i czeka na `flea ready` przez IPC. Dopiero po sukcesie ustawia `com.thisisgm.flea.desktop` dla `inode/directory`, zapisuje aktywację D-Bus `org.freedesktop.FileManager1` zgodnie z wyborem. Nautilus może pozostać zainstalowany; jego usunięcie wymaga osobnego debloat. Nie usuwa zależności przez autoremove, rozszerzeń na ślepo ani Qt. Dolphin jest usuwany dopiero przez wybrany debloat. Wcześniejsza rejestracja FileManager1 jest kopiowana do katalogu przebiegu; już działający inny menedżer może zachować nazwę D-Bus do wylogowania.
 
 Nie uruchamiamy `flea --default` ani `--picker`, które zakładają konfigurację Omarchy. Portale otwierania/zapisywania plików i udostępniania ekranu pozostają skonfigurowane jak dotychczas. Funkcje powiązane z paskiem/poleceniami Omarchy oraz podgląd diagramów/matematyki wymagający QuickJS-NG nie są objęte tą integracją. Bez istniejącego Cargo kompilator Rust jest doinstalowywany tylko na czas budowania Flea; po budowaniu (także po błędzie) usuwane są wyłącznie nowo dodane pakiety Rust/Cargo, po teście zależności. Wcześniejsze SDK i pozostałe zależności pozostają. Pozostałe zależności dostarcza DNF, w tym GVfs, UDisks, schowek, multimedia Qt i QtPdf. Nie instalujemy LibreOffice wyłącznie do opcjonalnych podglądów.
 
@@ -179,7 +197,7 @@ bash install.sh --yes --modules "files defaults updates"
 ~/.local/share/fedora-postinstall/scripts/flea-manager check
 ```
 
-Preset Hyprland otwiera Flea przez `Super+Shift+F`. W istniejącym głównym Lua instalator dodaje tylko oznaczony loader na końcu i nadpisuje ten jeden skrót przez unbind/bind; pozostałe ustawienia zachowuje, a poprzedni plik kopiuje do katalogu przebiegu. Scentralizowane `fedora-update` sprawdza nowe tagi Flea i obsługuje wyłącznie sprawdzoną parę rewizji Flea/bibliotek QML; nowe źródła wymagają aktualizacji manifestu projektu. Aktualizacja nie wykonuje `git pull` konfiguracji. `flea-manager uninstall` odmawia usunięcia, dopóki Flea jest domyślnym handlerem katalogów; po wybraniu innego usuwa tylko zarządzane launchery i własną rejestrację D-Bus. Dane, ustawienia i starsze payloady pozostają.
+Preset Hyprland otwiera wybrany menedżer przez `Super+Shift+F` i skojarzenie katalogów. W istniejącym głównym Lua instalator dodaje tylko oznaczony loader na końcu i nadpisuje ten jeden skrót przez unbind/bind; pozostałe ustawienia zachowuje, a poprzedni plik kopiuje do katalogu przebiegu. Scentralizowane `fedora-update` sprawdza nowe tagi Flea i obsługuje wyłącznie sprawdzoną parę rewizji Flea/bibliotek QML; nowe źródła wymagają aktualizacji manifestu projektu. Aktualizacja nie wykonuje `git pull` konfiguracji. `flea-manager uninstall` odmawia usunięcia, dopóki Flea jest domyślnym handlerem katalogów; po wybraniu innego usuwa tylko zarządzane launchery i własną rejestrację D-Bus. Dane, ustawienia i starsze payloady pozostają.
 
 ## Omasnap: screenshoty i edycja
 

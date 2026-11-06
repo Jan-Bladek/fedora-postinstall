@@ -6,6 +6,7 @@ source "$ROOT/lib/core.sh"
 source "$ROOT/lib/desktop.sh"
 source "$ROOT/lib/ui.sh"
 source "$ROOT/lib/development.sh"
+source "$ROOT/lib/files.sh"
 if [[ -t 0 ]] && ! command -v whiptail >/dev/null && python3 -c 'import curses' 2>/dev/null; then
     whiptail() { python3 "$ROOT/scripts/tui.py" "$@"; }
 fi
@@ -17,6 +18,7 @@ DEV_PROFILE=code
 DRY_RUN=0
 EXPLICIT_MODULES=0
 DESKTOP=''
+FILE_MANAGER=''
 MODULES='snapshots dependencies hyprland noctalia terminal development browsers multimedia utilities defaults optimization updates'
 while (($#)); do
     case $1 in
@@ -29,8 +31,9 @@ while (($#)); do
         --dev-apps) shift; DEV_APPS=${1:?Missing development apps (use none for empty)}; [[ $DEV_APPS != none ]] || DEV_APPS='' ;;
         --dev-profile) shift; DEV_PROFILE=${1:?Missing development profile} ;;
         --desktop) shift; DESKTOP=${1:?Missing desktop choice} ;;
+        --file-manager) shift; FILE_MANAGER=${1:?Missing file manager (flea or nautilus)} ;;
         --modules) shift; MODULES=${1:?Missing module list}; EXPLICIT_MODULES=1 ;;
-        --help) echo 'install.sh [--dry-run] [--yes] [--no-progress] [--keep-hypr-config] [--cleanup-apps "all|id id"] [--desktop noctalia|dms|plasma] [--dev-profile code|full] [--dev-apps "code rustrover intellij-idea webstorm clion arduino-ide|none"] [--modules "snapshots dependencies hyprland session-services noctalia dms terminal terminal-theme app-theme zsh clipboard lazyvim vscode development libreoffice hyprmod files omasnap browsers multimedia utilities defaults optimization updates cleanup kde-removal"]'; exit 0 ;;
+        --help) echo 'install.sh [--dry-run] [--yes] [--no-progress] [--keep-hypr-config] [--cleanup-apps "all|id id"] [--desktop noctalia|dms|plasma] [--file-manager flea|nautilus] [--dev-profile code|full] [--dev-apps "code rustrover intellij-idea webstorm clion arduino-ide|none"] [--modules "snapshots dependencies hyprland session-services noctalia dms terminal terminal-theme app-theme zsh clipboard lazyvim vscode development libreoffice hyprmod files omasnap browsers multimedia utilities defaults optimization updates cleanup kde-removal"]'; exit 0 ;;
         *) die "Unknown option: $1" ;;
     esac
     shift
@@ -53,6 +56,11 @@ fi
 # Explicit module lists retain their meaning; presets affect only default modules.
 if ((EXPLICIT_MODULES == 0)); then MODULES=$(default_modules); fi
 export DESKTOP
+if [[ -z $FILE_MANAGER && -t 0 && $DRY_RUN == 0 && $EXPLICIT_MODULES == 0 && $INSTALL_APPROVED == 0 ]]; then
+    ui_file_manager_choice || exit 0
+fi
+FILE_MANAGER=$(selected_file_manager)
+export FILE_MANAGER
 if [[ -n $CLEANUP_APPS ]]; then
     if [[ ! " $MODULES " =~ [[:space:]]cleanup[[:space:]] ]]; then MODULES+=" cleanup"; fi
 elif [[ -t 0 && $DRY_RUN == 0 && $EXPLICIT_MODULES == 0 && $INSTALL_APPROVED == 0 ]]; then
@@ -75,14 +83,14 @@ validate_desktop_modules
 if [[ -n $CLEANUP_APPS ]]; then
     read -r -a cleanup_keys <<< "$CLEANUP_APPS"
     python3 - "$ROOT" "${cleanup_keys[@]}" <<'PY_CHECK'
-import runpy, sys
+import os, runpy, sys
 planner = runpy.run_path(sys.argv[1]+'/scripts/cleanup-plan.py')
-planner['plan'](sys.argv[2:], [])
+planner['plan'](sys.argv[2:], [], file_manager=os.environ.get('FILE_MANAGER'))
 PY_CHECK
 fi
 preflight
 if ((DRY_RUN)); then
-    echo "PLAN Fedora 44 x86_64, desktop: $DESKTOP, development: $DEV_PROFILE ($DEV_APPS), modules: $MODULES"
+    echo "PLAN Fedora 44 x86_64, desktop: $DESKTOP, file manager: $FILE_MANAGER, development: $DEV_PROFILE ($DEV_APPS), modules: $MODULES"
     for module in $MODULES; do
         printf '\n[%s] Planned module (not executed):\n' "$module"
         cat "$ROOT/modules/$module.sh"

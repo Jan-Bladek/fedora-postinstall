@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
 module_cleanup() {
+    source "$ROOT/lib/files.sh"
+    local manager desktop
+    manager=$(selected_file_manager)
+    desktop=$(file_manager_desktop)
+    export FILE_MANAGER=$manager
     local p unit path selection=${CLEANUP_APPS:-all}
     local -a targets=() keys=() units=() nevras=()
     read -r -a keys <<< "$selection"
@@ -10,10 +15,10 @@ module_cleanup() {
     local key
     for key in "${keys[@]}"; do
         if [[ $key == all || $key == dolphin ]]; then
-            [[ -x $HOME/.local/bin/flea ]] || die 'Install the files module before removing Dolphin.'
-            run "$HOME/.local/share/fedora-postinstall/scripts/flea-manager" check
-            run xdg-mime default com.thisisgm.flea.desktop inode/directory
-            [[ $(xdg-mime query default inode/directory) == com.thisisgm.flea.desktop ]] || die 'Flea default check failed; Dolphin retained.'
+            file_manager_installed || die 'Install the files module before removing Dolphin.'
+            if [[ $manager == flea ]]; then run "$HOME/.local/share/fedora-postinstall/scripts/flea-manager" check; fi
+            run xdg-mime default "$desktop" inode/directory
+            [[ $(xdg-mime query default inode/directory) == "$desktop" ]] || die 'Selected file-manager default check failed; Dolphin retained.'
             break
         fi
     done

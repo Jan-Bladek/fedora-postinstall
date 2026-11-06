@@ -4,6 +4,7 @@
 ui_confirm_plan() {
     local summary
     summary="Pulpit: $DESKTOP
+Menedżer plików: ${FILE_MANAGER:-flea}
 Wybrane IDE: ${DEV_APPS:-brak}
 Moduły: $MODULES
 Usuwanie aplikacji: ${CLEANUP_APPS:-nie}
@@ -29,11 +30,24 @@ Zamknij Neovim i aplikacje wybrane do usunięcia. Licencje IDE aktywujesz samodz
         [[ $answer == t || $answer == T || $answer == y || $answer == Y ]]
     fi
 }
+ui_file_manager_choice() {
+    local current flea=OFF nautilus=OFF
+    current=$(selected_file_manager) || return
+    if [[ $current == flea ]]; then flea=ON; else nautilus=ON; fi
+    if command -v whiptail >/dev/null; then
+        FILE_MANAGER=$(whiptail --title 'Fedora · Menedżer plików' --radiolist \
+            'Wybierz domyślny menedżer folderów i skrót Super+Shift+F.' 13 78 2 \
+            flea 'Flea (kompilacja ze źródeł)' "$flea" nautilus 'Nautilus / Pliki GNOME (RPM Fedory)' "$nautilus" 3>&1 1>&2 2>&3) || return
+    else
+        read -r -p "Menedżer plików: flea lub nautilus [$current]: " FILE_MANAGER
+        FILE_MANAGER=${FILE_MANAGER:-$current}
+    fi
+}
 ui_cleanup_choice() {
     local answer
     if command -v whiptail >/dev/null; then
         if ! whiptail --title 'Fedora · Debloat Plasma' --yes-button 'Tak, usuń' --no-button 'Nie, zachowaj' --defaultno \
-            --yesno 'Usunąć cały przygotowany zestaw zbędnych aplikacji KDE/Fedory? Obejmuje m.in. KMail/PIM, KDE Connect, gry, Firefox, Dolphin (po kontroli Flea), LibreOffice (jeśli nie wybierzesz instalacji), Spectacle, Gwenview, Dragon, KRDC/Krfb i edytor menu. Sam pulpit Plasma, Qt i dane użytkownika pozostaną. Pełna lista: data/cleanup.tsv.' 16 78; then return 0; fi
+            --yesno 'Usunąć cały przygotowany zestaw zbędnych aplikacji KDE/Fedory? Obejmuje m.in. KMail/PIM, KDE Connect, gry, Firefox, Dolphin (po kontroli wybranego menedżera plików), LibreOffice (jeśli nie wybierzesz instalacji), Spectacle, Gwenview, Dragon, KRDC/Krfb i edytor menu. Sam pulpit Plasma, Qt i dane użytkownika pozostaną. Pełna lista: data/cleanup.tsv.' 16 78; then return 0; fi
         CLEANUP_APPS=all
     else
         read -r -p 'Usunąć cały zestaw debloat Plasma? [t/N]: ' answer
@@ -109,6 +123,7 @@ ui_finish() {
 ui_module_label() {
     case $1 in
         snapshots) echo 'Kopie konfiguracji i Snapper' ;;
+        files) echo "Menedżer plików: ${FILE_MANAGER:-flea}" ;;
         dependencies) echo 'Aktualizacja Fedory i narzędzia podstawowe' ;;
         hyprland) echo 'Hyprland + profil Omarchy (kopia poprzedniego configu)' ;;
         noctalia) echo 'Powłoka Noctalia' ;;

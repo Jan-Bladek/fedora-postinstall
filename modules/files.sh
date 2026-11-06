@@ -7,7 +7,7 @@ configure_flea_binding() {
     [[ ${DESKTOP:-} != plasma ]] || return 0
     local main=$CONFIG/hypr/hyprland.lua module=$CONFIG/hypr/fedora-postinstall-flea.lua
     if [[ ! -f $main ]]; then
-        log 'No Hyprland Lua config present; add Super+Shift+F for ~/.local/bin/flea --gui manually.'
+        log 'No Hyprland Lua config present; add Super+Shift+F for the selected folder handler manually.'
         return 0
     fi
     cp -- "$main" "$RUN/hyprland-before-flea.lua"
@@ -21,6 +21,16 @@ configure_flea_binding() {
     atomic_config "$RUN/hyprland.lua" "$main"
 }
 module_files() {
+    source "$ROOT/lib/files.sh"
+    FILE_MANAGER=$(selected_file_manager)
+    export FILE_MANAGER
+    if [[ $FILE_MANAGER == nautilus ]]; then
+        packages nautilus xdg-utils gvfs gvfs-mtp gvfs-smb
+        command -v nautilus >/dev/null || die 'Nautilus executable missing.'
+        [[ -f /usr/share/applications/org.gnome.Nautilus.desktop ]] || die 'Nautilus desktop entry missing.'
+        configure_file_manager nautilus
+        return
+    fi
     local available dest=$HOME/.local/share/fedora-postinstall
     # Fedora 44's base Quickshell is too old for this upstream UI. Reuse the
     # already-reviewed Hyprland COPR only when no suitable RPM is available.
@@ -46,17 +56,26 @@ module_files() {
     if declare -F ui_status >/dev/null; then ui_status 'Flea: kompilacja Rust, testy upstream i kontrola GUI'; fi
     run "$dest/scripts/flea-manager" install
     run "$dest/scripts/flea-manager" check
-    configure_flea_binding
-    run xdg-mime default com.thisisgm.flea.desktop inode/directory
-    [[ $(xdg-mime query default inode/directory) == com.thisisgm.flea.desktop ]] || die 'Flea default verification failed.'
-    local service=$HOME/.local/share/dbus-1/services/org.freedesktop.FileManager1.service
-    if [[ -e $service ]]; then cp -- "$service" "$RUN/filemanager1-before.service"; fi
-    atomic_config "$dest/apps/flea/current/share/dbus-1/services/org.freedesktop.FileManager1.service" "$service"
-    log 'FileManager1 activation now targets Flea. A previous running owner is retained until logout; no file-manager process was killed.'
-    # Only remove the former default after Flea's actual QML/IPC has passed.
-    # Reuse exact dependency guards and recovery RPMs, without autoremove.
-    source "$ROOT/modules/cleanup.sh"
-    local CLEANUP_APPS=nautilus
-    module_cleanup
+    configure_file_manager flea
     log 'Flea configured for folders. Omarchy-specific --default/--picker were not executed; screen-sharing portals remain unchanged.'
+}
+configure_file_manager() {
+    local selection=$1 desktop dest=$HOME/.local/share/fedora-postinstall
+    desktop=$(file_manager_desktop)
+    configure_flea_binding
+    run xdg-mime default "$desktop" inode/directory
+    [[ $(xdg-mime query default inode/directory) == "$desktop" ]] || die 'Selected file-manager default verification failed.'
+    local service=$HOME/.local/share/dbus-1/services/org.freedesktop.FileManager1.service
+    if [[ -e $service && ! -e $RUN/filemanager1-before.service ]]; then cp -- "$service" "$RUN/filemanager1-before.service"; fi
+    if [[ $selection == flea ]]; then
+        atomic_config "$dest/apps/flea/current/share/dbus-1/services/org.freedesktop.FileManager1.service" "$service"
+    else
+        printf '[D-BUS Service]\nName=org.freedesktop.FileManager1\nExec=/usr/bin/nautilus --gapplication-service\n' > "$RUN/filemanager1.service"
+        atomic_config "$RUN/filemanager1.service" "$service"
+    fi
+    mkdir -p "$CONFIG/fedora-postinstall"
+    if [[ -f $CONFIG/fedora-postinstall/file-manager ]]; then cp -- "$CONFIG/fedora-postinstall/file-manager" "$RUN/file-manager-before"; fi
+    printf '%s\n' "$selection" > "$RUN/file-manager"
+    atomic_config "$RUN/file-manager" "$CONFIG/fedora-postinstall/file-manager"
+    log "Selected $selection for folders and FileManager1. Log out to release any previous D-Bus owner."
 }

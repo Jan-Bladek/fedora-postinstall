@@ -34,7 +34,7 @@ def specs():
     return {
         'hyprland': [('config', 'hypr')], 'kitty': [('config', 'kitty')],
         'zsh': [('home', '.zshrc'), ('config', 'fedora-postinstall/starship.toml')],
-        'defaults': [('config', p) for p in ('mimeapps.list', 'kdeglobals', 'xdg-terminals.list', 'environment.d/60-fedora-postinstall.conf')]+[('data', 'applications/mimeapps.list')],
+        'defaults': [('config', p) for p in ('mimeapps.list', 'fedora-postinstall/file-manager', 'kdeglobals', 'xdg-terminals.list', 'environment.d/60-fedora-postinstall.conf')]+[('data', 'applications/mimeapps.list')],
         'desktop': [('config', p) for p in ('noctalia', 'dms', 'btop/btop.conf', 'fontconfig/conf.d/60-jetbrains-mono.conf', 'xdg-desktop-portal/hyprland-portals.conf')],
         'services': [('config', 'systemd/user'), ('config', 'autostart')]+[('data', 'dbus-1/services')],
         'applications': [('data', f'fedora-postinstall/apps/{name}/current') for name in APP_NAMES]+[('data', 'applications')]+[('home', f'.local/bin/{name}') for name in (*APP_NAMES, 'flea-filemanager1')]+[('data', 'fonts/fedora-postinstall-symbols.ttf')],

@@ -13,8 +13,9 @@ code_desktop_id() {
 
 module_defaults() {
     local type desktop handler path
-    if [[ -x $HOME/.local/bin/flea ]]; then
-        run xdg-mime default com.thisisgm.flea.desktop inode/directory
+    source "$ROOT/lib/files.sh"
+    if file_manager_installed; then
+        run xdg-mime default "$(file_manager_desktop)" inode/directory
     fi
     if command -v brave-browser >/dev/null; then
         run xdg-settings set default-web-browser brave-browser.desktop

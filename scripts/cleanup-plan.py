@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Exact app allowlist; never infer deletion from translated application names."""
 import json
+import os
 from pathlib import Path
 import subprocess
 import sys
@@ -17,11 +18,13 @@ def groups():
     return result
 
 
-def plan(selected, installed):
+def plan(selected, installed, file_manager=None):
     catalog = groups()
     keys = list(catalog) if selected == ['all'] else selected
     if not keys or set(keys) - catalog.keys():
         raise ValueError('Unknown or empty application selection')
+    if file_manager == 'nautilus':
+        keys = [key for key in keys if key != 'nautilus']
     targets = set()
     for key in keys:
         for package in catalog[key][1]:
@@ -38,4 +41,8 @@ if __name__ == '__main__':
             print(key+'\t'+label)
     else:
         installed = subprocess.check_output(['rpm', '-qa', '--qf', '%{NAME}\n'], text=True).splitlines()
-        print(json.dumps(plan(sys.argv[1:], installed), indent=2))
+        selection = os.environ.get('FILE_MANAGER')
+        saved = Path(os.environ.get('XDG_CONFIG_HOME') or Path.home()/'.config')/'fedora-postinstall/file-manager'
+        if not selection and saved.is_file():
+            selection = saved.read_text().strip()
+        print(json.dumps(plan(sys.argv[1:], installed, file_manager=selection), indent=2))

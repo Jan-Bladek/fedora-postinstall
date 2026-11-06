@@ -15,8 +15,9 @@ verify() {
         run "$HOME/.local/share/fedora-postinstall/scripts/omasnap-manager" check
     fi
     if [[ $MODULES =~ (^|[[:space:]])defaults($|[[:space:]]) ]]; then
-        if [[ -x $HOME/.local/bin/flea ]]; then
-            [[ $(xdg-mime query default inode/directory) == com.thisisgm.flea.desktop ]] || die 'Flea default verification failed.'
+        source "$ROOT/lib/files.sh"
+        if file_manager_installed; then
+            [[ $(xdg-mime query default inode/directory) == "$(file_manager_desktop)" ]] || die 'Selected file-manager default verification failed.'
         fi
         if command -v brave-browser >/dev/null; then
             for type in x-scheme-handler/http x-scheme-handler/https text/html application/xhtml+xml; do

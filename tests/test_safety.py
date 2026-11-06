@@ -89,6 +89,7 @@ packages nonexistent-package
         script = r"""
 source "$1/lib/core.sh"
 source "$1/lib/verify.sh"
+ROOT=$1
 RUN=$2
 MODULES=$'terminal\tdefaults\nupdates'
 HOME=$2

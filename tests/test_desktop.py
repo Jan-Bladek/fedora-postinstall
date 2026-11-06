@@ -92,6 +92,7 @@ class DesktopChoice(unittest.TestCase):
 printf '%s\\n' "$*" >> "$MENU_LOG"
 case " $* " in
  *" --radiolist "*" noctalia "*) echo plasma >&2 ;;
+ *" --radiolist "*" nautilus "*) echo nautilus >&2 ;;
  *) exit 1 ;;
 esac
 ''')
@@ -106,11 +107,12 @@ esac
                 os.close(slave)
             self.assertEqual(result.returncode, 0, result.stderr)
             menus = (work/'menu').read_text().splitlines()
-            self.assertEqual(len(menus), 3)
+            self.assertEqual(len(menus), 4)
             self.assertIn('Fedora Post-Install', menus[0])
-            self.assertIn('Debloat Plasma', menus[1])
-            self.assertIn('Zestaw programistyczny', menus[2])
-            self.assertIn('--checklist', menus[2])
+            self.assertIn('Menedżer plików', menus[1])
+            self.assertIn('Debloat Plasma', menus[2])
+            self.assertIn('Zestaw programistyczny', menus[3])
+            self.assertIn('--checklist', menus[3])
 
     def test_lua_loads_generated_settings_only_for_dms(self):
         runner = """
