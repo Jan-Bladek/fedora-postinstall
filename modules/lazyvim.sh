@@ -26,6 +26,8 @@ module_lazyvim() {
         printf '%s\n' "$revision" > "$destination/.fedora-postinstall-lazyvim"
     fi
     config_file "$ROOT/config/nvim/animations.lua" "$destination/lua/plugins/fedora-animations.lua"
+    source "$ROOT/modules/app-theme.sh"
+    configure_dms_lazyvim_theme
     if declare -F ui_status >/dev/null; then ui_status "LazyVim — instalowanie i sprawdzanie wtyczek"; fi
     run timeout 600 nvim --headless '+Lazy! sync' '+lua local ok, err = pcall(require, "lazyvim.config"); if not ok then vim.api.nvim_err_writeln(err); vim.cmd("cquit 1") end' +qa
     mkdir -p "$STATE/managed"

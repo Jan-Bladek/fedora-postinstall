@@ -21,5 +21,9 @@ REPO
     if [[ -f $settings ]]; then cp -- "$settings" "$RUN/code-settings-before.jsonc"; fi
     python3 "$ROOT/scripts/merge-json.py" "$settings" "$ROOT/config/vscode/settings.json" "$RUN/code-settings.json"
     atomic_config "$RUN/code-settings.json" "$settings"
+    if [[ ${DESKTOP:-} == dms ]] && command -v dms >/dev/null; then
+        run python3 "$ROOT/scripts/dms-app-theme.py" vscode --config "$CONFIG" --backup "$RUN" \
+            --data "${XDG_DATA_HOME:-$HOME/.local/share}"
+    fi
     log 'VS Code installed; TelemetryLevel=off is enforced by the Linux policy. Third-party extensions have independent privacy settings.'
 }

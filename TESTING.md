@@ -719,3 +719,24 @@ retaining the previous payload and full diagnostic output on CTest failure.
 The repository check completed 89 tests with 88 passing; its one remaining
 error is the session-health test attempting a Unix socket bind forbidden by
 this sandbox. Shell syntax and ShellCheck passed.
+
+# 2026-11-06: DMS application theme integration
+
+The installer now enables the installed DMS GTK/Hyprland/Kitty/Neovim/VS Code
+templates, uses the RPM's GTK apply/patch scripts and VSIX, and registers a
+pinned base46 plugin for managed LazyVim. Qt uses GTK passthrough only in the
+DMS-selected Hyprland config. btop uses its built-in terminal-palette theme.
+Existing settings and CSS are backed up; initial palette generation is staged
+separately and copies only missing GTK files.
+
+Five new regression tests passed: settings preservation and repeated/partial
+palette setup, packaged VSIX and JSONC merging, scoped Qt environment and Lua
+merge, LazyVim first-start fallback and shell selection, and inactive modules
+for Plasma/Noctalia. The real upstream GTK apply/patch scripts were also run
+against isolated test theme directories: palette injection, GTK4 import and
+original CSS backup passed. Fedora 44 package metadata confirms both selected
+Qt GUI packages contain the GTK platform plugin. Bash syntax and ShellCheck
+passed. The repository suite ran 95 tests: 94 passed; the session-health test
+cannot bind its Unix socket in this sandbox. A full visual Fedora/DMS session,
+live Qt repaint and actual VS Code/LazyVim plugin installation have not been
+verified here.

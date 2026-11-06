@@ -195,12 +195,15 @@ fi
                                                      XDG_CONFIG_HOME=str(work/'config'), TRACE=str(trace),
                                                      HYPRLAND_INSTANCE_SIGNATURE='test', WAYLAND_DISPLAY='wayland-test',
                                                      DISPLAY=':99', XDG_CURRENT_DESKTOP='KDE', XDG_SESSION_DESKTOP='KDE',
+                                                     QT_QPA_PLATFORMTHEME='gtk3', QT_QPA_PLATFORMTHEME_QT6='gtk3',
                                                      XDG_SESSION_TYPE='x11', IMPORT_STATUS=str(status)),
                                             capture_output=True, text=True)
                     self.assertEqual(result.returncode, status, result.stderr)
                     lines = trace.read_text().splitlines()
                     self.assertEqual(lines[0], 'IMPORT Hyprland Hyprland wayland')
                     self.assertIn('XDG_SESSION_TYPE', lines[1])
+                    self.assertIn('QT_QPA_PLATFORMTHEME', lines[1].split())
+                    self.assertIn('QT_QPA_PLATFORMTHEME_QT6', lines[1].split())
                     self.assertIn('DISPLAY', lines[1])
                     if status == 0:
                         self.assertEqual(lines[2], 'SHELL Hyprland Hyprland wayland')

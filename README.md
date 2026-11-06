@@ -83,6 +83,7 @@ Selektor `~/.config/fedora-postinstall/shell` steruje autostartem i skrótami. D
 | noctalia / dms | Jedna wybrana powłoka, bez Waybar, dunst i dodatkowego launchera |
 | terminal | Kitty, Zsh + Oh My Zsh, prompt Starship w stylu Omarchy, Lua 5.4 z DNF, JetBrains Mono, symbole Nerd Fonts, konfiguracja fontów i terminala; btop z przezroczystym tłem |
 | terminal-theme | Tekst i paleta ANSI Kitty zgodne z motywem DMS/Noctalia; odświeżanie otwartych okien |
+| app-theme | Integracja DMS z GTK3/4, Qt przez GTK, VS Code, zarządzanym LazyVim i paletą terminala btop |
 | zsh | Sam Zsh + Oh My Zsh i przypięte wtyczki, z kopią i scaleniem `.zshrc` |
 | clipboard | Historia schowka pod Win+Shift+V: cliphist + fzf w Kitty, Tab/strzałki/Enter/Esc; tylko Hyprland |
 | lazyvim | Neovim, oficjalny starter LazyVim, lazy.nvim, ripgrep, fd, tree-sitter-cli i narzędzia kompilacji |
@@ -353,6 +354,25 @@ bash install.sh --yes --desktop dms --modules terminal-theme
 Usługa użytkownika `fedora-kitty-theme.path` obserwuje plik palety wybranej powłoki i przeładowuje wyłącznie procesy Kitty bieżącego użytkownika przez SIGUSR1. Nie wymaga otwierania zdalnego sterowania terminalem i nie odpytuje plików w pętli. Pozostałe ustawienia i szablony są zachowywane. Noctalia wymaga pakietu `python3-tomlkit` z DNF do bezpiecznego scalania TOML z komentarzami. Zapisane przez Kitty pliki `dark-theme.auto.conf`, `light-theme.auto.conf` i `no-preference-theme.auto.conf` są przenoszone do kopii w katalogu przebiegu, ponieważ mogłyby zasłaniać kolory systemowe.
 
 Programy, które samodzielnie ustawiają kolory RGB, nadal używają własnego motywu. Wariant Plasma zachowuje dotychczasową konfigurację kolorów. Wybór źródła palety (tapeta albo motyw stały) pozostaje w ustawieniach DMS/Noctalii.
+
+## Motywy aplikacji DMS
+
+Moduł `dms` automatycznie uruchamia `app-theme`. Instalowane są `matugen`, `adw-gtk3-theme` oraz biblioteki GUI Qt5/Qt6 z pluginem GTK. Instalator włącza szablony DMS i synchronizację trybu jasny/ciemny przez portal, zachowując wybrane źródło kolorów, tapetę i pozostałe ustawienia. Uruchamia dostarczony w RPM skrypt DMS `scripts/gtk.sh` (`apply` i `patch`), ustawia GTK na adw-gtk3 i przygotowuje motyw aplikacji. Gdy nie ma jeszcze palet GTK, generuje tylko początkowe kolory GTK z koloru `#6750a4`; kolejne zmiany tapety/motywu obsługuje już DMS. Istniejące palety nie są zastępowane kolorem początkowym. Zainstalowany pakiet musi zawierać szablony i skrypty Matugen.
+
+Qt5 i Qt6 korzystają z udokumentowanego trybu GTK passthrough. Zmienna `QT_QPA_PLATFORMTHEME=gtk3` jest ustawiana w oznaczonym bloku Lua tylko wtedy, gdy selektor powłoki wskazuje DMS. Nie powstaje globalny plik `environment.d` zmieniający platformę Qt w Plasma. Po instalacji wyloguj się i zaloguj ponownie do Hyprland. Aplikacje z własnym silnikiem/motywem mogą nadal wymagać swoich ustawień.
+
+VS Code otrzymuje rozszerzenie `dms-theme.vsix` z zainstalowanego RPM DMS i motyw `Dynamic Base16 DankShell`, z wariantami jasnym/ciemnym, jeśli udostępnia je rozszerzenie. Nie pobieramy VSIX z ruchomego Git HEAD. Moduł `vscode` włącza integrację także wtedy, gdy edytor jest instalowany już po DMS.
+
+Zarządzany LazyVim dostaje osobny plik `lua/plugins/fedora-dms-theme.lua`, oficjalny plugin `duxlabs-dev/base46` przypięty do rewizji i motyw `dms` generowany przez DMS. Przed pierwszym wygenerowaniem pliku kolorów używa wbudowanego `habamax`. Po wybraniu innej powłoki plik integracji przestaje rejestrować plugin i motyw DMS. Istniejący zmieniony plik konfiguracji jest zachowany, z propozycją `.fedora-postinstall-new`.
+
+btop używa wbudowanego motywu `TTY`, czyli kolorów terminala, z zachowaniem pozostałych ustawień; w Kitty kolory pochodzą z DMS. GTK i VS Code korzystają ze wspólnej konfiguracji użytkownika, więc ich ustawienia motywów są widoczne także po uruchomieniu aplikacji w innej sesji. Oryginały konfiguracji są kopiowane do `dms-app-theme/` w katalogu przebiegu; DMS dodatkowo zarządza własnymi kopiami adw-gtk3.
+
+```bash
+# Uzupełnienie istniejącej instalacji DMS:
+bash install.sh --desktop dms --modules "app-theme"
+```
+
+Sprawdzenie: zmień tapetę lub motyw DMS i sprawdź GTK, Qt oraz edytory. W już otwartych aplikacjach może być wymagany restart. Integracja opiera się na [oficjalnych instrukcjach DMS](https://duxlabs.dev/docs/dms/application-themes).
 
 ### DNF instaluje Node.js, ale starszy instalator zgłasza brak `nodejs`
 

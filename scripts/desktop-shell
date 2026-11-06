@@ -12,6 +12,11 @@ prepare_session_environment() {
     export XDG_CURRENT_DESKTOP=Hyprland XDG_SESSION_DESKTOP=Hyprland XDG_SESSION_TYPE=wayland
     local -a variables=(WAYLAND_DISPLAY XDG_CURRENT_DESKTOP XDG_SESSION_DESKTOP XDG_SESSION_TYPE HYPRLAND_INSTANCE_SIGNATURE)
     if [[ -n ${DISPLAY:-} ]]; then variables+=(DISPLAY); fi
+    if [[ $shell == dms ]]; then
+        # Hyprland's DMS-only theme block also applies to D-Bus activated apps.
+        if [[ -n ${QT_QPA_PLATFORMTHEME:-} ]]; then variables+=(QT_QPA_PLATFORMTHEME); fi
+        if [[ -n ${QT_QPA_PLATFORMTHEME_QT6:-} ]]; then variables+=(QT_QPA_PLATFORMTHEME_QT6); fi
+    fi
     # Import synchronously before a shell can launch XDG autostart applications.
     dbus-update-activation-environment --systemd "${variables[@]}"
 }

@@ -28,4 +28,6 @@ module_dms() {
     log 'DMS provides its own Polkit agent; the Hyprland selector does not start polkit-kde for DMS.'
     source "$ROOT/modules/terminal-theme.sh"
     module_terminal_theme
+    source "$ROOT/modules/app-theme.sh"
+    module_app_theme
 }
