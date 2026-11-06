@@ -31,6 +31,9 @@ class ThemeSetup:
         self.config, self.backup, self.data = map(Path, (config, backup, data))
         self.shell = Path(shell) if shell is not None else None
         self.env = dict(os.environ, XDG_CONFIG_HOME=str(self.config), XDG_DATA_HOME=str(self.data))
+        bus = Path(os.environ.get('XDG_RUNTIME_DIR') or f'/run/user/{os.getuid()}') / 'bus'
+        if bus.is_socket():
+            self.env.setdefault('DBUS_SESSION_BUS_ADDRESS', f'unix:path={bus}')
 
     def save(self, path):
         path = Path(path)
@@ -67,10 +70,12 @@ class ThemeSetup:
         value.update(patch)
         self.write(path, json.dumps(value, indent=2, ensure_ascii=False) + '\n')
 
-    def run(self, *args, allowed=(0,)):
-        result = subprocess.run(list(map(str, args)), env=self.env, timeout=120)
+    def run(self, *args, allowed=(0,), env=None, capture_output=False):
+        result = subprocess.run(list(map(str, args)), env=dict(self.env, **(env or {})), timeout=120,
+                                text=True, capture_output=capture_output)
         if result.returncode not in allowed:
             raise RuntimeError(f'Theme command failed ({result.returncode}): {args[0]}')
+        return result
 
     def installed_shell(self):
         if self.shell is None:
@@ -90,9 +95,21 @@ class ThemeSetup:
         if not settings.has_section('Settings'):
             settings.add_section('Settings')
         settings['Settings']['gtk-theme-name'] = 'adw-gtk3' if light else 'adw-gtk3-dark'
+        # Select light/dark through the theme name; a lingering KDE preference
+        # for dark variants would otherwise keep GTK dark in DMS light mode.
+        settings['Settings']['gtk-application-prefer-dark-theme'] = 'false'
         output = StringIO()
         settings.write(output)
         self.write(path, output.getvalue())
+
+    def activate_gtk_theme(self, light):
+        schema, key = 'org.gnome.desktop.interface', 'gtk-theme'
+        previous = self.backup / 'dms-app-theme/gsettings-gtk-theme.txt'
+        if not previous.exists():
+            value = self.run('gsettings', 'get', schema, key, capture_output=True).stdout
+            previous.parent.mkdir(parents=True, exist_ok=True)
+            previous.write_text(value)
+        self.run('gsettings', 'set', schema, key, 'adw-gtk3' if light else 'adw-gtk3-dark')
 
     def prepare(self):
         shell = self.installed_shell()
@@ -122,14 +139,19 @@ class ThemeSetup:
                      '--kind', 'hex', '--value', '#6750a4', '--mode', 'light' if light else 'dark',
                      '--run-user-templates=false',
                      '--skip-templates', 'niri,hyprland,mangowc,qt5ct,qt6ct,qtengine,fcitx5,firefox,pywalfox,zenbrowser,vesktop,vencord,equibop,ghostty,kitty,foot,alacritty,wezterm,nvim,dgop,kcolorscheme,vscode,emacs,zed',
-                     allowed=(0, 2))
+                     # DMS resolves template output paths through XDG_CONFIG_HOME;
+                     # --config-dir alone only selects its input configuration.
+                     env={'XDG_CONFIG_HOME': str(bootstrap)}, allowed=(0, 2))
             for name in missing:
                 self.write(self.config / name / 'dank-colors.css', (bootstrap / name / 'dank-colors.css').read_text())
         # This is the installed upstream's Apply GTK colors implementation.
         self.run('bash', script, self.config, 'apply', 'true' if light else 'false')
-        self.run('bash', script, self.config, 'patch', 'true' if light else 'false', allowed=(0, 2))
+        self.run('bash', script, self.config, 'patch', 'true' if light else 'false', allowed=(0, 2, 3))
         for name in ('gtk-3.0', 'gtk-4.0'):
             self.gtk_settings(name, light)
+        # DMS refreshes only a theme it owns. Mirror its explicit Apply action
+        # so an existing Breeze setting does not block subsequent mode changes.
+        self.activate_gtk_theme(light)
         btop = self.config / 'btop/btop.conf'
         original = btop.read_text() if btop.exists() else ''
         lines = [line for line in original.splitlines() if not re.match(r'^\s*color_theme\s*=', line)]

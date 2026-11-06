@@ -46,10 +46,13 @@ module_app_theme
 
             def run(*args, **kwargs):
                 calls.append(args)
+                if args[:2] == ('gsettings', 'get'):
+                    return subprocess.CompletedProcess(args, 0, "'Breeze'\n")
                 if args[0] == 'dms':
                     self.assertIn('--run-user-templates=false', args)
                     self.assertEqual(args[args.index('--mode') + 1], 'light')
                     output = Path(args[args.index('--config-dir') + 1])
+                    self.assertEqual(kwargs['env']['XDG_CONFIG_HOME'], str(output))
                     for name in ('gtk-3.0', 'gtk-4.0'):
                         (output / name).mkdir(exist_ok=True)
                         (output / name / 'dank-colors.css').write_text('/* palette */')
@@ -72,6 +75,8 @@ module_app_theme
             ini.read(config / 'gtk-3.0/settings.ini')
             self.assertEqual(ini['Settings']['gtk-font-name'], 'Personal 12')
             self.assertEqual(ini['Settings']['gtk-theme-name'], 'adw-gtk3')
+            self.assertEqual(ini['Settings']['gtk-application-prefer-dark-theme'], 'false')
+            self.assertEqual((backup / 'dms-app-theme/gsettings-gtk-theme.txt').read_text(), "'Breeze'\n")
             self.assertIn('update_ms = 1500', (config / 'btop/btop.conf').read_text())
             self.assertEqual((config / 'btop/btop.conf').read_text().count('color_theme'), 1)
             self.assertTrue(all(call[-1] == 'true' for call in calls if call[0] == 'bash'))
