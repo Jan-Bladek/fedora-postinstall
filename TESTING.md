@@ -758,3 +758,19 @@ The report distinguishes these results from untested lock/suspend/audio/OBS
 flows and records the GTK4 accent, virtual-CPU mcelog and missing upstream
 Omarchy notification-helper limitations. Tailscale was installed without
 logging the VM into a tailnet.
+
+# 2026-11-06: selectable file manager and real OBS recording
+
+The installer now offers Flea or Nautilus in the TUI and through
+`--file-manager flea|nautilus`, persists the choice and protects selected
+Nautilus from debloat. Both switches and a repeat using the saved choice
+were exercised in Fedora; ShellCheck and all 100 tests passed on the host
+and in the guest.
+
+See the [VM report and actual screenshots](tests/vm/evidence/2026-11-06-files-obs/README.md).
+OBS recorded and finalized 70.635 seconds of H.264/AAC through the Wayland
+portal/PipeWire in a VirGL clone. All 4216 video frames decoded; three sampled
+frames differed, and synthetic 440 Hz audio was detected. Independent host
+decoding also passed. The non-3D VM failed at the system Hyprtoolkit picker
+with SIGSEGV; this limitation remains explicit. Physical audio and remote
+streaming were not tested.

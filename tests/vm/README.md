@@ -36,3 +36,17 @@ Plasma-removal test, and reboot checks. Logs are uploaded as `fedora-kde-vm-repo
 It runs only when dispatched, downloads several GiB and may take tens of minutes.
 Its SSH fixture does **not** validate a graphical session, lock/unlock or screenshare.
 The guest alone has passwordless sudo; no such policy is installed on user systems.
+
+For an actual OBS recording test, approve the screen in its native portal
+picker, record moving UI and a synthetic 440 Hz tone played through PipeWire,
+then validate the resulting H.264/AAC file:
+
+```bash
+python3 tests/vm/check-obs-recording.py recording.mp4 --output-dir /tmp/obs-result
+```
+
+This checks full decoding, nonblank/changing video samples and the recorded
+tone, and exports a real decoded frame. It does not approve a screen request
+or start a recording. See [the Fedora/VirGL run](evidence/2026-11-06-files-obs/README.md)
+for the successful recording and the separate Hyprtoolkit picker failure on
+the guest without accelerated 3D.

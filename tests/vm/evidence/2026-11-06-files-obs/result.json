@@ -1,0 +1,102 @@
+{
+  "recorded_at": "2026-11-06T22:09:45.559600+00:00",
+  "source_commit": "70506954890f166b1ada87270d9e48950604a1f4",
+  "guest": "Fedora 44 x86_64",
+  "selinux": "Enforcing",
+  "tests": {
+    "host_passed": 100,
+    "guest_passed": 100,
+    "failed": 0,
+    "shellcheck": "passed on host and guest"
+  },
+  "file_manager": {
+    "initial_nautilus_install": "passed",
+    "saved_choice_repeat": "passed",
+    "flea_switch": "passed",
+    "nautilus_switch_back": "passed",
+    "final_committed_source_switches": "passed",
+    "defaults_uses_saved_nautilus_with_flea_installed": "passed",
+    "selected_nautilus_protected_from_debloat": true,
+    "nautilus_filemanager1_process_verified": true
+  },
+  "obs": {
+    "unaccelerated_vm": "failed: hyprland-share-picker SIGSEGV in Hyprtoolkit::CWaylandBuffer",
+    "hyprtoolkit_version": "0.6.0-2.fc44",
+    "portal_version": "1.5.0-1.fc44",
+    "virgl_clone": "passed",
+    "renderer": "Mesa virgl (NVIDIA GeForce RTX 2060/PCIe/SSE2)",
+    "obs_version": "32.1.1",
+    "portal_stream": "1280x800 BGRA, streaming without error",
+    "recording": {
+      "status": "passed",
+      "duration_seconds": 70.635,
+      "video": {
+        "codec": "h264",
+        "width": 1152,
+        "height": 720,
+        "frame_rate": "60/1",
+        "decoded_frames": 4216,
+        "sample_sha256": [
+          "6e06dbeafb29f3ae34c899e6e22adaed549f24f075c4d151472230c4c53a0025",
+          "7f38ea44daa0d38293a9ef90fde2eab916d7f10f2efe13296f717023ae4713d3",
+          "da32eed8020b1ffac31df71ade9fc27e743d42469246ff6d48e3cf0e244a0e69"
+        ],
+        "sample_distinct_byte_values": [
+          256,
+          256,
+          256
+        ]
+      },
+      "audio": {
+        "codec": "aac",
+        "rms": 0.07886032957203093,
+        "tone_440hz_amplitude": 0.10567384783629055
+      },
+      "recording_sha256": "3c281d5df5fa55051f4a8e57b5e58ce233fd801a2440fcfa88d9a96e2c829b15"
+    },
+    "host_decoder_recheck": "passed",
+    "render_lag": {
+      "frames": 12,
+      "attempted": 4246,
+      "percent": 0.3
+    },
+    "physical_audio_tested": false,
+    "remote_streaming_tested": false
+  },
+  "screenshots": {
+    "menu.png": {
+      "sha256": "05472982c6209d6ffbdddd38a23162066d7c449a5205a7b2db43f100125b973c",
+      "width": 1280,
+      "height": 800
+    },
+    "nautilus.png": {
+      "sha256": "7767278d91aab7ac45133d8ea5d06c0920ed05b88512b1f2d97fc2413c335870",
+      "width": 1280,
+      "height": 800
+    },
+    "obs-picker.png": {
+      "sha256": "a157a787ae7763b6993a3a774feb2867b927159c7ab5ffd909278fa91e0c6c95",
+      "width": 1280,
+      "height": 800
+    },
+    "obs-recording.png": {
+      "sha256": "2abbf8c25e2cdd5c0875a86a8526663e52dc72b62bd552e7cc1143b0fc703595",
+      "width": 1280,
+      "height": 800
+    },
+    "decoded-frame.png": {
+      "sha256": "ecf4bd42f7632e793b30e93e958facd89c9bc215bf4dff06059496317ed288b0",
+      "width": 1152,
+      "height": 720
+    }
+  },
+  "cleanup": {
+    "guests_stopped": true,
+    "temporary_ssh_keys_removed": true,
+    "temporary_passwordless_sudo_removed": true,
+    "temporary_autologin_removed": true,
+    "original_disk_acl_restored": true,
+    "disposable_overlay_removed": true,
+    "original_vm_preserved": true
+  }
+}

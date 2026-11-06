@@ -1,0 +1,27 @@
+{
+  "status": "passed",
+  "duration_seconds": 70.635,
+  "video": {
+    "codec": "h264",
+    "width": 1152,
+    "height": 720,
+    "frame_rate": "60/1",
+    "decoded_frames": 4216,
+    "sample_sha256": [
+      "6e06dbeafb29f3ae34c899e6e22adaed549f24f075c4d151472230c4c53a0025",
+      "7f38ea44daa0d38293a9ef90fde2eab916d7f10f2efe13296f717023ae4713d3",
+      "da32eed8020b1ffac31df71ade9fc27e743d42469246ff6d48e3cf0e244a0e69"
+    ],
+    "sample_distinct_byte_values": [
+      256,
+      256,
+      256
+    ]
+  },
+  "audio": {
+    "codec": "aac",
+    "rms": 0.07886032957203093,
+    "tone_440hz_amplitude": 0.10567384783629055
+  },
+  "recording_sha256": "3c281d5df5fa55051f4a8e57b5e58ce233fd801a2440fcfa88d9a96e2c829b15"
+}
