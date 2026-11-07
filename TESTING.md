@@ -1,4 +1,37 @@
-# Validation record — updated 2026-11-02
+# Validation record — updated 2026-11-08
+
+## Fedora 45 support — 2026-11-08
+
+The installer and read-only Plasma removal planner now accept mutable Fedora 44
+and 45. Architecture, enforcing SELinux and Atomic exclusions remain enforced.
+Package, DMS, experience and Omasnap CI jobs now cover both releases; the manual
+cleanup and Flatpak workflows also offer both container targets. The graphical
+VM workflow still uses its verified Fedora 44 ISO.
+
+Local Bash syntax, ShellCheck and **106 regression tests passed**. New regressions
+check the exact release allowlist, preflight rejection paths and release-specific
+COPR URLs. Fedora 45 Hyprland/DMS repository metadata was reachable.
+
+Native checks used disposable `fedora:45` containers, with the repository mounted
+read-only. Image digest:
+`sha256:a7d72ba2745b100a3351087472e5ee7b2450af7cf331e7673007e3817612839c`.
+
+- `tests/fedora-packages.sh` passed: system/package installation, Python/pip and
+  venv, Node.js/npm, real C++ and Rust compilation, and `dnf5 check`.
+- `tests/dms-packages.sh` passed installation and repeat with DMS
+  `2.1.1-1.fc45`. A follow-up container with a private D-Bus session and
+  `DESKTOP=dms` passed both rounds of the actual terminal and application theme
+  setup. The fixture now explicitly sets that desktop to prevent skipped theme
+  checks.
+- The experience fixture now verifies switching between Nautilus and Flea and
+  preserving the selected default on a subsequent run; its full Fedora 45 run
+  is delegated to CI.
+
+These checks establish native Fedora 45 package and configuration compatibility.
+A complete Fedora 45 graphical installation, reboot, screen capture and OBS
+recording have **not** been performed. Existing GUI evidence below is Fedora 44.
+
+## Earlier Fedora 44 validation
 
 **Full Fedora KDE 44 CLI installation, repeat and reboot passed** in
 [the follow-up KVM run](https://github.com/Jan-Bladek/fedora-postinstall/actions/runs/41304027246).

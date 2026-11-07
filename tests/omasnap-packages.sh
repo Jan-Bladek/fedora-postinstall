@@ -3,7 +3,7 @@
 set -Eeuo pipefail
 [[ ${FEDORA_POSTINSTALL_TEST_TARGET:-} == disposable ]] || exit 1
 source /etc/os-release
-[[ $ID == fedora && $VERSION_ID == 44 ]] || exit 1
+[[ $ID == fedora && $VERSION_ID =~ ^(44|45)$ ]] || exit 1
 ROOT=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
 if ((EUID == 0)); then
     dnf5 -y install sudo python3 git curl shadow-utils diffutils

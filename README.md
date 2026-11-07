@@ -1,6 +1,6 @@
 # Fedora Post-Install · Plasma / Noctalia / DMS
 
-Modułowy instalator Bash dla **klasycznej Fedory 44 x86_64 z DNF5**, również Fedora KDE Desktop. Konfiguruje już zainstalowany system; nie jest dystrybucją. Fedora Atomic, inne wydania i ARM są blokowane. SELinux pozostaje Enforcing.
+Modułowy instalator Bash dla **klasycznej Fedory 44 lub 45 x86_64 z DNF5**, również Fedora KDE Desktop. Konfiguruje już zainstalowany system; nie jest dystrybucją. Fedora Atomic, inne wydania i ARM są blokowane. SELinux pozostaje Enforcing.
 
 ![Kitty po konfiguracji w testowej Fedorze](tests/vm/evidence/fedora44-v0.4-kitty.png)
 
@@ -185,7 +185,7 @@ poprzedni proces nadal zajmuje nazwę D-Bus FileManager1.
 
 Wariant `--file-manager flea` instaluje [Flea](https://github.com/thisisgm/flea). Upstream oficjalnie wymaga Omarchy. To **adaptacja dla Fedory utrzymywana w tym projekcie**, a nie deklarowane przez autora wsparcie Fedory. Instalator buduje wersję `0.3.12` z przypiętej rewizji (`data/flea-release`), używa `cargo --locked --offline` i uruchamia testy Rust upstream. Nie używa pakietów Arch ani pacmana. Mała poprawka źródeł mapuje `/lib64` na `usr/lib64` wewnątrz sandboxu bubblewrap, zgodnie z układem Fedory; zachowuje wszystkie flagi izolacji. Nieznany układ upstream blokuje patchowanie, a digest poprawki jest częścią zapisu wersji payloadu.
 
-GUI wymaga Quickshell >=0.3.1. Fedora 44 ma starszy pakiet, więc gdy nie ma odpowiedniego RPM, dodawany jest opisany wcześniej COPR `lionheartp/Hyprland`. Z Omarchy pobierane są tylko przypięte biblioteki komponentów `shell/Commons` i `shell/Ui`, umieszczane prywatnie obok Flea z licencją MIT. Nie instalujemy pakietu Omarchy, jego poleceń, panelu ani usług. Flea korzysta z własnej palety awaryjnej, gdy nie ma motywu Omarchy.
+GUI wymaga Quickshell >=0.3.1. Jeżeli system nie dostarcza odpowiednio nowego RPM Quickshell, dodawany jest opisany wcześniej COPR `lionheartp/Hyprland`. Z Omarchy pobierane są tylko przypięte biblioteki komponentów `shell/Commons` i `shell/Ui`, umieszczane prywatnie obok Flea z licencją MIT. Nie instalujemy pakietu Omarchy, jego poleceń, panelu ani usług. Flea korzysta z własnej palety awaryjnej, gdy nie ma motywu Omarchy.
 
 Przed przełączeniem aktywnego payloadu instalator ładuje prawdziwe QML w odizolowanej sesji offscreen i czeka na `flea ready` przez IPC. Dopiero po sukcesie ustawia `com.thisisgm.flea.desktop` dla `inode/directory`, zapisuje aktywację D-Bus `org.freedesktop.FileManager1` zgodnie z wyborem. Nautilus może pozostać zainstalowany; jego usunięcie wymaga osobnego debloat. Nie usuwa zależności przez autoremove, rozszerzeń na ślepo ani Qt. Dolphin jest usuwany dopiero przez wybrany debloat. Wcześniejsza rejestracja FileManager1 jest kopiowana do katalogu przebiegu; już działający inny menedżer może zachować nazwę D-Bus do wylogowania.
 

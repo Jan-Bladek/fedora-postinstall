@@ -3,7 +3,7 @@
 set -Eeuo pipefail
 [[ ${FEDORA_POSTINSTALL_TEST_TARGET:-} == disposable ]] || exit 1
 source /etc/os-release
-[[ $ID == fedora && $VERSION_ID == 44 ]] || exit 1
+[[ $ID == fedora && $VERSION_ID =~ ^(44|45)$ ]] || exit 1
 ROOT=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
 if ((EUID == 0)); then
     dnf5 -y install sudo python3 git curl shadow-utils diffutils tar util-linux
@@ -46,7 +46,17 @@ module_files
 if [[ $had_cargo == 0 ]] && command -v cargo >/dev/null; then echo "Temporary Cargo was retained" >&2; exit 1; fi
 module_hyprmod
 module_hyprmod
-if rpm -q nautilus >/dev/null 2>&1; then exit 1; fi
+rpm -q nautilus
+[[ $(xdg-mime query default inode/directory) == com.thisisgm.flea.desktop ]]
+FILE_MANAGER=nautilus
+module_files
+module_defaults
+[[ $(xdg-mime query default inode/directory) == org.gnome.Nautilus.desktop ]]
+FILE_MANAGER=''
+module_defaults
+[[ $(xdg-mime query default inode/directory) == org.gnome.Nautilus.desktop ]]
+FILE_MANAGER=flea
+module_files
 [[ $(xdg-mime query default inode/directory) == com.thisisgm.flea.desktop ]]
 grep -q '^scrollback_lines 5555$' "$CONFIG/kitty/kitty.conf"
 grep -q '^confirm_os_window_close 0$' "$CONFIG/kitty/kitty.conf"

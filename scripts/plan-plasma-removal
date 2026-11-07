@@ -3,8 +3,10 @@
 set -Eeuo pipefail
 ROOT=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
 source /etc/os-release
-[[ $ID == fedora && $VERSION_ID == 44 ]] || { echo 'Supported target: Fedora 44.' >&2; exit 1; }
 source "$ROOT/lib/core.sh"
+if [[ $ID != fedora ]] || ! supported_fedora_release "$VERSION_ID"; then
+    die 'Supported targets: Fedora 44 or 45.'
+fi
 source "$ROOT/modules/kde-removal.sh"
 selection=$(plasma_removal_targets) || die 'Cannot read the installed RPM database.'
 [[ -n $selection ]] || { echo 'No allowlisted Plasma packages installed.'; exit 0; }

@@ -3,7 +3,7 @@
 set -Eeuo pipefail
 [[ ${FEDORA_POSTINSTALL_TEST_TARGET:-} == disposable ]] || { echo 'Set FEDORA_POSTINSTALL_TEST_TARGET=disposable inside a disposable guest.' >&2; exit 1; }
 source /etc/os-release
-[[ $ID == fedora && $VERSION_ID == 44 && $EUID == 0 ]] || exit 1
+[[ $ID == fedora && $VERSION_ID =~ ^(44|45)$ && $EUID == 0 ]] || exit 1
 ROOT=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
 source "$ROOT/lib/core.sh"
 RUN=$(mktemp -d)

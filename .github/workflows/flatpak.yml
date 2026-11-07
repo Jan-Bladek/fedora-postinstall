@@ -6,8 +6,12 @@ jobs:
   applications:
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        fedora: [44, 45]
     container:
-      image: fedora:44
+      image: fedora:${{ matrix.fedora }}
       # Flatpak's extra-data deployment uses bubblewrap namespaces. This is an
       # ephemeral hosted runner, never a request to change the user's host.
       options: --privileged

@@ -6,7 +6,11 @@ jobs:
   cleanup:
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    container: fedora:44
+    strategy:
+      fail-fast: false
+      matrix:
+        fedora: [44, 45]
+    container: fedora:${{ matrix.fedora }}
     steps:
       - uses: actions/checkout@v4
         with:

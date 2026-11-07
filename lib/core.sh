@@ -16,11 +16,14 @@ run() {
     fi
 }
 confirm() { local reply; read -r -p "$1 [type YES]: " reply; [[ $reply == YES ]]; }
+supported_fedora_release() { [[ ${1:-} == 44 || ${1:-} == 45 ]]; }
 preflight() {
     ((EUID != 0)) || die 'Run as your desktop user; sudo is used only where required.'
     if ((DRY_RUN)); then return; fi
     source /etc/os-release
-    [[ $ID == fedora && $VERSION_ID == 44 ]] || die 'Supported target: mutable Fedora 44 only.'
+    if [[ $ID != fedora ]] || ! supported_fedora_release "$VERSION_ID"; then
+        die 'Supported targets: mutable Fedora 44 or 45.'
+    fi
     [[ ! -e /run/ostree-booted ]] || die 'Atomic editions are not supported.'
     [[ $(uname -m) == x86_64 ]] || die 'Full application set requires x86_64.'
     command -v dnf5 >/dev/null || die 'DNF5 is required.'

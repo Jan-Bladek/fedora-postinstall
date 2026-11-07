@@ -1,22 +1,24 @@
 #!/usr/bin/env bash
-# Only execute in a disposable Fedora 44 CI container, never on the workstation.
+# Only execute in a disposable Fedora 44/45 CI container, never on the workstation.
 set -Eeuo pipefail
 [[ ${FEDORA_POSTINSTALL_TEST_TARGET:-} == disposable ]] || exit 1
 source /etc/os-release
-[[ $ID == fedora && $VERSION_ID == 44 ]] || exit 1
+[[ $ID == fedora && $VERSION_ID =~ ^(44|45)$ ]] || exit 1
 ROOT=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
 source "$ROOT/lib/core.sh"
 source "$ROOT/lib/desktop.sh"
 source "$ROOT/modules/dms.sh"
 if ((EUID == 0)); then
-    dnf5 -y install curl python3 sudo
+    dnf5 -y install curl python3 sudo dbus-daemon dconf
     useradd -m dms-tester
     printf 'dms-tester ALL=(ALL) NOPASSWD: ALL\n' > /etc/sudoers.d/dms-test
     chmod 440 /etc/sudoers.d/dms-test
-    exec sudo -H -u dms-tester env FEDORA_POSTINSTALL_TEST_TARGET=disposable bash "$ROOT/tests/dms-packages.sh"
+    exec sudo -H -u dms-tester env FEDORA_POSTINSTALL_TEST_TARGET=disposable dbus-run-session bash "$ROOT/tests/dms-packages.sh"
 fi
 RUN=$(mktemp -d)
 CONFIG=$RUN/config
+DESKTOP=dms
+export DESKTOP
 export XDG_CONFIG_HOME=$CONFIG
 trap 'rm -rf -- "$RUN"' EXIT
 mkdir -p "$CONFIG"
