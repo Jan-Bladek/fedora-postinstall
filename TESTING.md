@@ -774,3 +774,17 @@ frames differed, and synthetic 440 Hz audio was detected. Independent host
 decoding also passed. The non-3D VM failed at the system Hyprtoolkit picker
 with SIGSEGV; this limitation remains explicit. Physical audio and remote
 streaming were not tested.
+
+# 2026-11-07: P switches installer progress to live command output
+
+The progress viewer now accepts P/p without Enter. It leaves the curses screen
+and streams the existing install.log, including stdout and stderr already
+written and subsequent command output. Another P restores the progress view;
+installation continues independently. The viewer alone reads the terminal,
+does not inherit the installer lock and restores terminal settings on exit.
+
+The full check passed ShellCheck and 102 tests. Real 80x24 PTY tests exercised
+P/p/P, live stdout/stderr while the worker continued, completion, failure
+reporting, Ctrl+C interruption and restoration of the original terminal mode.
+These are terminal integration tests; no Fedora package transaction was run
+for this UI-only change.

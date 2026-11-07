@@ -212,6 +212,64 @@ ui_finish 42
             self.assertEqual(status, 0, output)
             self.assertIn('kod 42', output)
 
+    def test_p_toggles_live_log_without_interrupting_work_and_restores_terminal(self):
+        with tempfile.TemporaryDirectory() as temp:
+            script = r'''
+source "$1/lib/ui.sh"
+ROOT=$1
+RUN=$2
+USE_PROGRESS=1
+DESKTOP=dms
+original=$(stty -g < /dev/tty)
+exec > "$RUN/install.log" 2>&1
+ui_start
+printf 'PACKAGE_BEFORE_P\n'
+sleep 0.5
+printf 'PACKAGE_DETAILS_AFTER_P\n' >&2
+ui_status 'Instalowanie pakietów'
+printf '50\n' > "$RUN/progress-percent"
+sleep 0.5
+printf 'PACKAGE_COMPLETED\n'
+touch "$RUN/work-completed"
+ui_finish 0
+[[ $(stty -g < /dev/tty) == "$original" ]]
+printf '\nTTY_RESTORED\n' > /dev/tty
+'''
+            status, output = self.run_terminal(['bash', '-eu', '-c', script, 'test', str(ROOT), temp],
+                                               [b'P', b'p', b'P'], rows=24, columns=80,
+                                               ready=[b'P:', b'PACKAGE_DETAILS_AFTER_P', b'P:'])
+            self.assertEqual(status, 0, output)
+            self.assertGreaterEqual(output.count('Szczegóły instalacji'), 2, output)
+            self.assertIn('PACKAGE_BEFORE_P', output)
+            self.assertIn('PACKAGE_DETAILS_AFTER_P', output)
+            self.assertIn('PACKAGE_COMPLETED', output)
+            self.assertIn('TTY_RESTORED', output)
+            self.assertTrue((Path(temp) / 'work-completed').exists())
+            self.assertEqual((Path(temp) / 'install.log').read_text(),
+                             'PACKAGE_BEFORE_P\nPACKAGE_DETAILS_AFTER_P\nPACKAGE_COMPLETED\n')
+
+    def test_progress_ctrl_c_interrupts_worker_and_restores_terminal(self):
+        with tempfile.TemporaryDirectory() as temp:
+            script = r'''
+source "$1/lib/ui.sh"
+ROOT=$1
+RUN=$2
+USE_PROGRESS=1
+DESKTOP=dms
+original=$(stty -g < /dev/tty)
+trap 'ui_finish 130; [[ $(stty -g < /dev/tty) == "$original" ]]; printf "\nTTY_RESTORED\n"; exit 130' INT
+: > "$RUN/install.log"
+ui_start
+sleep 20
+touch "$RUN/should-not-complete"
+'''
+            status, output = self.run_terminal(['bash', '-eu', '-c', script, 'test', str(ROOT), temp],
+                                               [b'p', b'\x03'], rows=24, columns=80,
+                                               ready=[b'P:', 'Szczegóły instalacji'.encode()])
+            self.assertEqual(status, 130, output)
+            self.assertIn('TTY_RESTORED', output)
+            self.assertFalse((Path(temp) / 'should-not-complete').exists())
+
     @unittest.skipUnless(shutil.which('whiptail'), 'native whiptail is unavailable')
     def test_native_summary_accepts_consent_in_an_80_by_24_terminal(self):
         script = r'''source "$1/lib/ui.sh"

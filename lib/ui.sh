@@ -96,14 +96,13 @@ ui_start() {
     ui_status 'Przygotowywanie kopii zapasowej'
     exec 7>/dev/tty
     (
-        while [[ ! -f $RUN/progress-done ]]; do
-            printf 'XXX\n%s\nFedora Post-Install · %s\n\n%s\n\nEtapy ukończone. Szczegóły: %s/install.log\nXXX\n' \
-                "$(cat "$RUN/progress-percent")" "$DESKTOP" "$(cat "$FEDORA_PROGRESS_STATUS")" "$RUN"
-            sleep 1
-        done
-        if [[ ! -f $RUN/progress-exit || $(cat "$RUN/progress-exit") == 0 ]]; then printf '100\n'; fi
-    ) | whiptail --title 'Fedora · Instalacja' --gauge 'Przygotowanie' 13 78 0 >&7 2>&7 &
+        # The viewer owns keyboard input and must not retain the installer lock.
+        exec 9>&- 7>&-
+        exec python3 "$ROOT/scripts/install-progress.py" "$RUN" "$DESKTOP" "$$" </dev/tty >/dev/tty 2>&1
+    ) &
     UI_PID=$!
+    # Commands run noninteractively after approval; P belongs to the viewer.
+    exec </dev/null
 }
 ui_finish() {
     local rc=${1:-0}

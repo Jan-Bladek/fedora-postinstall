@@ -21,13 +21,14 @@ bash install.sh --dry-run
 Uruchamiaj jako zwykły użytkownik. Instalator pokazuje kolejno:
 
 1. Wybór **Plasma**, **Hyprland + Noctalia** albo **Hyprland + DMS**.
-2. Pytanie **Debloat Plasma: tak/nie** — cały zestaw z listy, bez wyboru pojedynczych aplikacji. Domyślnie nie.
-3. Osobny wybór VS Code, RustRover, IntelliJ IDEA, WebStorm, CLion i Arduino IDE. Rust jest instalowany z RustRover, C/C++ z CLion, Node.js z WebStorm. Domyślnie zaznaczone jest VS Code.
-4. Wybór LibreOffice Writer/Calc/Impress po polsku; wybór zachowuje go również przy debloat.
-5. Jedno podsumowanie zgody na zmiany, źródła pakietów i klucze dostawców.
-6. Ekran postępu z bieżącym etapem/aplikacją. Pełne wyjście poleceń trafia do logu.
+2. Wybór menedżera plików **Flea** albo **Nautilus**.
+3. Pytanie **Debloat Plasma: tak/nie** — cały zestaw z listy, bez wyboru pojedynczych aplikacji. Domyślnie nie.
+4. Osobny wybór VS Code, RustRover, IntelliJ IDEA, WebStorm, CLion i Arduino IDE. Rust jest instalowany z RustRover, C/C++ z CLion, Node.js z WebStorm. Domyślnie zaznaczone jest VS Code.
+5. Wybór LibreOffice Writer/Calc/Impress po polsku; wybór zachowuje go również przy debloat.
+6. Jedno podsumowanie zgody na zmiany, źródła pakietów i klucze dostawców.
+7. Ekran postępu z bieżącym etapem/aplikacją. **P** (również małe `p`, bez Enter) przełącza na pełny log poleceń na żywo. Ponowne **P** przywraca ekran postępu. Przełączanie nie zatrzymuje instalacji; `Ctrl+C` ją przerywa. Pełne wyjście zawsze pozostaje zapisane w `install.log` danego przebiegu. `--no-progress` pokazuje log od początku.
 
-TUI korzysta z whiptail, a gdy go brakuje — z Python curses. Nie wymaga pobrania skryptu interfejsu z internetu. TUI jest sprawdzane w terminalu 80×24; większe okno ułatwia czytanie. W podsumowaniu PgUp/PgDn przewija opis. W whiptail klawisz Tab przechodzi z opisu do przycisków; Enter zatwierdza. Esc anuluje wybór.
+TUI korzysta z whiptail, a gdy go brakuje — z Python curses. Widok postępu i przełączanie logu obsługuje Python curses. Nie wymaga pobrania skryptu interfejsu z internetu. TUI jest sprawdzane w terminalu 80×24; większe okno ułatwia czytanie. W podsumowaniu PgUp/PgDn przewija opis. W whiptail klawisz Tab przechodzi z opisu do przycisków; Enter zatwierdza. Esc anuluje wybór.
 
 Po zatwierdzeniu nie trzeba wpisywać kolejnych T/YES przy DNF, Flatpak, źródłach i archiwach. Hasło sudo może być potrzebne raz; uprawnienia są odnawiane tylko podczas działania instalatora. Nie zmieniamy sudoers. Jeżeli nie ma terminala, wymagane jest jawne `--yes`.
 
