@@ -6,6 +6,8 @@ Modułowy instalator Bash dla **klasycznej Fedory 44 lub 45 x86_64 z DNF5**, ró
 
 Projekt jest wydaniem testowym. Faktycznie wykonane testy, zrzuty GUI i ograniczenia opisuje [TESTING.md](TESTING.md). Do pracy z IDE zalecane jest 16 GB RAM i co najmniej 30 GB wolnego miejsca; potrzebne są internet, konto z sudo oraz niezależna kopia danych osobistych.
 
+[Lista własnych komend i wszystkich ich opcji](#komendy-projektu).
+
 ## Instalacja i TUI
 
 ```bash
@@ -14,7 +16,7 @@ cd fedora-postinstall
 bash install.sh
 
 
-Do testów
+# Podgląd do testów:
 bash install.sh --dry-run
 ```
 
@@ -53,6 +55,115 @@ python3 scripts/cleanup-plan.py --catalog
 # Dokładny plan pakietów na docelowej Fedorze (tylko odczyt RPM):
 python3 scripts/cleanup-plan.py all
 ```
+
+## Komendy projektu
+
+Uruchamiaj jako użytkownik pulpitu, bez poprzedzania całej komendy przez `sudo`.
+Narzędzia wymagające uprawnień proszą o nie dla konkretnych operacji. Komendy
+zainstalowane w `~/.local/bin` wymagają tego katalogu w `PATH`; można też wywołać
+je pełną ścieżką, np. `~/.local/bin/fedora-display off`. Dostępność zależy od
+wybranych modułów instalatora.
+
+### Komendy dostępne po instalacji
+
+| Komenda | Opcje / działania | Zastosowanie |
+|---|---|---|
+| `fedora-display` | `install`, `off`, `on`, `toggle`, `status`, `reset`, `--help` | Trwałe przełączanie SDR/HDR i 8/10-bit. `off`: SDR/sRGB, 8-bit, bez auto-HDR i zgłaszania typu treści. `on`: 10-bit i automatyczne HDR w fullscreen, zależnie od sprzętu. `toggle`: przełącza profile; z własnej konfiguracji wybiera `off`. `status`: pokazuje profil i dane monitorów. `reset`: przywraca własne reguły. `install`: doinstalowuje samą komendę. |
+| `fedora-update` | bez opcji, `--check`, `--yes`, `--help` | Bez opcji pyta o zgodę, robi kopię i aktualizuje zarządzane źródła. `--check` sprawdza RPM/COPR, Flatpak i Rustup bez instalowania; odświeża metadane. `--yes` pomija pytanie o zgodę. |
+| `fedora-restore` | bez argumentów lub `list`, `import ID_PRZEBIEGU`, `ID_KOPII`; flagi poniżej | Lista kopii, import starszego przebiegu lub podgląd/przywrócenie wybranych elementów. Bez `--apply` pokazuje tylko plan. |
+| `clipboard-history` | bez argumentów lub `open`, `pick`, `start`, `clear` | `open` otwiera historię w Kitty; `pick` wybiera wpis w bieżącym terminalu; `start` uruchamia usługę zbierania historii w sesji Wayland; `clear` usuwa zapisaną historię. |
+| `validate-omasnap` | bez opcji, `--capture-smoke` | Sprawdza zarządzaną instalację Omasnap i kolizje skrótów w Hyprlandzie. `--capture-smoke` dodatkowo robi zrzut monitora i zastępuje schowek obrazem PNG. |
+
+Flagi `fedora-restore ID_KOPII`:
+
+| Flaga | Działanie |
+|---|---|
+| `--components GRUPA,GRUPA` | Wybór grup oddzielonych przecinkiem, bez spacji. Domyślnie: `hyprland,kitty,zsh,defaults`. Dostępne również: `desktop`, `services`, `applications`, `lazyvim`, `packages`. |
+| `--apply` | Wykonuje pokazany plan przywracania. |
+| `--yes` | Pomija pytanie o zgodę przy `--apply`; nie omija konfliktów. |
+| `--force` | Pozwala nadpisać pliki zmienione po zapisaniu kopii; może zastąpić późniejsze własne edycje. |
+| `--json` | Wypisuje listę kopii albo plan w JSON; nie oznacza trybu podglądu, jeśli dodasz też `--apply`. |
+| `--help` | Wyświetla pomoc. |
+
+`fedora-display`, `fedora-update` i `fedora-restore` przyjmują również krótkie `-h`
+zamiast `--help`.
+
+```bash
+fedora-display off
+fedora-display on
+fedora-update --check
+fedora-update
+fedora-restore list
+fedora-restore ID_KOPII --components kitty,defaults
+fedora-restore ID_KOPII --components kitty,defaults --apply
+fedora-restore import ID_PRZEBIEGU
+clipboard-history open
+validate-omasnap
+```
+
+`fedora-update` aktualizuje zainstalowane aplikacje i zarządzane źródła;
+**nowy kod samego instalatora pobiera się osobno przez `git pull --ff-only`
+w katalogu repozytorium**. Sposób doinstalowania samej komendy HDR opisuje
+[sekcja HDR / 10-bit](#hdr--10-bit-i-czarny-ekran-przy-fullscreen).
+
+### Narzędzia w katalogu danych użytkownika
+
+Te narzędzia mają pełne ścieżki, a nie osobne komendy w `PATH`. W przykładach
+możesz zapisać ich wspólny katalog jako zmienną bieżącego terminala:
+
+```bash
+fpi_scripts="$HOME/.local/share/fedora-postinstall/scripts"
+"$fpi_scripts/desktop-shell" name
+"$fpi_scripts/flea-manager" check
+"$fpi_scripts/omasnap-manager" check
+```
+
+| Narzędzie w `$fpi_scripts` | Argumenty | Działanie |
+|---|---|---|
+| `desktop-shell` | `name`, `start`, `health`, `launcher`, `panel`, `settings` | `name`: zapisany wybór DMS/Noctalia; `start`: uruchamia wybraną powłokę w Hyprlandzie; `health`: sprawdza odpowiedź jej interfejsu; pozostałe przełączają launcher, panel sterowania i ustawienia. Nie służy do zmiany wyboru powłoki. |
+| `flea-manager` | `install`, `update`, `check`, `uninstall` | Bez argumentu wykonuje `check`. Instaluje/buduje sprawdzoną rewizję, aktualizuje zarządzaną kopię, kontroluje instalację albo usuwa zarządzane launchery. Przed `uninstall` trzeba wybrać inny domyślny menedżer katalogów. |
+| `omasnap-manager` | `install`, `update`, `check`, `uninstall` | Bez argumentu wykonuje `check`. Instaluje/buduje sprawdzoną rewizję, aktualizuje zarządzaną kopię, kontroluje instalację albo usuwa zarządzane launchery. Zachowuje dane, konfigurację i starsze payloady. |
+| `vendor-apps.py` | `install [ID ...]`, `update`, `repair` | Uruchamiaj przez `python3`. `install` przyjmuje `rustrover`, `intellij-idea`, `webstorm`, `clion`, `arduino-ide`; bez ID wybiera wszystkie. `update` aktualizuje tylko zarządzane instalacje. `repair` odtwarza launchery zarządzanych IDE JetBrains. Wybór ID działa tylko z `install`. |
+| `symbols-fonts.py` | `install`, `update` | Przez `python3`: instaluje lub aktualizuje czcionkę symboli Nerd Fonts. `update` pomija brak zarządzanej instalacji. |
+| `zsh-manager.py` | `install`, `update` | Przez `python3`: instaluje lub aktualizuje zarządzany zestaw Oh My Zsh, wtyczek i Starship do rewizji przypiętych w projekcie. `update` pomija brak zarządzanej instalacji. |
+
+`install`/`update` menedżerów aplikacji mogą pobierać pliki i wykonywać kompilację;
+wymagane zależności instaluje odpowiedni moduł instalatora. `update` Flea/Omasnap
+nie wybiera automatycznie dowolnego nowego upstream: instaluje wersję sprawdzoną
+w manifestach projektu, a o nowszych tagach informuje. Na co dzień pełny przebieg
+aktualizacji z kopią i raportem zapewnia `fedora-update`.
+
+### Diagnostyka i planowanie z repozytorium
+
+Poniższe polecenia wykonuj w katalogu pobranego repozytorium:
+
+| Polecenie | Opcje / argumenty | Działanie |
+|---|---|---|
+| `bash scripts/validate-session` | bez opcji, `--check-only` | Sprawdza aktywny monitor, błędy konfiguracji, powłokę i usługi. Bez opcji dodatkowo pyta o ręczne testy launchera, blokady, suspend/resume, dźwięku, monitorów i OBS. `--check-only` kończy się po kontrolach automatycznych. Wymaga aktywnej sesji Hyprland. |
+| `bash scripts/plan-plasma-removal` | bez opcji | Wypisuje dokładne pakiety-kandydatów i wykonuje `rpm -e --test`; nie usuwa pakietów. Wymaga Fedory 44/45; test RPM może poprosić o sudo. |
+| `python3 scripts/cleanup-plan.py` | `--catalog`, `all` albo `ID [ID ...]` | `--catalog` pokazuje identyfikatory aplikacji. `all` lub lista ID tworzy JSON planu dla zainstalowanych RPM, uwzględniając wybranego menedżera plików; nie usuwa aplikacji. |
+| `python3 scripts/validate-flea.py` | `KATALOG_PAYLOADU` | Sprawdza zbudowany payload Flea, jego QML i działanie offscreen. Przykładowy katalog: `~/.local/share/fedora-postinstall/apps/flea/current`. |
+| `bash tests/check.sh` | bez opcji | Uruchamia sprawdzanie składni Bash, ShellCheck i lokalne testy regresji Python/Lua. Zależności opisuje sekcja testów. |
+
+### Wszystkie opcje instalatora
+
+Składnia: `bash install.sh [OPCJE]`. Opcje z argumentem można łączyć, np.
+`bash install.sh --desktop dms --file-manager nautilus --dev-apps "code clion"`.
+
+| Opcja | Wartość / działanie |
+|---|---|
+| `--help` | Wyświetla składnię i listę modułów. |
+| `--version` | Wyświetla wersję instalatora. |
+| `--dry-run` | Pokazuje plan modułów bez instalacji, sudo i pobierania. |
+| `--yes` | Zatwierdza instalację bez interaktywnego podsumowania; nie znosi osobnego potwierdzenia usunięcia Plasma. |
+| `--desktop noctalia\|dms\|plasma` | Wybiera wariant pulpitu. |
+| `--file-manager flea\|nautilus` | Wybiera menedżer plików. |
+| `--dev-profile code\|full` | Zestaw IDE: domyślny VS Code lub pełen zestaw. Własny wybór przez `--dev-apps`. |
+| `--dev-apps "ID ID"` | Wybrane IDE: `code`, `rustrover`, `intellij-idea`, `webstorm`, `clion`, `arduino-ide`; `none` oznacza brak. |
+| `--cleanup-apps "all\|ID ID"` | Wszystkie aplikacje z katalogu czyszczenia albo wskazane ID. Listę pokazuje `python3 scripts/cleanup-plan.py --catalog`. |
+| `--modules "MODUŁ MODUŁ"` | Wykonuje wyłącznie wskazane moduły z [listy modułów](#moduły-i-źródła). Wymagania zależą od modułu i stanu systemu. |
+| `--keep-hypr-config` | Zachowuje własny główny config Hyprlanda; proponowane zmiany zapisuje obok. |
+| `--no-progress` | Pokazuje pełny log od początku. W trybie postępu klawisz `P` przełącza log bez przerywania instalacji. |
 
 ## Warianty pulpitu
 
