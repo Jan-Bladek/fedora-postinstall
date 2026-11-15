@@ -45,20 +45,22 @@ case ${1:-} in
         pgrep -u "$(id -u)" -x noctalia >/dev/null
         exec timeout 10 noctalia msg status
         ;;
-    launcher|panel|settings)
+    launcher|panel|settings|lock)
         if [[ $shell == dms ]]; then
             case $1 in
                 launcher) exec dms ipc call spotlight toggle ;;
                 panel) exec dms ipc call control-center toggle ;;
                 settings) exec dms ipc call settings toggle ;;
+                lock) exec dms ipc call lock lock ;;
             esac
         else
             case $1 in
                 launcher) exec noctalia msg panel-toggle launcher ;;
                 panel) exec noctalia msg panel-toggle control-center ;;
                 settings) exec noctalia msg settings-toggle ;;
+                lock) exec noctalia msg session lock ;;
             esac
         fi
         ;;
-    *) echo 'Usage: desktop-shell {name|start|health|launcher|panel|settings}' >&2; exit 2 ;;
+    *) echo 'Usage: desktop-shell {name|start|health|launcher|panel|settings|lock}' >&2; exit 2 ;;
 esac

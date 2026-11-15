@@ -127,6 +127,7 @@ ui_module_label() {
         hyprland) echo 'Hyprland + profil Omarchy (kopia poprzedniego configu)' ;;
         noctalia) echo 'Powłoka Noctalia' ;;
         dms) echo 'Powłoka DankMaterialShell / Dux Shell' ;;
+        laptop-keys) echo 'Klawisze laptopa: jasność, dźwięk, mikrofon, radio, blokada i kalkulator' ;;
         terminal) echo 'Kitty, Zsh + Oh My Zsh, prompt Omarchy i fonty' ;;
         lazyvim) echo 'LazyVim + wtyczki (kopia starego Neovim)' ;;
         development) echo 'Wybrane IDE i ich narzędzia' ;;

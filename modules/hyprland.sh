@@ -21,6 +21,10 @@ validate_hyprland_config() {
     mkdir -p "$config_root/fedora-postinstall" "$config_root/hypr"
     chmod 700 "$runtime"
     printf '%s\n' "${DESKTOP:-noctalia}" > "$config_root/fedora-postinstall/shell"
+    # Standalone HDR profiles are loaded from XDG_CONFIG_HOME, outside hypr/.
+    if [[ -f $CONFIG/fedora-postinstall/display-profile.lua ]]; then
+        cp -- "$CONFIG/fedora-postinstall/display-profile.lua" "$config_root/fedora-postinstall/display-profile.lua"
+    fi
     # Preserve relative imports in custom configs, while keeping runtime sockets isolated.
     if [[ -d $CONFIG/hypr ]]; then cp -a -- "$CONFIG/hypr/." "$config_root/hypr/"; fi
     atomic_config "$RUN/hyprland.lua" "$config_root/hypr/hyprland.lua"

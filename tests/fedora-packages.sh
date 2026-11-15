@@ -23,6 +23,8 @@ run() {
 module_dependencies
 lua -v
 packages polkit-kde noctalia python3-pip
+packages brightnessctl wireplumber util-linux qalculate-gtk
+for tool in brightnessctl wpctl rfkill qalculate-gtk; do command -v "$tool"; done
 install_language_tools
 test -x /usr/libexec/kf6/polkit-kde-authentication-agent-1
 command -v wget

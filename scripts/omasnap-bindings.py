@@ -6,7 +6,7 @@ import sys
 
 
 def merge(text, module, name='OMASNAP'):
-    if name not in {'OMASNAP', 'FLEA', 'CLIPBOARD'}:
+    if name not in {'OMASNAP', 'FLEA', 'CLIPBOARD', 'LAPTOP-KEYS'}:
         raise ValueError('Unsupported managed Lua loader')
     begin = '-- BEGIN FEDORA-POSTINSTALL '+name
     end = '-- END FEDORA-POSTINSTALL '+name

@@ -72,6 +72,7 @@ wybranych modułów instalatora.
 | `fedora-update` | bez opcji, `--check`, `--yes`, `--help` | Bez opcji pyta o zgodę, robi kopię i aktualizuje zarządzane źródła. `--check` sprawdza RPM/COPR, Flatpak i Rustup bez instalowania; odświeża metadane. `--yes` pomija pytanie o zgodę. |
 | `fedora-restore` | bez argumentów lub `list`, `import ID_PRZEBIEGU`, `ID_KOPII`; flagi poniżej | Lista kopii, import starszego przebiegu lub podgląd/przywrócenie wybranych elementów. Bez `--apply` pokazuje tylko plan. |
 | `clipboard-history` | bez argumentów lub `open`, `pick`, `start`, `clear` | `open` otwiera historię w Kitty; `pick` wybiera wpis w bieżącym terminalu; `start` uruchamia usługę zbierania historii w sesji Wayland; `clear` usuwa zapisaną historię. |
+| `fedora-laptop` | `volume-up`, `volume-down`, `mute`, `mic-mute`, `brightness-up`, `brightness-down`, `airplane`, `lock`, `calculator`, `--help` / `-h` | Akcje klawiszy laptopa, dostępne także z terminala. Moduł `laptop-keys` instaluje komendę, zależności i przypisania. |
 | `validate-omasnap` | bez opcji, `--capture-smoke` | Sprawdza zarządzaną instalację Omasnap i kolizje skrótów w Hyprlandzie. `--capture-smoke` dodatkowo robi zrzut monitora i zastępuje schowek obrazem PNG. |
 
 Flagi `fedora-restore ID_KOPII`:
@@ -120,7 +121,7 @@ fpi_scripts="$HOME/.local/share/fedora-postinstall/scripts"
 
 | Narzędzie w `$fpi_scripts` | Argumenty | Działanie |
 |---|---|---|
-| `desktop-shell` | `name`, `start`, `health`, `launcher`, `panel`, `settings` | `name`: zapisany wybór DMS/Noctalia; `start`: uruchamia wybraną powłokę w Hyprlandzie; `health`: sprawdza odpowiedź jej interfejsu; pozostałe przełączają launcher, panel sterowania i ustawienia. Nie służy do zmiany wyboru powłoki. |
+| `desktop-shell` | `name`, `start`, `health`, `launcher`, `panel`, `settings`, `lock` | `name`: zapisany wybór DMS/Noctalia; `start`: uruchamia wybraną powłokę w Hyprlandzie; `health`: sprawdza odpowiedź jej interfejsu; `lock`: blokuje ekran wybraną powłoką; pozostałe przełączają launcher, panel sterowania i ustawienia. Nie służy do zmiany wyboru powłoki. |
 | `flea-manager` | `install`, `update`, `check`, `uninstall` | Bez argumentu wykonuje `check`. Instaluje/buduje sprawdzoną rewizję, aktualizuje zarządzaną kopię, kontroluje instalację albo usuwa zarządzane launchery. Przed `uninstall` trzeba wybrać inny domyślny menedżer katalogów. |
 | `omasnap-manager` | `install`, `update`, `check`, `uninstall` | Bez argumentu wykonuje `check`. Instaluje/buduje sprawdzoną rewizję, aktualizuje zarządzaną kopię, kontroluje instalację albo usuwa zarządzane launchery. Zachowuje dane, konfigurację i starsze payloady. |
 | `vendor-apps.py` | `install [ID ...]`, `update`, `repair` | Uruchamiaj przez `python3`. `install` przyjmuje `rustrover`, `intellij-idea`, `webstorm`, `clion`, `arduino-ide`; bez ID wybiera wszystkie. `update` aktualizuje tylko zarządzane instalacje. `repair` odtwarza launchery zarządzanych IDE JetBrains. Wybór ID działa tylko z `install`. |
@@ -199,6 +200,7 @@ Selektor `~/.config/fedora-postinstall/shell` steruje autostartem i skrótami. D
 | app-theme | Integracja DMS z GTK3/4, Qt przez GTK, VS Code, zarządzanym LazyVim i paletą terminala btop |
 | zsh | Sam Zsh + Oh My Zsh i przypięte wtyczki, z kopią i scaleniem `.zshrc` |
 | clipboard | Historia schowka pod Win+Shift+V: cliphist + fzf w Kitty, Tab/strzałki/Enter/Esc; tylko Hyprland |
+| laptop-keys | Jasność, dźwięk, mikrofon, tryb samolotowy, blokada i kalkulator; narzędzia RPM oraz przypisania XF86, tylko Hyprland |
 | lazyvim | Neovim, oficjalny starter LazyVim, lazy.nvim, ripgrep, fd, tree-sitter-cli i narzędzia kompilacji |
 | development | Tylko wybrane IDE i ich SDK; `full` zawiera też CLion |
 | libreoffice | Opcjonalny Writer, Calc i Impress z polskim pakietem językowym |
@@ -298,6 +300,50 @@ JetBrains Mono jest instalowany z Fedory, z aliasami fontconfig i ustawieniem fo
 btop ma `theme_background = False`, więc używa tła terminala (w Kitty z jego przezroczystością). Pozostałe ustawienia btop są zachowywane; stara wartość i duplikaty tylko tego klucza są zastępowane.
 
 Kitty: **Win+C / Win+V** kopiują zaznaczenie i wklejają schowek (mapowania `super+c` i `super+v`); Ctrl+C zachowuje przerywanie poleceń. `confirm_os_window_close 0`, `background_opacity 0.90`, JetBrains Mono. Inne własne ustawienia są zachowane; aktualizowany jest tylko oznaczony blok żądanych kluczy. VS Code: `TelemetryLevel=off` w `/etc/vscode/policy.json` i ustawienia użytkownika. JSONC jest scalany z zachowaniem wartości innych kluczy; oryginał z komentarzami znajduje się w kopii. Telemetria niezależnych rozszerzeń wymaga ich własnych ustawień; nie deklarujemy blokowania całego ruchu sieciowego.
+
+## Klawisze funkcyjne laptopa
+
+Moduł `laptop-keys` jest częścią domyślnych instalacji Hyprland + DMS/Noctalia.
+Na już zainstalowanym systemie wykonaj z katalogu repozytorium:
+
+```bash
+git pull --ff-only
+bash install.sh --yes --desktop dms --modules laptop-keys
+```
+
+Dla Noctalii zmień `--desktop dms` na `--desktop noctalia`. Uruchom jako zwykły
+użytkownik — instalator sam użyje sudo do brakujących pakietów. Ten przebieg
+instaluje tylko moduł klawiszy i zapisuje kopię konfiguracji; nie reinstaluje
+pulpitu. W aktywnej sesji wykonuje reload oraz sprawdza błędy Hyprlanda.
+
+| Klawisz / symbol XF86 | Działanie |
+|---|---|
+| `XF86MonBrightnessUp` / `XF86MonBrightnessDown` | Jasność podświetlenia ekranu ±5%, z niezerowym minimum. |
+| `XF86AudioRaiseVolume` / `XF86AudioLowerVolume` | Głośność domyślnego wyjścia ±5%, maksymalnie 100%. |
+| `XF86AudioMute` | Wyciszenie / włączenie domyślnego wyjścia audio. |
+| `XF86AudioMicMute` | Wyciszenie / włączenie domyślnego mikrofonu. |
+| `XF86RFKill` lub `XF86WLAN` | Tryb samolotowy: blokuje wszystkie radia, jeśli którekolwiek jest odblokowane; ponownie odblokowuje wszystkie programowo. Dotyczy m.in. Wi‑Fi, Bluetooth i WWAN. |
+| `XF86ScreenSaver` lub `Super+L` | Blokada ekranu przez wybraną powłokę DMS/Noctalia. |
+| `XF86Calculator` | Kalkulator Qalculate; awaryjnie KCalc lub GNOME Calculator, jeśli są dostępne. |
+
+Jasność i głośność działają po przytrzymaniu klawisza, również na ekranie blokady.
+Wyciszenie audio i mikrofonu też jest dostępne przy blokadzie; kalkulator i tryb
+samolotowy jej nie omijają. Używane są `wpctl` (WirePlumber), `brightnessctl`,
+`rfkill` (util-linux) i `qalculate-gtk`. Uprawnienia do sprzętu wynikają z aktywnej
+lokalnej sesji — nie dodajemy reguł sudoers ani szerokich uprawnień do urządzeń.
+Sprzętowej blokady radia nie da się zdjąć programowo. Blokada ekranu wymaga
+uruchomionej powłoki z włączoną funkcją blokowania.
+
+Przypisania trafiają do osobnego pliku
+`~/.config/hypr/fedora-postinstall-laptop-keys.lua`, ładowanego po ustawieniach
+użytkownika i DMS. Moduł zastępuje przypisania wymienionych klawiszy oraz
+`Super+L`; zachowuje pozostałe skróty, dwindle i profil HDR. Poprzedni główny Lua
+i poprzednia wersja modułu, jeśli istniała, pozostają w katalogu przebiegu.
+
+Akcje można sprawdzić oddzielnie od klawiatury, np. `fedora-laptop volume-up` lub
+`fedora-laptop brightness-up`. Jeśli akcja działa z terminala, a klawisz nie,
+sprawdź Fn/Fn Lock i symbol wysyłany przez klawiaturę, np. narzędziem `wev`.
+Niektóre laptopy obsługują część przełączników bezpośrednio w firmware.
 
 ## Menedżer plików: Flea lub Nautilus
 

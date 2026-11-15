@@ -1,5 +1,43 @@
 # Validation record — updated 2026-11-15
 
+## Laptop function keys — 2026-11-15
+
+Added the `laptop-keys` module to both Hyprland presets. Existing installations
+can apply just this module. It installs brightnessctl, WirePlumber/wpctl,
+util-linux/rfkill and Qalculate GTK, plus `fedora-laptop` and a last-loaded Lua
+module. The existing `desktop-shell` selector now routes `lock` to DMS's
+`dms ipc call lock lock` or Noctalia's `noctalia msg session lock`.
+
+Bindings cover display brightness, output volume/mute, microphone mute,
+RFKill/WLAN airplane mode, ScreenSaver lock, Super+L and Calculator. Only volume
+and brightness repeat when held; these controls and mute also work under input
+inhibition, while calculator/radio actions do not bypass the lock screen.
+Volume is capped at 100%, brightness targets the backlight class with a nonzero
+minimum, and microphone mute addresses the default source rather than the sink.
+Mixed radio states are blocked together; a subsequent press unblocks all radios
+in software, leaving hardware blocks effective. No host radio/audio/brightness
+changes or real screen lock were performed during validation.
+
+Bash syntax, ShellCheck and **133 regression tests passed**. Eight new tests
+cover action/device selection, radio toggling and malformed/no-device cases,
+calculator launch, lock routing for both shells, binding uniqueness/repeat/lock
+flags, repeated module installation retaining user code, and rollback after a
+failed reload. Installation tests use isolated homes and tool stand-ins.
+
+The actual module validator, running real Hyprland 0.56.2, accepted the new Lua
+with Noctalia/DMS and with no HDR profile, HDR off, or HDR on (six combinations).
+The shared validator now copies the user's standalone HDR module into its staged
+config; otherwise an existing HDR loader would fail before applying key bindings.
+The Fedora 44/45 package CI fixture now also checks the four RPM dependencies and
+their executable names; those new package transactions were not run locally.
+Physical Fn scan codes, backlight hardware access, radio permissions, microphone
+LEDs, and actual lock authentication still require testing on the laptop.
+
+References: [Hyprland bind flags](https://wiki.hypr.land/configuring/core/binds/flags/),
+[DMS lock IPC](https://duxlabs.dev/docs/dankmaterialshell/keybinds-ipc/),
+[Noctalia session/lock IPC](https://github.com/noctalia-dev/noctalia/blob/main/docs/user/configuration/shell.mdx),
+[Fedora util-linux/rfkill](https://packages.fedoraproject.org/pkgs/util-linux/util-linux/fedora-45.html).
+
 ## Dwindle and explicit terminal fullscreen — 2026-11-15
 
 The preset now loads a managed tiling policy after DMS's layout/window rules.

@@ -28,14 +28,15 @@ class DesktopChoice(unittest.TestCase):
                 plan = result.stdout.splitlines()[0].split('modules: ')[1].split()
                 self.assertNotIn('kde-removal', plan)
                 if desktop == 'plasma':
-                    self.assertTrue(set(plan).isdisjoint({'hyprland', 'noctalia', 'dms'}))
+                    self.assertTrue(set(plan).isdisjoint({'hyprland', 'noctalia', 'dms', 'laptop-keys'}))
                 else:
                     self.assertIn('hyprland', plan)
                     self.assertIn(desktop, plan)
+                    self.assertIn('laptop-keys', plan)
                     self.assertNotIn('dms' if desktop == 'noctalia' else 'noctalia', plan)
                 self.assertNotIn('FORBIDDEN', result.stdout+result.stderr)
             for desktop, modules in [('plasma', 'kde-removal'), ('plasma', 'hyprland'),
-                                     ('plasma', 'dms'), ('dms', 'noctalia'),
+                                     ('plasma', 'dms'), ('plasma', 'laptop-keys'), ('dms', 'noctalia'),
                                      ('noctalia', 'dms'), ('invalid', 'terminal')]:
                 result = subprocess.run(['bash', str(ROOT/'install.sh'), '--dry-run', '--desktop', desktop,
                                          '--modules', modules], env=env, text=True, capture_output=True)

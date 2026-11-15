@@ -1,0 +1,70 @@
+#!/usr/bin/env python3
+"""Actions for Hyprland laptop function keys; no root process or shell parsing."""
+import argparse
+import fcntl
+import json
+import os
+from pathlib import Path
+import shutil
+import subprocess
+import sys
+
+ACTIONS = ('volume-up', 'volume-down', 'mute', 'mic-mute', 'brightness-up',
+           'brightness-down', 'airplane', 'lock', 'calculator')
+
+
+def dispatch(action):
+    commands = {
+        'volume-up': ['wpctl', 'set-volume', '--limit', '1.0', '@DEFAULT_AUDIO_SINK@', '5%+'],
+        'volume-down': ['wpctl', 'set-volume', '--limit', '1.0', '@DEFAULT_AUDIO_SINK@', '5%-'],
+        'mute': ['wpctl', 'set-mute', '@DEFAULT_AUDIO_SINK@', 'toggle'],
+        'mic-mute': ['wpctl', 'set-mute', '@DEFAULT_AUDIO_SOURCE@', 'toggle'],
+        'brightness-up': ['brightnessctl', '--class=backlight', '--min-value=1', 'set', '+5%'],
+        'brightness-down': ['brightnessctl', '--class=backlight', '--min-value=1', 'set', '5%-'],
+        'lock': [str(Path.home() / '.local/share/fedora-postinstall/scripts/desktop-shell'), 'lock'],
+    }
+    if action in commands:
+        subprocess.run(commands[action], check=True, timeout=15)
+    elif action == 'calculator':
+        calculator = next((path for name in ('qalculate-gtk', 'kcalc', 'gnome-calculator')
+                           if (path := shutil.which(name))), None)
+        if calculator is None:
+            raise RuntimeError('Brak kalkulatora. Zainstaluj pakiet qalculate-gtk.')
+        subprocess.Popen([calculator], start_new_session=True)
+    elif action == 'airplane':
+        runtime = Path(os.environ.get('XDG_RUNTIME_DIR', str(Path.home() / '.cache')))
+        runtime.mkdir(parents=True, exist_ok=True)
+        with (runtime / 'fedora-laptop-radios.lock').open('w') as lock:
+            fcntl.flock(lock, fcntl.LOCK_EX)
+            result = subprocess.run(['rfkill', '--json', '--output', 'SOFT,HARD'],
+                                    capture_output=True, text=True, check=True, timeout=10)
+            devices = json.loads(result.stdout)['rfkilldevices']
+            if not devices:
+                raise RuntimeError('Brak urządzeń radiowych rfkill.')
+            states = [device['soft'] for device in devices]
+            if any(state not in ('blocked', 'unblocked') for state in states):
+                raise RuntimeError('Nieznany stan urządzeń rfkill; nie zmieniono ustawień.')
+            # A single global state: mixed Wi-Fi/Bluetooth must not just swap.
+            operation = 'block' if 'unblocked' in states else 'unblock'
+            subprocess.run(['rfkill', operation, 'all'], check=True, timeout=10)
+    else:
+        raise ValueError('Nieznana akcja klawisza laptopa.')
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('action', choices=ACTIONS)
+    args = parser.parse_args()
+    if os.geteuid() == 0:
+        parser.error('Uruchom jako użytkownik pulpitu, bez sudo.')
+    try:
+        dispatch(args.action)
+    except (OSError, ValueError, KeyError, RuntimeError, subprocess.SubprocessError) as error:
+        message = f'fedora-laptop: {error}'
+        print(message, file=sys.stderr)
+        if shutil.which('notify-send'):
+            try:
+                subprocess.run(['notify-send', '--urgency=normal', 'Klawisze laptopa', message], timeout=5, check=False)
+            except (OSError, subprocess.SubprocessError):
+                pass
+        sys.exit(1)
