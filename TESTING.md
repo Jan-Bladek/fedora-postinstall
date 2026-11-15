@@ -1,5 +1,32 @@
 # Validation record — updated 2026-11-15
 
+## fedora-update sudo authentication — 2026-11-15
+
+The update engine previously used `start_new_session=True`. This detached it
+from the controlling terminal and the session of the earlier `sudo -v`, breaking
+tty-scoped sudo authentication and any subsequent password prompt. It now uses a
+separate process group in the existing session, preserving group cancellation
+without detaching from the terminal. Privileged update stages use `sudo -n` to
+fail explicitly if authorization expires.
+
+Authentication occurs before checkpoints and update logging: cached/passwordless
+sudo is reused, otherwise whiptail displays a password box on `/dev/tty`. Only a
+private stdin pipe delivers the password to `sudo -S -v`; passwords are not placed
+in process arguments or printed. Cancellation aborts before updates. Without
+whiptail, native sudo reads from the real terminal. Missing terminals produce an
+instruction to rerun in a terminal rather than a suggestion to pass `-S` to the
+updater.
+
+Eight regressions cover cached authentication, private password delivery,
+cancellation, missing terminals, native-prompt fallback, bounded retries, a real
+whiptail password box under a PTY, and an actual update subprocess retaining its
+controlling terminal/session while using a separate process group. The password
+box test supplies a synthetic fixture password to a sudo stand-in and checks that
+the password never appears in PTY output. The subprocess test runs a harmless
+fixture stage with real checkpoint/report handling; it performs no package
+updates or privileged commands. Bash syntax, ShellCheck and **120 regression
+tests passed**; no Fedora VM package transaction was run for this fix.
+
 ## HDR / 10-bit display command — 2026-11-15
 
 Added standalone `fedora-display install` for existing systems, plus installation

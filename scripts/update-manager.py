@@ -100,10 +100,45 @@ def rpm_changes(before, after):
             for name in sorted(set(before) | set(after)) if before.get(name) != after.get(name)]
 
 
+def authenticate():
+    # Authenticate on the real terminal before stdout becomes a package log.
+    if subprocess.run(['sudo', '-n', '-v'], stdin=subprocess.DEVNULL,
+                      stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode == 0:
+        return
+    try:
+        terminal = open('/dev/tty', 'r+b', buffering=0)
+    except OSError as error:
+        raise RuntimeError('Brak terminala do wpisania hasła. Otwórz terminal i uruchom fedora-update ponownie.') from error
+    with terminal:
+        if not shutil.which('whiptail') or os.environ.get('TERM', 'dumb') == 'dumb':
+            print('Podaj hasło sudo w terminalu (wpisywane znaki są ukryte).', flush=True)
+            subprocess.run(['sudo', '-v'], stdin=terminal, stdout=terminal, stderr=terminal, check=True)
+            return
+        prompt = 'Podaj hasło użytkownika do sudo. Hasło nie jest zapisywane w logu.'
+        for _ in range(3):
+            dialog = subprocess.run(['whiptail', '--title', 'Fedora Update · Uprawnienia',
+                                     '--passwordbox', prompt, '10', '72'],
+                                    stdin=terminal, stdout=terminal, stderr=subprocess.PIPE, text=True)
+            if dialog.returncode:
+                raise RuntimeError('Anulowano podawanie hasła; aktualizacja nie została rozpoczęta.')
+            # Password goes only through a private pipe to sudo, never argv/logs.
+            password = dialog.stderr
+            del dialog
+            try:
+                result = subprocess.run(['sudo', '-S', '-p', '', '-v'], input=password+'\n',
+                                        stdout=terminal, stderr=subprocess.PIPE, text=True)
+            finally:
+                del password
+            if result.returncode == 0:
+                return
+            prompt = 'Nie udało się potwierdzić uprawnień sudo. Spróbuj ponownie lub naciśnij Anuluj.'
+        raise RuntimeError('Nie potwierdzono uprawnień sudo; aktualizacja nie została rozpoczęta.')
+
+
 def execute():
     os.umask(0o077)
     with recovery.Lock():
-        subprocess.run(['sudo', '-v'], check=True)
+        authenticate()
         stop = threading.Event()
         def refresh_sudo():
             while not stop.wait(40):
@@ -129,8 +164,10 @@ def execute():
                   'Brak skonfigurowanej migawki root. Kopia plików nie cofa aktualizacji RPM/Flatpak/Rust.', flush=True)
             engine = Path(__file__).with_name('update-actions.sh')
             env = dict(os.environ, FEDORA_UPDATE_RUN=str(run))
+            # A separate process group supports cancellation without setsid():
+            # sudo's tty-scoped timestamp must stay in the authenticated session.
             process = subprocess.Popen(['bash', str(engine)], env=env, stdout=subprocess.PIPE,
-                                       stderr=subprocess.STDOUT, text=True, start_new_session=True)
+                                       stderr=subprocess.STDOUT, text=True, process_group=0)
             with (run/'update.log').open('w') as log:
                 for line in process.stdout:
                     print(line.replace('::fedora-stage::', ''), end='', flush=True); log.write(line); log.flush()

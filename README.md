@@ -364,6 +364,28 @@ fedora-update --check
 fedora-update --yes
 ```
 
+Jeśli sudo wymaga uwierzytelnienia, przed rozpoczęciem aktualizacji pojawia się
+okno hasła `whiptail`. Wpisywane znaki są ukryte; Enter zatwierdza, Esc anuluje
+całą operację. Hasło jest przekazywane bezpośrednio do sudo przez potok, bez
+zapisywania w logu ani argumentach procesu. Przy ważnym potwierdzeniu sudo lub
+uprawnieniach bez hasła okno nie jest potrzebne. Bez `whiptail` działa zwykły,
+ukryty prompt sudo w terminalu. `--yes` pomija zgodę na aktualizację, ale nie
+uwierzytelnianie. `--check` nie wywołuje sudo.
+
+Proces aktualizacji zachowuje terminal i sesję potwierdzenia sudo. Poszczególne
+etapy używają `sudo -n`, więc wygasłe uprawnienia kończą etap błędem zamiast
+otwierać niewidoczny prompt w logu. **Nie dodawaj `-S` do `fedora-update`** — to
+opcja sudo, której użycie aktualizator obsługuje wewnętrznie.
+
+Doinstalowanie tej poprawki do istniejącej instalacji (w katalogu repozytorium,
+bez ponownej instalacji pulpitu):
+
+```bash
+git pull --ff-only
+install -m 755 scripts/update-manager.py scripts/update-actions.sh "$HOME/.local/share/fedora-postinstall/scripts/"
+fedora-update
+```
+
 Obejmuje DNF i aktywne COPR/repozytoria dostawców, Flatpak user/system, zarządzane archiwa JetBrains i Arduino AppImage, Rustup jeśli używany, zarządzany LazyVim, symbole Nerd Fonts i zainstalowane rozszerzenia VS Code. Noctalia i DMS aktualizują się przez RPM. Osobne etapy Omasnap i Flea sprawdzają tagi oraz obsługują przypięte, sprawdzone rewizje bez modyfikacji konfiguracji. Flea sprawdza także ładowanie QML po aktualizacji bibliotek. Niezainstalowane aplikacje producentów nie są pobierane.
 
 LazyVim używa `Lazy check/update`, bez `git pull` konfiguracji; kopia lockfile pozwala na próbę `Lazy restore` po błędzie. Nie obiecujemy zgodności każdej zewnętrznej wtyczki. Narzędzie nie aktualizuje arbitralnych plików w `/usr/local/bin`, nie dotyka cudzych checkoutów Git, środowisk pip ani projektów npm. Aktualizacje RPM pokrywają systemowe Python/C++/Rust. Logi: `~/.local/state/fedora-postinstall/updates/`.

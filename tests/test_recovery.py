@@ -155,6 +155,8 @@ class RecoveryTests(unittest.TestCase):
 
     def test_failed_update_finalizes_checkpoint_and_report(self):
         def failed_process(*args, **kwargs):
+            self.assertEqual(kwargs.get('process_group'), 0)
+            self.assertFalse(kwargs.get('start_new_session', False))
             self.assertTrue(recovery.list_points())
             self.assertEqual(recovery.list_points()[0]['status'], 'open')
             process = unittest.mock.Mock()
@@ -162,7 +164,7 @@ class RecoveryTests(unittest.TestCase):
             process.returncode = 42
             process.poll.return_value = 42
             return process
-        with patch.object(update.subprocess, 'run'), patch.object(update.subprocess, 'Popen', side_effect=failed_process), patch.object(update, 'rpm_inventory', return_value={}), patch.object(update, 'snapshot', return_value=None), patch.object(update, 'reboot_status', return_value='unknown'):
+        with patch.object(update, 'authenticate'), patch.object(update.subprocess, 'run'), patch.object(update.subprocess, 'Popen', side_effect=failed_process), patch.object(update, 'rpm_inventory', return_value={}), patch.object(update, 'snapshot', return_value=None), patch.object(update, 'reboot_status', return_value='unknown'):
             with self.assertRaises(RuntimeError):
                 update.execute()
         report = json.loads(next((recovery.state_root()/'updates').glob('*/report.json')).read_text())
@@ -171,7 +173,7 @@ class RecoveryTests(unittest.TestCase):
         self.assertEqual(recovery.load(report['checkpoint'])[1]['status'], 'failed')
 
     def test_failed_configured_snapshot_aborts_before_update(self):
-        with patch.object(update.subprocess, 'run'), patch.object(update.subprocess, 'Popen') as engine, patch.object(update, 'rpm_inventory', return_value={}), patch.object(update, 'snapshot', side_effect=RuntimeError('snapshot failed')), patch.object(update, 'reboot_status', return_value='unknown'):
+        with patch.object(update, 'authenticate'), patch.object(update.subprocess, 'run'), patch.object(update.subprocess, 'Popen') as engine, patch.object(update, 'rpm_inventory', return_value={}), patch.object(update, 'snapshot', side_effect=RuntimeError('snapshot failed')), patch.object(update, 'reboot_status', return_value='unknown'):
             with self.assertRaises(RuntimeError):
                 update.execute()
         engine.assert_not_called()

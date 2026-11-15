@@ -12,11 +12,11 @@ run=$FEDORA_UPDATE_RUN
 state=${XDG_STATE_HOME:-$HOME/.local/state}/fedora-postinstall
 export INSTALL_APPROVED=1
 printf '\n::fedora-stage::[1/10] Fedora, COPR, repozytoria dostawców\n'
-sudo dnf5 --assumeyes upgrade --refresh
+sudo -n dnf5 --assumeyes upgrade --refresh
 printf '\n::fedora-stage::[2/10] Flatpak\n'
 if command -v flatpak >/dev/null; then
     flatpak update --user --assumeyes --noninteractive
-    sudo flatpak update --system --assumeyes --noninteractive
+    sudo -n flatpak update --system --assumeyes --noninteractive
 fi
 printf '\n::fedora-stage::[3/10] Zarządzane archiwa JetBrains i Arduino AppImage\n'
 python3 "$HOME/.local/share/fedora-postinstall/scripts/vendor-apps.py" update
@@ -62,6 +62,6 @@ if [[ -f $state/managed/zsh ]]; then
     python3 "$HOME/.local/share/fedora-postinstall/scripts/zsh-manager.py" update
 fi
 printf '\n::fedora-stage::[10/10] Kontrola zależności\n'
-sudo dnf5 check
+sudo -n dnf5 check
 echo "Aktualizacja zakończona. Log: $run/update.log"
 echo 'DNF obejmuje RPM Noctalia/DMS i aktywne COPR. Własne pliki konfiguracji pozostają zachowane.'
