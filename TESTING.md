@@ -1,5 +1,38 @@
 # Validation record — updated 2026-11-15
 
+## Dwindle and explicit terminal fullscreen — 2026-11-15
+
+The preset now loads a managed tiling policy after DMS's layout/window rules.
+It selects dwindle, sets `misc.on_focus_under_fullscreen=2` (exit fullscreen
+instead of handing it to the newly focused tiled window), and disables fullscreen
+inheritance when closing a window. Super+Enter launches `kitty --start-as=normal`;
+Super+F toggles fullscreen. A Kitty-specific static rule starts it tiled with
+zero internal/client fullscreen state and suppresses client fullscreen/maximize
+requests, while compositor fullscreen dispatch remains available. Existing
+dialog rules for other applications remain intact.
+
+`python3 scripts/configure-tiling.py` applies only the marked policy to an
+existing installation. It preserves other code and the current HDR profile,
+verifies the staged config, backs up the original, reloads the live session when
+available, and rolls back if reloading fails. DMS include migration was restricted
+to its own include block so it cannot duplicate a separately applied tiling block.
+
+Five new regressions cover policy ordering after conflicting DMS settings,
+unique terminal/fullscreen bindings, repeat application with an existing HDR
+profile, backup and reload-failure rollback, and DMS migration without duplicate
+policy. Bash syntax, ShellCheck and **125 regression tests passed**.
+Real Hyprland 0.56.2 accepted six configuration combinations: Noctalia/DMS
+with no HDR override, HDR off, and HDR on. The DMS fixture deliberately supplied
+monocle and fullscreen takeover before the last-loaded policy.
+
+The configuration checks do not establish live window geometry or actual keypress
+behavior. A separate isolated headless compositor startup was attempted but the
+available backend could not initialize (`CBackend::create() failed`); no live GUI
+pass is claimed and the host's active configuration was not changed.
+Current behavior/options were checked against the upstream
+[config options](https://wiki.hypr.land/configuring/core/config-options/) and
+[window rules](https://wiki.hypr.land/configuring/core/rules/window-rules/).
+
 ## fedora-update sudo authentication — 2026-11-15
 
 The update engine previously used `start_new_session=True`. This detached it

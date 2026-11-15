@@ -13,14 +13,12 @@ hl.config({
 hl.on("hyprland.start", function()
     hl.exec_cmd("$HOME/.local/share/fedora-postinstall/scripts/desktop-shell start")
 end)
-hl.bind("SUPER+Return", hl.dsp.exec_cmd("kitty"))
 hl.bind("SUPER+B", hl.dsp.exec_cmd("brave-browser"))
 hl.bind("SUPER+Space", hl.dsp.exec_cmd("$HOME/.local/share/fedora-postinstall/scripts/desktop-shell launcher"))
 hl.bind("SUPER+CTRL+S", hl.dsp.exec_cmd("$HOME/.local/share/fedora-postinstall/scripts/desktop-shell panel"))
 hl.bind("SUPER+comma", hl.dsp.exec_cmd("$HOME/.local/share/fedora-postinstall/scripts/desktop-shell settings"))
 -- More specific monitor rules can be added through Noctalia settings.
 hl.bind("SUPER+Q", hl.dsp.window.close())
-hl.bind("SUPER+F", hl.dsp.window.fullscreen({ action = "toggle", mode = "fullscreen" }))
 for i = 1, 10 do
     hl.bind("SUPER+code:" .. (i+9), hl.dsp.focus({ workspace = i }))
     hl.bind("SUPER+SHIFT+code:" .. (i+9), hl.dsp.window.move({ workspace = i }))
@@ -71,3 +69,24 @@ if selected == "dms" then
     require("dms.input")
     require("dms.windowrules")
 end
+
+-- BEGIN FEDORA-POSTINSTALL TILING
+-- Apply after DMS includes: new windows split instead of inheriting fullscreen.
+hl.config({
+    general = { layout = "dwindle" },
+    misc = { on_focus_under_fullscreen = 2, exit_window_retains_fullscreen = 0 },
+})
+hl.unbind("SUPER+Return")
+hl.bind("SUPER+Return", hl.dsp.exec_cmd("kitty --start-as=normal"), { description = "Terminal: tiled" })
+hl.unbind("SUPER+F")
+hl.bind("SUPER+F", hl.dsp.window.fullscreen({ action = "toggle", mode = "fullscreen" }),
+    { description = "Window: toggle fullscreen" })
+-- Ignore Kitty's remembered/client-requested maximization, keeping Super+F usable.
+hl.window_rule({
+    name = "fedora-postinstall-kitty-tiled",
+    match = { class = "^kitty$" },
+    tile = true,
+    fullscreen_state = "0 0",
+    suppress_event = "maximize fullscreen",
+})
+-- END FEDORA-POSTINSTALL TILING

@@ -143,6 +143,7 @@ Poniższe polecenia wykonuj w katalogu pobranego repozytorium:
 | `bash scripts/plan-plasma-removal` | bez opcji | Wypisuje dokładne pakiety-kandydatów i wykonuje `rpm -e --test`; nie usuwa pakietów. Wymaga Fedory 44/45; test RPM może poprosić o sudo. |
 | `python3 scripts/cleanup-plan.py` | `--catalog`, `all` albo `ID [ID ...]` | `--catalog` pokazuje identyfikatory aplikacji. `all` lub lista ID tworzy JSON planu dla zainstalowanych RPM, uwzględniając wybranego menedżera plików; nie usuwa aplikacji. |
 | `python3 scripts/validate-flea.py` | `KATALOG_PAYLOADU` | Sprawdza zbudowany payload Flea, jego QML i działanie offscreen. Przykładowy katalog: `~/.local/share/fedora-postinstall/apps/flea/current`. |
+| `python3 scripts/configure-tiling.py` | bez opcji, `--help` / `-h` | Dodaje do istniejącej konfiguracji politykę dwindle i skróty Super+Enter / Super+F. Weryfikuje Lua, zapisuje kopię i przeładowuje aktywną sesję; błąd reloadu przywraca poprzedni plik. |
 | `bash tests/check.sh` | bez opcji | Uruchamia sprawdzanie składni Bash, ShellCheck i lokalne testy regresji Python/Lua. Zależności opisuje sekcja testów. |
 
 ### Wszystkie opcje instalatora
@@ -253,6 +254,30 @@ Lista i dane aplikacji Flatpak pozostają oddzielne; ich ponowna instalacja wyma
 ## Hyprland, Kitty i font
 
 Profil przenosi do Fedory układ Omarchy: gaps 5/10, border 2, brak zaokrągleń/cieni/blur, gradient aktywnego obramowania, animacje okien, dwindle i scratchpad. Używa Kitty, Brave, Flea, VS Code i wybranej powłoki; nie zależy od poleceń `omarchy-*` ani narzędzi Arch. Atrybucja: [Omarchy MIT](licenses/Omarchy-MIT.txt).
+
+`Super+Enter` otwiera zwykłe, kafelkowane okno Kitty. Samotne okno zajmuje cały
+dostępny obszar roboczy, a drugie i kolejne dzielą go w układzie `dwindle`.
+Fullscreen przełącza `Super+F`; po ponownym naciśnięciu okno wraca do kafelków.
+Nowe okno nie przejmuje fullscreen po poprzednim: żądanie fokusu wychodzi z tego
+trybu i wraca do podziału. Zamknięcie okna fullscreen również nie przenosi tego
+stanu na następne. Reguła Kitty ignoruje jego własne żądania fullscreen/maximize
+i wymusza kafelkowanie przy otwarciu; dialogi innych aplikacji zachowują swoje
+reguły. Ustawienia te są ładowane po ustawieniach DMS.
+
+W istniejącym systemie zastosuj tylko tę poprawkę z katalogu repozytorium,
+bez `sudo`:
+
+```bash
+git pull --ff-only
+python3 scripts/configure-tiling.py
+```
+
+Skrypt zastępuje tylko oznaczony blok `TILING` na końcu głównego Lua. Zachowuje
+pozostałą konfigurację, w tym profil HDR/8/10-bit, i zapisuje poprzedni plik w
+`${XDG_STATE_HOME:-~/.local/state}/fedora-postinstall/tiling-*/hyprland.lua`.
+Zmienia przypisania `Super+Enter` i `Super+F` na opisane wyżej. Jeśli stare okno
+już jest w fullscreen, wyjdź z niego raz przez `Super+F`; nowe okna otwieraj
+normalnie przez `Super+Enter`.
 
 Moduł Hyprland stosuje żądany profil z kopią głównego pliku do katalogu przebiegu. Użyj `--keep-hypr-config`, aby zachować własną konfigurację i otrzymać propozycję zmian. Monitor domyślnie używa trybu i skali automatycznej. W DMS istniejące pliki monitorów/wyglądu z `~/.config/hypr/dms/*.lua` są wczytywane tylko przy wybranym DMS; jego zestaw skrótów nie zastępuje wybranych aplikacji.
 

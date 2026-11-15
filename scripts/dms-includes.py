@@ -16,7 +16,10 @@ end'''
 
 
 def migrate(text, template):
-    new = template[template.index('if selected == "dms" then'):].rstrip()
+    start = template.index('if selected == "dms" then')
+    # Only replace the include block, not unrelated policy appended after it.
+    stop = template.index('\nend', start) + len('\nend')
+    new = template[start:stop]
     if text.count(OLD) == 1:
         return text.replace(OLD, new)
     return text
