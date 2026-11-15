@@ -2,6 +2,7 @@
 module_updates() {
     local dest=$HOME/.local/share/fedora-postinstall
     mkdir -p "$dest/data" "$dest/scripts" "$HOME/.local/bin"
+    install -m 755 "$ROOT/scripts/fedora-display" "$HOME/.local/bin/fedora-display"
     install -m 755 "$ROOT/scripts/vendor-apps.py" "$dest/scripts/vendor-apps.py"
     install -m 755 "$ROOT/scripts/symbols-fonts.py" "$dest/scripts/symbols-fonts.py"
     install -m 644 "$ROOT/data/omasnap-release" "$dest/data/omasnap-release"

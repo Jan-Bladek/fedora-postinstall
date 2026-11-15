@@ -105,6 +105,7 @@ module_hyprland() {
     prepare_hyprland_config "$version"
     validate_hyprland_config
     write_hyprland_config
+    run python3 "$ROOT/scripts/fedora-display" install
     config_file "$ROOT/config/portals.conf" "$CONFIG/xdg-desktop-portal/hyprland-portals.conf"
     run sudo systemctl enable --now NetworkManager bluetooth
     if ! systemctl is-enabled display-manager.service >/dev/null 2>&1; then run sudo systemctl enable sddm; fi

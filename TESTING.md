@@ -1,4 +1,38 @@
-# Validation record — updated 2026-11-08
+# Validation record — updated 2026-11-15
+
+## HDR / 10-bit display command — 2026-11-15
+
+Added standalone `fedora-display install` for existing systems, plus installation
+through the Hyprland and updater modules. Installing the command alone does not
+change the display. `off` selects SDR/sRGB and 8-bit, disables automatic HDR and
+content-type reporting, and disables HDR capability advertisement. `on` requests
+10-bit with automatic fullscreen HDR and native capability detection. `reset`
+removes the override and restores the original monitor/render configuration.
+
+The Lua profile loads before user and DMS rules and copies incoming tables before
+overriding color fields. This avoids adding a partial final monitor rule, which
+would replace layout settings. Resolution/refresh, position, scale, transform,
+mirroring, VRR, ICC and other unrelated fields are preserved. Proposed configs are
+checked in an isolated Hyprland verification environment before writing; the
+active session is reloaded and checked for errors, with rollback on failure.
+
+Validation completed locally:
+
+- Bash syntax, ShellCheck and **112 regression tests passed**.
+- Six display regressions cover installation without the full installer,
+  off/toggle/reset, loader order and repeatability, Lua field preservation despite
+  later DMS settings, invalid-config rejection, failed-reload rollback (including
+  an existing profile), and symlink rejection.
+- Real `Hyprland 0.56.2 --verify-config` accepted both profiles with the project's
+  Noctalia and DMS templates. The DMS fixture included a custom rotated 4K output
+  with scale 1.5, VRR and a negative position.
+
+The host's active configuration was not modified. These checks validate syntax,
+configuration behavior and recovery; they do **not** prove physical HDR output,
+10-bit link negotiation, or elimination of the reported fullscreen blackout on
+the user's monitor. Those require testing on that monitor/GPU/cable combination.
+See the [upstream color-management documentation](https://wiki.hypr.land/configuring/core/monitors/colors/)
+for auto-HDR behavior and the ICC/HDR limitation.
 
 ## Fedora 45 support — 2026-11-08
 

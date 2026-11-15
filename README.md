@@ -293,6 +293,48 @@ To celowy wyjątek od automatycznej zgody: usuwanie sesji nadal wymaga osobnego 
 
 TTY: Ctrl+Alt+F3. Poprzedni główny config Hyprland: `hyprland-before-requested-preset.lua` w katalogu przebiegu. Oryginały Kitty, VS Code i archiwum `.config` również tam. Przywrócenie usuniętej sesji używa `plasma-rpms/*.rpm` z właściwego przebiegu i ponownego uruchomienia działającego menedżera logowania.
 
+## HDR / 10-bit i czarny ekran przy fullscreen
+
+`fedora-display` przełącza trwały profil kolorów we wszystkich regułach monitorów
+Hyprlanda, także generowanych przez DMS. Działa z konfiguracją Lua (Hyprland
+>=0.55), zarówno z DMS, jak i Noctalią.
+
+**Doinstalowanie do istniejącego systemu**, bez ponownej instalacji pulpitu ani
+aktualizowania całego systemu (wykonaj w katalogu tego repozytorium, bez `sudo`):
+
+```bash
+git pull --ff-only
+python3 scripts/fedora-display install
+~/.local/bin/fedora-display off
+```
+
+Komenda jest również instalowana przez moduły `hyprland` i `updates`. Samo
+doinstalowanie komendy nie zmienia ustawień ekranu; robi to dopiero `off` lub `on`.
+
+```bash
+fedora-display off     # SDR/sRGB i 8-bit; wyłącza auto-HDR i zgłaszanie typu treści
+fedora-display on      # 10-bit, cm=auto i automatyczne HDR w fullscreen
+fedora-display toggle  # przełączenie; z własnej konfiguracji najpierw wybiera off
+fedora-display status # zapisany profil oraz aktualne dane monitorów
+fedora-display reset  # usuwa profil i przywraca własne reguły
+```
+
+`off` wyłącza automatyczne przełączenia HDR i profilu monitora, które mogą powodować
+chwilowy czarny ekran przy wejściu/wyjściu z fullscreen. `on` używa wykrywania
+możliwości sprzętu; nie wymusza HDR na monitorze bez obsługi. To auto-HDR, a nie
+wymuszenie HDR na całym pulpicie. Rozdzielczość, odświeżanie, skala, pozycja,
+obrót, VRR i pozostałe ustawienia monitora są zachowywane. Własny profil ICC
+pozostaje aktywny; według [dokumentacji Hyprlanda](https://wiki.hypr.land/configuring/core/monitors/colors/)
+ICC może kolidować z HDR w grach.
+
+Zmiana przechodzi izolowane `Hyprland --verify-config`; kopie poprzednich plików
+trafiają do `${XDG_STATE_HOME:-~/.local/state}/fedora-postinstall/display-*`.
+W aktywnej sesji następuje reload i kontrola `configerrors`, a błąd powoduje
+przywrócenie poprzedniej konfiguracji. Poza sesją ustawienie działa od kolejnego
+logowania. Jednorazowe przełączenie głębi koloru może samo na chwilę wygasić ekran.
+Komenda nie usuwa innych możliwych przyczyn zaniku obrazu, np. przełączania VRR,
+trybu wyświetlania, problemów sterownika lub kabla.
+
 ## Diagnostyka i ograniczenia
 
 ```bash
