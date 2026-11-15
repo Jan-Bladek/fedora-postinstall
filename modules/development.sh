@@ -31,7 +31,11 @@ module_development() {
         source "$ROOT/modules/vscode.sh"
         module_vscode
     fi
-    if dev_selected arduino-ide; then packages fuse fuse-libs; fi
+    if dev_selected arduino-ide; then
+        packages fuse fuse-libs
+        source "$ROOT/modules/arduino-usb.sh"
+        module_arduino_usb
+    fi
     local app
     local -a vendor_apps=()
     for app in $DEV_APPS; do [[ $app == code ]] || vendor_apps+=("$app"); done

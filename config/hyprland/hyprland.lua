@@ -81,6 +81,8 @@ hl.bind("SUPER+Return", hl.dsp.exec_cmd("kitty --start-as=normal"), { descriptio
 hl.unbind("SUPER+F")
 hl.bind("SUPER+F", hl.dsp.window.fullscreen({ action = "toggle", mode = "fullscreen" }),
     { description = "Window: toggle fullscreen" })
+hl.unbind("SUPER+CTRL+F")
+hl.bind("SUPER+CTRL+F", hl.dsp.exec_cmd('xdg-open "$HOME"'), { description = "File manager" })
 -- Ignore Kitty's remembered/client-requested maximization, keeping Super+F usable.
 hl.window_rule({
     name = "fedora-postinstall-kitty-tiled",

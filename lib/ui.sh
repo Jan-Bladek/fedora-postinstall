@@ -15,6 +15,7 @@ Fedora, Microsoft, Brave, LibreWolf, Tailscale, lionheartp/Hyprland, duxlabs/DMS
 Flea, Omasnap i HyprMod: przypięte źródła; HyprMod używa uv/PyPI.
 Flea używa prywatnych bibliotek QML Omarchy i tymczasowego Rust przy braku Cargo.
 Terminal: Zsh + Oh My Zsh, trzy wtyczki z GitHub i Starship z SHA256. Historia schowka zapisuje kopiowane wpisy lokalnie.
+Wybranie Arduino IDE lub modułu arduino-usb dodaje użytkownika do dialout i reguły udev dla płytek/portów USB.
 
 Wybrany moduł Hyprland stosuje profil Omarchy i zapisuje kopię poprzedniej konfiguracji.
 --keep-hypr-config zachowuje własny plik. Kitty zmienia tylko wskazane ustawienia. Usuwanie aplikacji odbywa się
@@ -131,6 +132,7 @@ ui_module_label() {
         terminal) echo 'Kitty, Zsh + Oh My Zsh, prompt Omarchy i fonty' ;;
         lazyvim) echo 'LazyVim + wtyczki (kopia starego Neovim)' ;;
         development) echo 'Wybrane IDE i ich narzędzia' ;;
+        arduino-usb) echo 'Arduino: dostęp do portów szeregowych i USB/DFU' ;;
         browsers) echo 'Brave (domyślna) + LibreWolf' ;;
         multimedia) echo 'OBS, Vesktop i Steam' ;;
         utilities) echo 'Obsidian, LocalSend i Tailscale' ;;

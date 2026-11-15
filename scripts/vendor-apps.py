@@ -59,6 +59,45 @@ APP_INFO = {
 }
 
 
+ARDUINO_LAUNCHER = '''#!/usr/bin/env bash
+set -Eeuo pipefail
+here=$(cd -- "$(dirname -- "$(readlink -f -- "${BASH_SOURCE[0]}")")" && pwd)
+platform=${FEDORA_ARDUINO_PLATFORM:-auto}
+case $platform in auto|wayland|x11) ;; *) echo 'FEDORA_ARDUINO_PLATFORM: use auto, wayland or x11' >&2; exit 2 ;; esac
+explicit=0
+for argument in "$@"; do
+    case $argument in --ozone-platform|--ozone-platform=*) explicit=1 ;; esac
+done
+flags=()
+if ((explicit == 0)); then
+    if [[ $platform == wayland || ( $platform == auto && -n ${WAYLAND_DISPLAY:-} ) ]]; then
+        flags+=(--ozone-platform=wayland)
+    elif [[ $platform == x11 ]]; then
+        flags+=(--ozone-platform=x11)
+    fi
+fi
+exec "$here/current/arduino-ide" "${flags[@]}" "$@"
+'''
+
+
+def arduino_launcher(app):
+    wrapper = app / 'launcher'
+    receipt = app / 'launcher-sha256'
+    if wrapper.is_symlink():
+        raise ValueError(f'Unmanaged Arduino launcher symlink: {wrapper}')
+    if wrapper.exists() and (not receipt.is_file() or
+                            hashlib.sha256(wrapper.read_bytes()).hexdigest() != receipt.read_text().strip()):
+        raise ValueError(f'Custom Arduino launcher preserved: {wrapper}')
+    pending = app / 'launcher.new'
+    if pending.is_symlink():
+        raise ValueError(f'Unmanaged Arduino launcher staging symlink: {pending}')
+    pending.write_text(ARDUINO_LAUNCHER)
+    pending.chmod(0o755)
+    pending.replace(wrapper)
+    receipt.write_text(hashlib.sha256(ARDUINO_LAUNCHER.encode()).hexdigest()+'\n')
+    return wrapper
+
+
 def register_launcher(name, launcher):
     app = BASE / name
     current = app / 'current'
@@ -68,9 +107,14 @@ def register_launcher(name, launcher):
     BIN.mkdir(parents=True, exist_ok=True)
     if link.exists() and not link.is_symlink():
         raise ValueError(f'User executable collision: {link}')
+    executable = current / launcher
+    if name == 'arduino-ide':
+        if link.is_symlink() and link.readlink() not in (current / launcher, app / 'launcher'):
+            raise ValueError(f'Unmanaged Arduino executable symlink: {link}')
+        executable = arduino_launcher(app)
     if link.is_symlink():
         link.unlink()
-    link.symlink_to(current / launcher)
+    link.symlink_to(executable)
     title, desktop_id, icon_name = APP_INFO[name]
     icon = 'applications-development'
     if icon_name:
@@ -178,3 +222,5 @@ if __name__ == '__main__':
     if ((sys.argv[1] == 'install' and (not selected or 'arduino-ide' in selected)) or
             (sys.argv[1] == 'update' and (BASE / 'arduino-ide' / 'current').is_symlink())):
         install('arduino-ide', arduino(), 'arduino-ide')
+    elif sys.argv[1] == 'repair' and (BASE / 'arduino-ide' / 'current').is_symlink():
+        register_launcher('arduino-ide', 'arduino-ide')

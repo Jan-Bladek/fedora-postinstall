@@ -1,4 +1,9 @@
 -- Override only the selected file-manager shortcut; preserve all other user binds.
+hl.unbind("SUPER + CTRL + F")
+hl.unbind("CTRL + SUPER + F")
+hl.unbind("SUPER + CTRL + code:41")
+hl.unbind("CTRL + SUPER + code:41")
+hl.bind("SUPER + CTRL + F", hl.dsp.exec_cmd('xdg-open "$HOME"'), { description = "File manager" })
 hl.unbind("SUPER + SHIFT + F")
 hl.unbind("SHIFT + SUPER + F")
 hl.unbind("SUPER + SHIFT + code:41")

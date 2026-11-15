@@ -1,0 +1,8 @@
+# Serial access: Fedora dialout plus active local-seat ACLs, including clone boards.
+SUBSYSTEM=="tty", KERNEL=="ttyACM[0-9]*|ttyUSB[0-9]*", GROUP="dialout", MODE="0660", TAG+="uaccess"
+
+# Arduino/SRL USB bootloaders, DFU and debugger access (not every USB device).
+SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_device", ATTR{idVendor}=="2341|2a03", MODE="0660", TAG+="uaccess"
+SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_device", ATTR{idVendor}=="03eb", ATTR{idProduct}=="2145|2ff4", MODE="0660", TAG+="uaccess"
+SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_device", ATTR{idVendor}=="05c6", ATTR{idProduct}=="9008", MODE="0660", TAG+="uaccess"
+SUBSYSTEM=="usb|tty|hidraw", ATTRS{product}=="*CMSIS-DAP*", MODE="0660", TAG+="uaccess"

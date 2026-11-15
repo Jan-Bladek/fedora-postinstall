@@ -1,5 +1,49 @@
 # Validation record — updated 2026-11-15
 
+## File-manager shortcut and Arduino display / USB — 2026-11-15
+
+Super+F remains fullscreen. Super+Ctrl+F now opens the selected directory handler
+via `xdg-open "$HOME"`; Super+Shift+F remains an alias. Both the default tiling
+policy and the file-manager module provide the new shortcut. The existing-system
+tiling helper applies it without rebuilding Flea or replacing the main config.
+
+Managed Arduino AppImages now have a separate Bash launcher that selects native
+Wayland when `WAYLAND_DISPLAY` is present. X11 sessions keep their default backend;
+`FEDORA_ARDUINO_PLATFORM=x11` provides an explicit fallback, and command-line
+`--ozone-platform` takes precedence. No fixed DPI is imposed, no sandbox flags are
+disabled, and AppImage bytes/checksums stay unchanged. Vendor `repair` now includes
+existing Arduino installations without downloading them. Wrapper files and their
+receipts are included in application recovery checkpoints.
+
+The new `arduino-usb` module also runs when Arduino is selected for development.
+It verifies scoped udev rules, installs them, reloads the rules, and appends the
+desktop user to Fedora's dialout group. Serial ttyACM/ttyUSB nodes get 0660 and
+local-seat ACLs; raw USB permissions cover Arduino/SRL and listed bootloaders,
+plus CMSIS-DAP debug devices. This grants no blanket access to all USB devices.
+New group membership needs a fresh login; reconnecting the board applies udev
+rules. No application runs as root and no remote setup script is executed.
+
+Validation: Bash syntax, ShellCheck and **141 regressions passed**, including
+native execution of the generated wrapper against a recording stand-in, argument
+preservation, legacy-link migration, X11/explicit-backend overrides, preservation
+of custom launchers, network-free Arduino repair, scoped USB setup with append-only
+group membership, and wrapper/receipt recovery. Real Hyprland 0.56.2 accepted the
+combined file-manager/tiling configuration. The generated launcher separately
+passed ShellCheck. `udevadm verify --resolve-names=never` accepted the rules on
+the Arch host; Fedora's dialout lookup is enforced before installing on target.
+
+Two temporary-profile launches of the host's packaged Arduino 2.3.10 with native
+Wayland remained running but produced no observed mapped window within their
+15/30-second observation periods. They were stopped and their temporary data was
+removed. This is **not** a successful GUI/HiDPI test of the official AppImage.
+No physical board upload, port-open test or firmware change was performed; host
+group membership and udev rules were not modified. Board-specific USB/debugger
+IDs outside the shipped rules may require the manufacturer's additional rules.
+
+References: [Chromium Ozone backends](https://github.com/chromium/chromium/blob/main/docs/ozone_overview.md),
+[Arduino serial permissions](https://support.arduino.cc/hc/en-us/articles/360016495679-Fix-port-access-on-Linux),
+[Arduino udev / bootloader guidance](https://support.arduino.cc/hc/en-us/articles/9005041052444-Fix-udev-rules-on-Linux).
+
 ## Laptop function keys — 2026-11-15
 
 Added the `laptop-keys` module to both Hyprland presets. Existing installations

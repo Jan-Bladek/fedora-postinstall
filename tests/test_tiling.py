@@ -69,6 +69,7 @@ assert(config.misc.exit_window_retains_fullscreen==0)
 assert(binds['SUPER+Return'].args=='kitty --start-as=normal')
 assert(binds['SUPER+F'].name=='fullscreen')
 assert(binds['SUPER+F'].args.action=='toggle' and binds['SUPER+F'].args.mode=='fullscreen')
+assert(binds['SUPER+CTRL+F'].args=='xdg-open "$HOME"')
 local rule=rules['fedora-postinstall-kitty-tiled']
 assert(rule.match.class=='^kitty$' and rule.tile==true)
 assert(rule.fullscreen_state=='0 0' and rule.suppress_event=='maximize fullscreen')

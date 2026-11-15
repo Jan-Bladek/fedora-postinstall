@@ -33,7 +33,7 @@ while (($#)); do
         --desktop) shift; DESKTOP=${1:?Missing desktop choice} ;;
         --file-manager) shift; FILE_MANAGER=${1:?Missing file manager (flea or nautilus)} ;;
         --modules) shift; MODULES=${1:?Missing module list}; EXPLICIT_MODULES=1 ;;
-        --help) echo 'install.sh [--dry-run] [--yes] [--no-progress] [--keep-hypr-config] [--cleanup-apps "all|id id"] [--desktop noctalia|dms|plasma] [--file-manager flea|nautilus] [--dev-profile code|full] [--dev-apps "code rustrover intellij-idea webstorm clion arduino-ide|none"] [--modules "snapshots dependencies hyprland session-services noctalia dms terminal terminal-theme app-theme zsh clipboard laptop-keys lazyvim vscode development libreoffice hyprmod files omasnap browsers multimedia utilities defaults optimization updates cleanup kde-removal"]'; exit 0 ;;
+        --help) echo 'install.sh [--dry-run] [--yes] [--no-progress] [--keep-hypr-config] [--cleanup-apps "all|id id"] [--desktop noctalia|dms|plasma] [--file-manager flea|nautilus] [--dev-profile code|full] [--dev-apps "code rustrover intellij-idea webstorm clion arduino-ide|none"] [--modules "snapshots dependencies hyprland session-services noctalia dms terminal terminal-theme app-theme zsh clipboard laptop-keys lazyvim vscode development arduino-usb libreoffice hyprmod files omasnap browsers multimedia utilities defaults optimization updates cleanup kde-removal"]'; exit 0 ;;
         *) die "Unknown option: $1" ;;
     esac
     shift

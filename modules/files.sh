@@ -7,7 +7,7 @@ configure_flea_binding() {
     [[ ${DESKTOP:-} != plasma ]] || return 0
     local main=$CONFIG/hypr/hyprland.lua module=$CONFIG/hypr/fedora-postinstall-flea.lua
     if [[ ! -f $main ]]; then
-        log 'No Hyprland Lua config present; add Super+Shift+F for the selected folder handler manually.'
+        log 'No Hyprland Lua config present; add Super+Ctrl+F for the selected folder handler manually.'
         return 0
     fi
     cp -- "$main" "$RUN/hyprland-before-flea.lua"

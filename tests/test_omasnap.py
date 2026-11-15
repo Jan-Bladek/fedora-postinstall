@@ -163,6 +163,7 @@ raise SystemExit(8)
             (work/'modules').mkdir()
             (work/'modules/repositories.sh').write_text('# fixture\n')
             (work/'modules/vscode.sh').write_text('module_vscode() { echo CODE; }\n')
+            (work/'modules/arduino-usb.sh').write_text('module_arduino_usb() { echo SERIAL; }\n')
             script = '''source "$1/modules/development.sh"
 ROOT=$2
 DEV_PROFILE=$3
@@ -177,6 +178,7 @@ module_development
                                         text=True, capture_output=True, check=True)
                 self.assertIn('CODE', result.stdout)
                 self.assertEqual('VENDOR' in result.stdout, profile == 'full')
+                self.assertEqual('SERIAL' in result.stdout, profile == 'full')
 
     def test_runtime_bind_check_accepts_lua_dispatcher_ids_and_rejects_duplicates(self):
         with tempfile.TemporaryDirectory() as temp:

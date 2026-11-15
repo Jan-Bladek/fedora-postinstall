@@ -212,3 +212,16 @@ class RecoveryTests(unittest.TestCase):
         result = subprocess.run(['bash', '-c', 'source "$1/lib/core.sh"; umask 077; dnf5() { umask; }; run dnf5 check; umask', 'test', str(ROOT)],
                                 capture_output=True, text=True, check=True)
         self.assertEqual(result.stdout.splitlines()[-2:], ['0022', '0077'])
+
+    def test_arduino_wrapper_and_receipts_are_restored_together(self):
+        app = self.home/'data/fedora-postinstall/apps/arduino-ide'
+        app.mkdir(parents=True)
+        for name in ('launcher', 'launcher-sha256', 'desktop-sha256'):
+            (app/name).write_text('before-'+name)
+        point = recovery.create('Arduino launcher', groups=('applications',))
+        for name in ('launcher', 'launcher-sha256', 'desktop-sha256'):
+            (app/name).write_text('after-'+name)
+        recovery.finish(point)
+        recovery.apply(point, ('applications',))
+        for name in ('launcher', 'launcher-sha256', 'desktop-sha256'):
+            self.assertEqual((app/name).read_text(), 'before-'+name)

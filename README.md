@@ -124,7 +124,7 @@ fpi_scripts="$HOME/.local/share/fedora-postinstall/scripts"
 | `desktop-shell` | `name`, `start`, `health`, `launcher`, `panel`, `settings`, `lock` | `name`: zapisany wybór DMS/Noctalia; `start`: uruchamia wybraną powłokę w Hyprlandzie; `health`: sprawdza odpowiedź jej interfejsu; `lock`: blokuje ekran wybraną powłoką; pozostałe przełączają launcher, panel sterowania i ustawienia. Nie służy do zmiany wyboru powłoki. |
 | `flea-manager` | `install`, `update`, `check`, `uninstall` | Bez argumentu wykonuje `check`. Instaluje/buduje sprawdzoną rewizję, aktualizuje zarządzaną kopię, kontroluje instalację albo usuwa zarządzane launchery. Przed `uninstall` trzeba wybrać inny domyślny menedżer katalogów. |
 | `omasnap-manager` | `install`, `update`, `check`, `uninstall` | Bez argumentu wykonuje `check`. Instaluje/buduje sprawdzoną rewizję, aktualizuje zarządzaną kopię, kontroluje instalację albo usuwa zarządzane launchery. Zachowuje dane, konfigurację i starsze payloady. |
-| `vendor-apps.py` | `install [ID ...]`, `update`, `repair` | Uruchamiaj przez `python3`. `install` przyjmuje `rustrover`, `intellij-idea`, `webstorm`, `clion`, `arduino-ide`; bez ID wybiera wszystkie. `update` aktualizuje tylko zarządzane instalacje. `repair` odtwarza launchery zarządzanych IDE JetBrains. Wybór ID działa tylko z `install`. |
+| `vendor-apps.py` | `install [ID ...]`, `update`, `repair` | Uruchamiaj przez `python3`. `install` przyjmuje `rustrover`, `intellij-idea`, `webstorm`, `clion`, `arduino-ide`; bez ID wybiera wszystkie. `update` aktualizuje tylko zarządzane instalacje. `repair` odtwarza launchery zarządzanych IDE JetBrains i Arduino bez pobierania aplikacji. Wybór ID działa tylko z `install`. |
 | `symbols-fonts.py` | `install`, `update` | Przez `python3`: instaluje lub aktualizuje czcionkę symboli Nerd Fonts. `update` pomija brak zarządzanej instalacji. |
 | `zsh-manager.py` | `install`, `update` | Przez `python3`: instaluje lub aktualizuje zarządzany zestaw Oh My Zsh, wtyczek i Starship do rewizji przypiętych w projekcie. `update` pomija brak zarządzanej instalacji. |
 
@@ -208,6 +208,7 @@ Selektor `~/.config/fedora-postinstall/shell` steruje autostartem i skrótami. D
 | files | Wybór Flea lub Nautilus; foldery, skrót i aktywacja D-Bus zgodne z wyborem |
 | omasnap | Przypięty build upstream Omasnap, testy, skróty, zarządzane aktualizacje/odinstalowanie; tylko Hyprland |
 | vscode | Sam VS Code z oficjalnego repozytorium Microsoftu i wyłączoną telemetrią |
+| arduino-usb | Grupa `dialout` i reguły udev dla portów szeregowych/Arduino USB/DFU; wykonywany także przy wyborze Arduino IDE |
 | browsers | Brave jako domyślny, LibreWolf jako dodatkowy |
 | multimedia | OBS i rzeczywisty OpenH264; Vesktop i Steam z Flathub |
 | utilities | Obsidian, LocalSend z Flathub; Tailscale RPM bez logowania do konta |
@@ -235,6 +236,49 @@ python3 scripts/vendor-apps.py repair
 
 Własny zmieniony launcher jest zachowywany, z propozycją `.fedora-postinstall-new`. HyprMod jest instalowany zgodnie z [upstream](https://github.com/BlueManCZ/hyprmod), przez `uv tool install` z rewizji w `data/hyprmod-revision`, z natywnymi zależnościami GTK/PyGObject. `hyprmod --install` rejestruje launcher. `fedora-update` stosuje tylko rewizję dostarczoną z instalatorem. Usuwanie: `hyprmod --uninstall`, potem `uv tool uninstall hyprmod`. Instalacja w Fedorze wymaga jeszcze testu wykonawczego.
 
+## Arduino IDE: ostrość obrazu i fizyczne USB
+
+Zarządzany launcher Arduino wybiera natywny Wayland, jeśli sesja udostępnia
+`WAYLAND_DISPLAY`, aby uniknąć rozciągania obrazu XWaylanda przy skalowaniu
+monitora. Nie wymusza stałego współczynnika DPI, nie zmienia AppImage i nie
+wyłącza sandboxa Electron. W sesji X11 zachowuje zwykły start. Można wybrać
+backend jawnie: `FEDORA_ARDUINO_PLATFORM=x11 arduino-ide` lub
+`FEDORA_ARDUINO_PLATFORM=wayland arduino-ide`. Flaga `--ozone-platform=...`
+podana bezpośrednio do komendy ma pierwszeństwo.
+
+Moduł `arduino-usb` dodaje użytkownika do grupy `dialout`, instaluje reguły
+udev dla `ttyACM*` / `ttyUSB*` oraz obsługiwanych Arduino USB/DFU/CMSIS-DAP
+i przeładowuje reguły. Obejmuje zwykłe porty szeregowe klonów, np. CH340,
+CP210x i FTDI. Osobne VID/PID innych trybów bootloadera mogą wymagać reguł
+producenta konkretnej płytki. IDE działa jako zwykły użytkownik i ma dostęp do
+rzeczywistych urządzeń hosta; nie jest instalowane jako Flatpak.
+
+Doinstalowanie poprawki na istniejącym systemie, z katalogu repozytorium:
+
+```bash
+git pull --ff-only
+python3 scripts/configure-tiling.py
+bash install.sh --yes --desktop dms --modules "arduino-usb updates"
+python3 scripts/vendor-apps.py repair
+```
+
+Dla Noctalii wybierz `--desktop noctalia`. `configure-tiling.py` dodaje też
+`Super+Ctrl+F` do menedżera plików, zachowując `Super+F` jako fullscreen.
+`repair` naprawia launchery już zainstalowanych aplikacji bez ich pobierania;
+nie instaluje brakującego Arduino. Zamknij Arduino, wyloguj się i zaloguj ponownie,
+potem odłącz/podłącz płytkę i uruchom IDE z launchera albo przez `arduino-ide`.
+Nowa grupa nie jest dodawana do już działających procesów.
+
+Przy nowej instalacji wybranie Arduino IDE automatycznie konfiguruje USB.
+Reguły mają tryb `0660` i ACL aktywnej sesji; nie ustawiamy `chmod 666` na
+urządzeniach, nie otwieramy wszystkich urządzeń USB i nie uruchamiamy IDE przez
+sudo. Dotychczasowy plik reguł projektu jest kopiowany do katalogu przebiegu.
+Przed aktualizacją aplikacji kopia obejmuje również wrapper Arduino i jego
+sumy, aby przywracanie zachowało spójne launchery.
+
+Upstream: [dostęp do portów szeregowych](https://support.arduino.cc/hc/en-us/articles/360016495679-Fix-port-access-on-Linux),
+[reguły udev i bootloadery](https://support.arduino.cc/hc/en-us/articles/9005041052444-Fix-udev-rules-on-Linux).
+
 ## Opcjonalne czyszczenie aplikacji
 
 Lista jest w [data/cleanup.tsv](data/cleanup.tsv). Stary VSCodium można usunąć przez pozycję `vscodium`; nowa instalacja używa wyłącznie VS Code. Dane wcześniejszego edytora nie są kasowane. Obejmuje wskazane aplikacje PIM/KDE, gry, Firefox, LibreOffice, nwg-panel, Konsole i interfejsy zgłaszania problemów, a także pomocniki importu KMail, Spectacle, Dragon Player, Krfb, Gwenview, KAddressBook, KRDC i edytor menu KDE. Zestaw uwzględnia wspólne pakiety: np. KMail zawiera KTnef, Kleopatra dziennik GnuPG, a grantlee-editor wszystkie trzy edytory wyglądu kontaktów/nagłówków.
@@ -260,6 +304,7 @@ Profil przenosi do Fedory układ Omarchy: gaps 5/10, border 2, brak zaokrągleń
 `Super+Enter` otwiera zwykłe, kafelkowane okno Kitty. Samotne okno zajmuje cały
 dostępny obszar roboczy, a drugie i kolejne dzielą go w układzie `dwindle`.
 Fullscreen przełącza `Super+F`; po ponownym naciśnięciu okno wraca do kafelków.
+`Super+Ctrl+F` otwiera wybrany menedżer plików przez skojarzenie katalogów.
 Nowe okno nie przejmuje fullscreen po poprzednim: żądanie fokusu wychodzi z tego
 trybu i wraca do podziału. Zamknięcie okna fullscreen również nie przenosi tego
 stanu na następne. Reguła Kitty ignoruje jego własne żądania fullscreen/maximize
@@ -277,7 +322,7 @@ python3 scripts/configure-tiling.py
 Skrypt zastępuje tylko oznaczony blok `TILING` na końcu głównego Lua. Zachowuje
 pozostałą konfigurację, w tym profil HDR/8/10-bit, i zapisuje poprzedni plik w
 `${XDG_STATE_HOME:-~/.local/state}/fedora-postinstall/tiling-*/hyprland.lua`.
-Zmienia przypisania `Super+Enter` i `Super+F` na opisane wyżej. Jeśli stare okno
+Zmienia przypisania `Super+Enter`, `Super+F` i `Super+Ctrl+F` na opisane wyżej. Jeśli stare okno
 już jest w fullscreen, wyjdź z niego raz przez `Super+F`; nowe okna otwieraj
 normalnie przez `Super+Enter`.
 
@@ -287,13 +332,14 @@ Moduł Hyprland stosuje żądany profil z kopią głównego pliku do katalogu pr
 |---|---|
 | Super+Enter / Super+Space | Kitty / launcher powłoki |
 | Super+W (także Q) / F / T | Zamknij / fullscreen / floating |
+| Super+Ctrl+F | Wybrany menedżer plików |
 | Super+J / P | Zmiana podziału / pseudo |
 | Super+strzałki / Shift+strzałki | Fokus / zamiana położenia okna |
 | Super+1…0 / Shift+1…0 | Workspace / przeniesienie okna |
 | Super+S / Alt+S | Scratchpad / przeniesienie do scratchpada |
 | Super+Ctrl+S | Panel powłoki (wcześniej Super+S) |
 | Super+Shift+Enter lub B | Brave |
-| Super+Shift+F / N | Wybrany menedżer plików / VS Code |
+| Super+Shift+F / N | Dodatkowy skrót menedżera plików / VS Code |
 
 JetBrains Mono jest instalowany z Fedory, z aliasami fontconfig i ustawieniem fontu Qt/DMS. Symbole Nerd Fonts są dodatkowym fontem z oficjalnego wydania, z digest SHA256; Kitty używa ich jako fallback dla ikon.
 
@@ -357,7 +403,7 @@ bash install.sh --desktop dms --file-manager nautilus --yes --modules "files def
 bash install.sh --desktop dms --file-manager flea --yes --modules "files defaults"
 ```
 
-Wybór steruje folderami `inode/directory`, skrótem `Super+Shift+F` oraz
+Wybór steruje folderami `inode/directory`, skrótami `Super+Ctrl+F` / `Super+Shift+F` oraz
 aktywacją `org.freedesktop.FileManager1`. Nautilus pochodzi z RPM Fedory;
 jego wybór nie buduje Flea. Zmiana wyboru zachowuje drugi zainstalowany
 menedżer. Debloat zachowuje Nautilusa, gdy jest wybrany. Wyloguj się, jeśli
@@ -380,7 +426,7 @@ bash install.sh --yes --modules "files defaults updates"
 ~/.local/share/fedora-postinstall/scripts/flea-manager check
 ```
 
-Preset Hyprland otwiera wybrany menedżer przez `Super+Shift+F` i skojarzenie katalogów. W istniejącym głównym Lua instalator dodaje tylko oznaczony loader na końcu i nadpisuje ten jeden skrót przez unbind/bind; pozostałe ustawienia zachowuje, a poprzedni plik kopiuje do katalogu przebiegu. Scentralizowane `fedora-update` sprawdza nowe tagi Flea i obsługuje wyłącznie sprawdzoną parę rewizji Flea/bibliotek QML; nowe źródła wymagają aktualizacji manifestu projektu. Aktualizacja nie wykonuje `git pull` konfiguracji. `flea-manager uninstall` odmawia usunięcia, dopóki Flea jest domyślnym handlerem katalogów; po wybraniu innego usuwa tylko zarządzane launchery i własną rejestrację D-Bus. Dane, ustawienia i starsze payloady pozostają.
+Preset Hyprland otwiera wybrany menedżer przez `Super+Ctrl+F` (także `Super+Shift+F`) i skojarzenie katalogów. W istniejącym głównym Lua instalator dodaje tylko oznaczony loader na końcu i nadpisuje te skróty przez unbind/bind; pozostałe ustawienia zachowuje, a poprzedni plik kopiuje do katalogu przebiegu. Scentralizowane `fedora-update` sprawdza nowe tagi Flea i obsługuje wyłącznie sprawdzoną parę rewizji Flea/bibliotek QML; nowe źródła wymagają aktualizacji manifestu projektu. Aktualizacja nie wykonuje `git pull` konfiguracji. `flea-manager uninstall` odmawia usunięcia, dopóki Flea jest domyślnym handlerem katalogów; po wybraniu innego usuwa tylko zarządzane launchery i własną rejestrację D-Bus. Dane, ustawienia i starsze payloady pozostają.
 
 ## Omasnap: screenshoty i edycja
 

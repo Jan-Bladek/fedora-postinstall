@@ -59,7 +59,7 @@ def apply():
                 except (OSError, RuntimeError, subprocess.SubprocessError) as error:
                     print(f'Ponowne wczytanie przywróconej konfiguracji: {error}', file=sys.stderr)
             raise
-    print('Dwindle aktywne: Super+Enter otwiera zwykły terminal; Super+F przełącza fullscreen.')
+    print('Dwindle aktywne: Super+Enter = terminal; Super+F = fullscreen; Super+Ctrl+F = menedżer plików.')
     print(f'Kopia poprzedniej konfiguracji: {backup}')
     if not active:
         print('Ustawienie zadziała przy następnym logowaniu do Hyprlanda.')
